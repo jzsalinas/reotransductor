@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import matplotlib.patches as mpatches
 
 # =====================================================================
 # CONFIGURACIÓN DE PARÁMETROS FÍSICOS Y GEOMETRÍA
@@ -11,102 +12,105 @@ DIFFUSION_COEFF = 0.5   # Conductividad térmica del medio (k)
 KAPPA = 50.0            # Constante disipativa del Reotransductor (kappa)
 LANDAUER_DECAY = 0.02   # Tasa de decaimiento entrópico natural de los Índices
 
-# Inicialización de rejillas físicas
-# 1. Temperatura (T): Inicializada a la temperatura del vacío frío (2.73 K)
+# 1. Temperatura (T): Fondo cósmico frío a 2.73 K
 T = np.ones((GRID_SIZE, GRID_SIZE)) * 2.73
+T[15:18, 15:18] = 1000.0  # Caldera 1
+T[32:35, 32:35] = 800.0   # Caldera 2
 
-# Colocar fuentes termodinámicas calientes (Estrellas / Calderas a 1000 K)
-T[15:18, 15:18] = 1000.0
-T[32:35, 32:35] = 800.0
-
-# 2. Índices de Baja Entropía (I): Estructuras ordenadas iniciales (0 a 1)
-# Colocamos "islas de orden" (como sistemas vivos o bases de datos) en la malla
+# 2. Índices de Negentropía (I): Estructuras de orden
 I = np.zeros((GRID_SIZE, GRID_SIZE))
-I[18:22, 18:22] = 1.0  # Estructura A (Cerca de la caldera 1)
-I[35:39, 35:39] = 1.0  # Estructura B (Cerca de la caldera 2)
-I[5:9, 40:44] = 1.0    # Estructura C (Aislada en el vacío absoluto)
+I[18:22, 18:22] = 1.0     # Estructura A (Cerca de Caldera 1)
+I[35:39, 35:39] = 1.0     # Estructura B (Cerca de Caldera 2)
+I[5:9, 40:44] = 1.0       # Estructura C (Aislada en el vacío)
 
-# 3. Tiempo Térmico Acumulado (tau): El reloj local emergente de cada celda
+# 3. Coordenada de Tiempo Emergente Acumulado (tau)
 tau = np.zeros((GRID_SIZE, GRID_SIZE))
 
 # =====================================================================
-# MOTOR DE EVOLUCIÓN FÍSICA
+# MOTOR DE EVOLUCIÓN FÍSICA (VECTORIZADO)
 # =====================================================================
 def update_physics(T, I, tau):
-    # a. Difusión de Calor (Ecuación de conducción de Fourier)
-    # Laplaciano de Temperatura usando diferencias finitas
-    laplacian = (
-        np.roll(T, 1, axis=0) + np.roll(T, -1, axis=0) +
-        np.roll(T, 1, axis=1) + np.roll(T, -1, axis=1) - 4 * T
+    # a. Difusión térmica con diferencias finitas sin wrap-around
+    laplacian = np.zeros_like(T)
+    laplacian[1:-1, 1:-1] = (
+        T[:-2, 1:-1] + T[2:, 1:-1] +
+        T[1:-1, :-2] + T[1:-1, 2:] - 4 * T[1:-1, 1:-1]
     )
-    # Mantener las calderas de energía constantes (focos calientes persistentes)
+    
     T_next = T + DIFFUSION_COEFF * laplacian * DT
     T_next[15:18, 15:18] = 1000.0
     T_next[32:35, 32:35] = 800.0
-    # Fronteras frías (Disipación hacia el espacio profundo a 2.73 K)
     T_next[0, :] = T_next[-1, :] = T_next[:, 0] = T_next[:, -1] = 2.73
     
-    # b. Gradiente de Temperatura Inversa (Fuerza impulsora: X = grad(1/T))
+    # b. Gradiente de Temperatura Inversa: X = grad(1/T)
     inv_T = 1.0 / T_next
     grad_inv_T_y, grad_inv_T_x = np.gradient(inv_T)
     
-    # c. Corriente disipativa (Flujo de energía J = -k * grad(T))
+    # c. Flujo térmico: J = -k * grad(T)
     grad_T_y, grad_T_x = np.gradient(T_next)
     J_x = -DIFFUSION_COEFF * grad_T_x
     J_y = -DIFFUSION_COEFF * grad_T_y
     
-    # d. Velocidad del Reotransductor (d_tau/dt = kappa * |J . grad(1/T)|)
-    # Es el producto escalar local de la disipación de Onsager
-    d_tau_dt = KAPPA * np.abs(J_x * grad_inv_T_x + J_y * grad_inv_T_y)
-    
-    # Actualizar la coordenada del "Presente Activo" (tau)
+    # d. Velocidad del Reotransductor (Producción de Entropía local de Onsager)
+    # sigma = J . grad(1/T) >= 0
+    d_tau_dt = KAPPA * (J_x * grad_inv_T_x + J_y * grad_inv_T_y)
+    d_tau_dt = np.maximum(0.0, d_tau_dt)
     tau_next = tau + d_tau_dt * DT
     
-    # e. Dinámica de los Índices (I) bajo el Límite de Landauer
-    # Para sobrevivir, un Índice necesita consumir un flujo de Joules (J) proporcional
-    # a la disipación local para compensar el desorden térmico de fondo (T)
+    # e. Dinámica de los Índices de Negentropía
     energy_flux = np.sqrt(J_x**2 + J_y**2)
+    thermal_noise = 0.001 * T_next
+    sustenance = 5.0 * energy_flux
     
-    I_next = np.copy(I)
-    for y in range(GRID_SIZE):
-        for x in range(GRID_SIZE):
-            if I[y, x] > 0:
-                # El calor excesivo (ruido térmico) desorganiza el índice
-                thermal_noise = 0.001 * T_next[y, x]
-                # El flujo local de energía disipada sostiene y alimenta al índice (negentropía)
-                sustenance = 5.0 * energy_flux[y, x]
-                
-                # Ecuación de balance para la integridad del Índice
-                delta_I = (sustenance - thermal_noise - LANDAUER_DECAY) * DT
-                I_next[y, x] = np.clip(I[y, x] + delta_I, 0.0, 1.0)
-                
+    mask = I > 0
+    delta_I = np.zeros_like(I)
+    delta_I[mask] = (sustenance[mask] - thermal_noise[mask] - LANDAUER_DECAY) * DT
+    I_next = np.clip(I + delta_I, 0.0, 1.0)
+    
     return T_next, I_next, tau_next, d_tau_dt
 
 # =====================================================================
-# INTERFAZ GRÁFICA DE VISUALIZACIÓN
+# INTERFAZ GRÁFICA
 # =====================================================================
 fig, axes = plt.subplots(2, 2, figsize=(11, 9))
-fig.suptitle("Simulación del Reotransductor del Presente Activo", fontsize=15, fontweight='bold')
+fig.suptitle("Simulación del Reotransductor del Presente Activo", fontsize=14, fontweight='bold')
 
 # Plot 1: Temperatura
-im_temp = axes[0, 0].imshow(T, cmap='inferno', origin='lower')
-axes[0, 0].set_title("Temperatura de la Malla ($T$)", fontsize=11, fontweight='bold')
+im_temp = axes[0, 0].imshow(T, cmap='inferno', origin='lower', vmin=2.73, vmax=1000.0)
+axes[0, 0].set_title("Temperatura de la Malla ($T$)", fontweight='bold')
 fig.colorbar(im_temp, ax=axes[0, 0], label="Kelvins [K]")
 
-# Plot 2: Velocidad de flujo del tiempo (d_tau/dt)
-im_rate = axes[0, 1].imshow(np.zeros((GRID_SIZE, GRID_SIZE)), cmap='plasma', origin='lower')
-axes[0, 1].set_title("Velocidad del Reotransductor ($d\\tau/dt$)", fontsize=11, fontweight='bold')
+# Plot 2: Velocidad del Reotransductor (d_tau/dt)
+im_rate = axes[0, 1].imshow(np.zeros((GRID_SIZE, GRID_SIZE)), cmap='plasma', origin='lower', vmin=0, vmax=8.0)
+axes[0, 1].set_title("Velocidad del Reotransductor ($d\\tau/dt$)", fontweight='bold')
 fig.colorbar(im_rate, ax=axes[0, 1], label="Flujo local de Presente")
 
 # Plot 3: Tiempo Emergente Acumulado (tau)
-im_tau = axes[1, 0].imshow(tau, cmap='viridis', origin='lower')
-axes[1, 0].set_title("Tiempo Acumulado (Coordenada $\\tau$)", fontsize=11, fontweight='bold')
+im_tau = axes[1, 0].imshow(tau, cmap='viridis', origin='lower', vmin=0, vmax=100.0)
+axes[1, 0].set_title("Tiempo Acumulado (Coordenada $\\tau$)", fontweight='bold')
 fig.colorbar(im_tau, ax=axes[1, 0], label="Segundos emergentes")
 
 # Plot 4: Integridad de los Índices de Negentropía (I)
-im_index = axes[1, 1].imshow(I, cmap='Blues_r', origin='lower')
-axes[1, 1].set_title("Integridad del Índice ($I$)", fontsize=11, fontweight='bold')
-fig.colorbar(im_index, ax=axes[1, 1], label="Estabilidad estructural")
+im_index = axes[1, 1].imshow(I, cmap='cividis', origin='lower', vmin=0.0, vmax=1.0)
+axes[1, 1].set_title("Integridad del Índice ($I$)", fontweight='bold')
+fig.colorbar(im_index, ax=axes[1, 1], label="Orden estructural [0 a 1]")
+
+# Recuadros y etiquetas para las estructuras A, B y C
+axes[1, 1].add_patch(mpatches.Rectangle((17.5, 17.5), 4, 4, linewidth=1.5, edgecolor='#00ffff', facecolor='none'))
+axes[1, 1].add_patch(mpatches.Rectangle((34.5, 34.5), 4, 4, linewidth=1.5, edgecolor='#39ff14', facecolor='none'))
+axes[1, 1].add_patch(mpatches.Rectangle((39.5, 4.5), 4, 4, linewidth=1.5, edgecolor='#ff3131', facecolor='none'))
+
+axes[1, 1].text(19.5, 22.5, 'A', color='#00ffff', fontweight='bold', fontsize=11, ha='center', va='bottom')
+axes[1, 1].text(36.5, 39.5, 'B', color='#39ff14', fontweight='bold', fontsize=11, ha='center', va='bottom')
+axes[1, 1].text(41.5, 9.5, 'C', color='#ff3131', fontweight='bold', fontsize=11, ha='center', va='bottom')
+
+# Leyenda explicativa de los índices
+legend_elements = [
+    mpatches.Patch(facecolor='none', edgecolor='#00ffff', linewidth=1.5, label='A: Cerca Caldera 1 (1000 K) - Sostenida por alto flujo'),
+    mpatches.Patch(facecolor='none', edgecolor='#39ff14', linewidth=1.5, label='B: Cerca Caldera 2 (800 K) - Sostenida por flujo medio'),
+    mpatches.Patch(facecolor='none', edgecolor='#ff3131', linewidth=1.5, label='C: Aislada en vacío (2.73 K) - Decae por Landauer')
+]
+axes[1, 1].legend(handles=legend_elements, loc='upper left', fontsize=7.5, framealpha=0.85)
 
 def animate(frame):
     global T, I, tau
@@ -117,12 +121,12 @@ def animate(frame):
     im_tau.set_array(tau)
     im_index.set_array(I)
     
-    # Ajustar escalas dinámicamente para la tasa de tiempo
-    im_rate.set_clim(vmin=0, vmax=max(1e-3, np.max(d_tau_dt)))
-    im_tau.set_clim(vmin=0, vmax=max(1e-3, np.max(tau)))
+    # Ajuste suave del rango de tau conforme transcurre la simulación
+    max_tau = max(1.0, np.max(tau))
+    im_tau.set_clim(vmin=0, vmax=max_tau)
     
     return im_temp, im_rate, im_tau, im_index
 
-ani = FuncAnimation(fig, animate, frames=200, interval=50, blit=False)
+ani = FuncAnimation(fig, animate, frames=200, interval=30, blit=False)
 plt.tight_layout()
 plt.show()
