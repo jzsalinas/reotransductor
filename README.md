@@ -75,7 +75,7 @@ The interactive interface is divided into 4 real-time synchronized monitors:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/reotransductor.git
+git clone https://github.com/jzsalinas/reotransductor.git
 cd reotransductor
 ```
 
