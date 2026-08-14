@@ -113,17 +113,17 @@ fig.colorbar(im_temp, ax=ax_temp, label="Kelvins [K]", fraction=0.046, pad=0.04)
 
 # Plot 2: Velocidad del Reotransductor (d_tau/dt)
 im_rate = ax_rate.imshow(np.zeros((GRID_SIZE, GRID_SIZE)), cmap='plasma', origin='lower', vmin=0, vmax=8.0)
-ax_rate.set_title(r"Velocidad del Reotransductor ($d\tau/dt$)", fontweight='bold', fontsize=9.5)
+ax_rate.set_title("Velocidad del Reotransductor (dτ/dt)", fontweight='bold', fontsize=9.5)
 fig.colorbar(im_rate, ax=ax_rate, label="Flujo de Presente", fraction=0.046, pad=0.04)
 
 # Plot 3: Tiempo Emergente Acumulado (tau)
 im_tau = ax_tau.imshow(tau, cmap='viridis', origin='lower', vmin=0, vmax=100.0)
-ax_tau.set_title(r"Tiempo Acumulado (Coordenada $\tau$)", fontweight='bold', fontsize=9.5)
+ax_tau.set_title("Tiempo Acumulado (Coordenada τ)", fontweight='bold', fontsize=9.5)
 fig.colorbar(im_tau, ax=ax_tau, label="Segundos Emergentes", fraction=0.046, pad=0.04)
 
 # Plot 4: Integridad de los Índices de Negentropía (I)
 im_index = ax_index.imshow(I, cmap='cividis', origin='lower', vmin=0.0, vmax=1.0)
-ax_index.set_title(r"Integridad del Índice ($I$)", fontweight='bold', fontsize=9.5)
+ax_index.set_title("Integridad del Índice (I)", fontweight='bold', fontsize=9.5)
 fig.colorbar(im_index, ax=ax_index, label="Orden Estructural [0 a 1]", fraction=0.046, pad=0.04)
 
 # Recuadros y etiquetas para las estructuras A, B y C
