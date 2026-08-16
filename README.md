@@ -9,7 +9,7 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 
 ---
 
-## 🌟 Available Simulations
+## Available Simulations
 
 | Simulation | File | Description |
 |---|---|---|
@@ -18,7 +18,7 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 
 ---
 
-## 📸 Simulation Dashboards
+## Simulation Dashboards
 
 ### 1. Cosmological Rheotransducer Dashboard
 ![Cosmological Rheotransducer Dashboard](assets/preview_cosmology.png)
@@ -28,7 +28,7 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 
 ---
 
-## 🌌 Theoretical Framework
+## Theoretical Framework
 
 The project integrates non-equilibrium thermodynamics, gravitational collapse, and information theory across a 2D spatial continuum:
 
@@ -49,16 +49,23 @@ $$\frac{d\tau_i}{dt} = \kappa \cdot \sigma_i(x, y)$$
 * **Collapsing Clusters & Superclusters**: High matter accretion and thermal dissipation produce high entropy production $\sigma \implies$ time ticks vigorously ($d\tau/dt \gg 0$).
 * **Cosmic Voids**: In near-uniform underdense voids ($\nabla T \to 0, \nabla \Phi \to 0$), $\sigma \to 0 \implies$ **local time practically freezes**.
 
-### 4. Negentropy Indices & Landauer's Limit ($I$)
-Low-entropy structures (galaxies, biological organisms, coherent states) require continuous negentropic consumption to counteract thermal noise and Landauer decay:
-$$\frac{dI}{dt} = \alpha \|\mathbf{J}_{\text{total}}\| - \beta T - \gamma_{\text{Landauer}}$$
-* **`A` (Cyan - Central Supercluster)**: Sustained by intense gravitational accretion and dissipative negentropy.
-* **`B` (Lime - Filament Node)**: Moderately sustained by filamentary inflow.
-* **`C` (Red - Deep Void Dwarf)**: Decays monotonically due to absence of sustaining dissipative energy flux.
+### 4. Dynamic Informational Field & Landauer's Limit ($I$)
+Low-entropy structures (coherent states, complex matter, biological systems) require continuous negentropic consumption to counteract thermal noise and Landauer decay:
+* **Core Thermodynamic Model**: Models discrete bounded index islands ($I_A, I_B, I_C$) fed by local thermal flux $\mathbf{J}_T$.
+* **Cosmological Model (Continuous Field $I(\mathbf{r}, t)$)**: In accordance with Schrödinger, Prigogine, and Landauer, order is represented as a **continuous dynamic scalar field** that advects with matter velocity $\mathbf{v}$ and self-organizes in dissipative filamentary nodes:
+  $$\frac{\partial I}{\partial t} + \nabla \cdot (I \mathbf{v}) = D_I \nabla^2 I + \alpha \sigma \left(\frac{\rho}{\bar{\rho}}\right) - \beta T - \gamma_{\text{Landauer}} I$$
+  When galaxies and filaments merge, the informational field naturally coalesces into unified negentropic superclusters, while expanding cosmic voids smoothly decay toward informational erasure ($I \to 0$).
+
+### 5. Bekenstein Informational Capacity & Black Hole -> White Hole Transition
+In standard general relativity, gravitational collapse leads to non-physical mathematical singularities ($\rho \to \infty$). Grounded in **Loop Quantum Gravity (LQG/LQC)** (Ashtekar, Rovelli, Vidotto, Christodoulou), a collapsed black hole saturates when its accumulated internal informational entropy exceeds the **Bekenstein-Hawking bound**:
+$$S_{\text{max}} = \frac{k_B c^3 A}{4 G \hbar} \propto M_{\text{BH}}^2$$
+* **Quantum Tunneling into a White Hole**: When $S_{\text{BH}}(t) \ge S_{\text{max}}$, the black hole undergoes a quantum tunnel transition into a **White Hole**, expelling its compressed matter outward in an explosive blast wave (the **Big Bounce** into Eon $N+1$).
+* **Cosmic Inflation & Causal Speed Limit ($c$)**: Each new eon initiates with a brief **quantum inflationary super-expansion** ($a < 1.05$) that homogeneously stretches primordial perturbation modes across cosmological scales. Following inflation, matter advection strictly obeys the relativistic speed limit ($\|\mathbf{v}\| \le c = 2.5\text{ cells/s}$).
+* **Fossil Time Coupling & Multi-Eon Archaeology**: While the scale factor $a$ and temperature $T$ undergo quantum reheating, the **Rheotransducer proper time field $\tau(x, y)$ is monotonically preserved**. The logarithmic archaeological panel $\log_{10}(1 + \tau)$ maps the multi-eon cosmic web, showing how past universal lifetimes continuously seed future structure formation.
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Prerequisites
 * **Python 3.10+**
@@ -100,9 +107,9 @@ python simulador_reotransductor.py
 
 ---
 
-## 🎮 Interactive Controls
+## Interactive Controls
 
-* **Acceleration Slider**: Dynamically adjust execution from **1x** up to **50x** physics steps per frame.
+* **Acceleration Slider**: Dynamically adjust execution from **1x** up to **1000x** physics steps per frame.
 * **Matplotlib Navigation Toolbar**: Pan, zoom, and export vector or raster snapshots.
 
 ---
@@ -125,10 +132,10 @@ reotransductor/
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
+## Author
 
 * **José Salinas** ([@jzsalinas](https://github.com/jzsalinas)) - *Initial concept, thermodynamics formulation & simulation engine.*

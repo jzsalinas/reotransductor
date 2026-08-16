@@ -146,13 +146,13 @@ ax_index.legend(handles=legend_elements, loc='upper left', fontsize=7.2, frameal
 # Ajuste fino de la cuadrícula de subplots
 plt.subplots_adjust(top=0.93, bottom=0.09, left=0.06, right=0.94, hspace=0.22, wspace=0.28)
 
-# Slider de Aceleración en la parte inferior
+# Slider de Aceleración en la parte inferior (Rango extendido hasta 1000x)
 ax_slider = fig.add_axes([0.25, 0.025, 0.62, 0.03])
 slider_speed = Slider(
     ax=ax_slider,
     label='Aceleración (Pasos / Frame) ',
     valmin=1,
-    valmax=50,
+    valmax=1000,
     valinit=5,
     valstep=1,
     color='#2563eb'
@@ -189,5 +189,6 @@ def animate(frame):
     
     return im_temp, im_rate, im_tau, im_index, title_temp
 
-ani = FuncAnimation(fig, animate, interval=30, blit=False, cache_frame_data=False)
-plt.show()
+if __name__ == '__main__':
+    ani = FuncAnimation(fig, animate, interval=30, blit=False, cache_frame_data=False)
+    plt.show()
