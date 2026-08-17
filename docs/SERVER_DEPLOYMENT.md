@@ -33,7 +33,7 @@ This guide details the deployment of the **Reotransductor 3D Cosmological Server
 
 1. **Clone the repository on your server**:
    ```bash
-   git clone https://github.com/your-username/reotransductor.git /opt/reotransductor
+   git clone https://github.com/jzsalinas/reotransductor.git /opt/reotransductor
    cd /opt/reotransductor
    ```
 
