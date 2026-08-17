@@ -31,13 +31,20 @@ This guide details the deployment of the **Reotransductor 3D Cosmological Server
 
 ## 2. Prerequisites & Server Setup
 
-1. **Clone the repository on your server**:
+1. **Install Python virtual environment tools and system packages (Debian/Ubuntu)**:
    ```bash
-   git clone https://github.com/jzsalinas/reotransductor.git /opt/reotransductor
+   sudo apt update
+   sudo apt install -y python3-venv python3-pip git
+   ```
+
+2. **Clone the repository on your server**:
+   ```bash
+   sudo git clone https://github.com/jzsalinas/reotransductor.git /opt/reotransductor
+   sudo chown -R $USER:$USER /opt/reotransductor
    cd /opt/reotransductor
    ```
 
-2. **Create Python virtual environment and install dependencies**:
+3. **Create Python virtual environment and install dependencies**:
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
@@ -45,7 +52,7 @@ This guide details the deployment of the **Reotransductor 3D Cosmological Server
    pip install -r requirements.txt
    ```
 
-3. **Verify engine execution**:
+4. **Verify engine execution**:
    ```bash
    python run_server.py --port 8000
    ```
@@ -57,12 +64,17 @@ This guide details the deployment of the **Reotransductor 3D Cosmological Server
 
 Create a dedicated systemd service file to keep the simulation running in the background and ensure automatic restart on system reboot:
 
-1. **Create service file**:
+1. **Check your current username**:
+   ```bash
+   whoami
+   ```
+
+2. **Create service file**:
    ```bash
    sudo nano /etc/systemd/system/reotransductor.service
    ```
 
-2. **Add the following configuration** (adjust paths and user accordingly):
+3. **Add the following configuration** (replace `User=your_username` with the output of `whoami`):
    ```ini
    [Unit]
    Description=Reotransductor 3D 24/7 Cosmological Physics Server
@@ -70,7 +82,7 @@ Create a dedicated systemd service file to keep the simulation running in the ba
 
    [Service]
    Type=simple
-   User=jzsalinas
+   User=your_username
    WorkingDirectory=/opt/reotransductor
    ExecStart=/opt/reotransductor/.venv/bin/python run_server.py --host 127.0.0.1 --port 8000 --speed 20
    Restart=always
