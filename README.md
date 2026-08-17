@@ -14,23 +14,31 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 | Simulation | File | Description |
 |---|---|---|
 | **Core Rheotransducer** | [`simulador_reotransductor.py`](simulador_reotransductor.py) | Fundamental non-equilibrium thermodynamic simulation with finite boilers, Landauer negentropy decay, and Onsager dissipation. |
-| **Cosmological Rheotransducer** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | Cosmological model replacing the unphysical global FLRW time with **cellular emergent proper time** ($\tau_i$) across a collapsing cosmic web and freezing voids. |
+| **Cosmological Rheotransducer 2D** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | 2D cosmological model with cellular time emergence, Bekenstein entropy saturation, White Hole bounce, and fossil memory. |
+| **Cosmological Rheotransducer 3D (CPU)** | [`simulador_cosmologico_3d.py`](simulador_cosmologico_3d.py) | 3D cosmological model featuring 3D Poisson gravity ($1/r^2$), Zel'dovich cosmic web, real-time Mollweide CMB sky projection, and 3D Bekenstein holography (pure NumPy). |
+| **Cosmological Rheotransducer 3D (GPU)** | [`simulador_cosmologico_3d_gpu.py`](simulador_cosmologico_3d_gpu.py) | Hardware-accelerated 3D cosmological model running in VRAM on NVIDIA CUDA (CuPy) with in-place rendering for hyper-drive simulation speed. |
 
 ---
 
 ## Simulation Dashboards
 
-### 1. Cosmological Rheotransducer Dashboard
+### 1. 3D Cosmological Model & CMB Sky Projection (Mollweide)
+![3D Cosmological Rheotransducer Dashboard](assets/preview_cosmology_3d.png)
+
+### 2. 2D Cosmological Rheotransducer Dashboard
 ![Cosmological Rheotransducer Dashboard](assets/preview_cosmology.png)
 
-### 2. Core Thermodynamic Dashboard
+### 3. Core Thermodynamic Dashboard
 ![Rheotransductor Simulation Dashboard](assets/preview.png)
 
 ---
 
-## Theoretical Framework
+## Theoretical Framework & Mathematical Formulation
 
-The project integrates non-equilibrium thermodynamics, gravitational collapse, and information theory across a 2D spatial continuum:
+For the complete, rigorous mathematical derivations, differential equations, and code implementation mapping, see the dedicated document:
+👉 **[Comprehensive Theory and Mathematical Formulation](docs/THEORY_AND_MATHEMATICAL_FORMULATION.md)**
+
+The project integrates non-equilibrium thermodynamics, gravitational collapse, and information theory across spatial continua:
 
 ### 1. Thermal Diffusion & Fluid Dynamics
 * **Thermal Conduction**: Heat flows according to Fourier's equation:
@@ -95,7 +103,17 @@ uv pip install -r requirements.txt
 
 ### 3. Run the simulations
 
-**To run the Cosmological Model:**
+**To run the 3D Cosmological Model on GPU (NVIDIA CUDA / CuPy - Ultra-Fast):**
+```bash
+python simulador_cosmologico_3d_gpu.py
+```
+
+**To run the 3D Cosmological Model on CPU (pure NumPy):**
+```bash
+python simulador_cosmologico_3d.py
+```
+
+**To run the 2D Cosmological Model:**
 ```bash
 python simulador_cosmologico.py
 ```
@@ -114,19 +132,22 @@ python simulador_reotransductor.py
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 reotransductor/
 ├── assets/
 │   ├── preview.png                 # Core simulation snapshot
-│   └── preview_cosmology.png       # Cosmological simulation snapshot
+│   ├── preview_cosmology.png       # 2D Cosmological simulation snapshot
+│   └── preview_cosmology_3d.png    # 3D Cosmological simulation snapshot
 ├── .gitignore                      # Python & virtual environment ignore rules
 ├── LICENSE                         # MIT License
 ├── pyproject.toml                  # Project metadata & packaging configuration
 ├── requirements.txt                # Production dependencies
 ├── README.md                       # Documentation & mathematical foundations
-├── simulador_cosmologico.py        # Cosmological model with cellular time emergence
+├── simulador_cosmologico.py        # 2D Cosmological model with cellular time emergence
+├── simulador_cosmologico_3d.py     # 3D Cosmological model (CPU / NumPy)
+├── simulador_cosmologico_3d_gpu.py # 3D Cosmological model (GPU / CUDA CuPy)
 └── simulador_reotransductor.py      # Core thermodynamic Rheotransducer simulation
 ```
 
