@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "bot_token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+  "chat_id": "YOUR_TELEGRAM_CHAT_ID_OR_CHANNEL_ID",
+  "interval_eons": 10
+}

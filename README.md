@@ -13,10 +13,11 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 
 | Simulation | File | Description |
 |---|---|---|
-| **Core Rheotransducer** | [`simulador_reotransductor.py`](simulador_reotransductor.py) | Fundamental non-equilibrium thermodynamic simulation with finite boilers, Landauer negentropy decay, and Onsager dissipation. |
-| **Cosmological Rheotransducer 2D** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | 2D cosmological model with cellular time emergence, Bekenstein entropy saturation, White Hole bounce, and fossil memory. |
-| **Cosmological Rheotransducer 3D (CPU)** | [`simulador_cosmologico_3d.py`](simulador_cosmologico_3d.py) | 3D cosmological model featuring 3D Poisson gravity ($1/r^2$), Zel'dovich cosmic web, real-time Mollweide CMB sky projection, and 3D Bekenstein holography (pure NumPy). |
-| **Cosmological Rheotransducer 3D (GPU)** | [`simulador_cosmologico_3d_gpu.py`](simulador_cosmologico_3d_gpu.py) | Hardware-accelerated 3D cosmological model running in VRAM on NVIDIA CUDA (CuPy) with in-place rendering for hyper-drive simulation speed. |
+| **24/7 Cosmological Server & Web Dashboard** | [`run_server.py`](run_server.py) | Autonomous headless multi-core engine with automated checkpointing, multi-eon history recorder, and real-time WebSocket Web Dashboard (Dell PowerEdge R820 / Nginx ready). |
+| **3D Cosmological Model (GPU CUDA)** | [`simulador_cosmologico_3d_gpu.py`](simulador_cosmologico_3d_gpu.py) | Desktop GPU-accelerated 3D simulation with CuPy in-VRAM integration, Planck CMB sky projection, and Matplotlib GUI. |
+| **3D Cosmological Model (CPU NumPy)** | [`simulador_cosmologico_3d.py`](simulador_cosmologico_3d.py) | Desktop 3D simulation with pure NumPy, 3D Poisson gravity, Planck CMB sky projection, and Matplotlib GUI. |
+| **2D Cosmological Model** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | 2D cosmological model with cellular time emergence, Bekenstein entropy saturation, White Hole bounce, and fossil memory. |
+| **Core Thermodynamic Rheotransducer** | [`simulador_reotransductor.py`](simulador_reotransductor.py) | Fundamental non-equilibrium thermodynamic simulation with finite boilers, Landauer negentropy decay, and Onsager dissipation. |
 
 ---
 
@@ -103,6 +104,12 @@ uv pip install -r requirements.txt
 
 ### 3. Run the simulations
 
+**To run the 24/7 Cosmological Server & Live Web Dashboard (Dell PowerEdge R820 / Headless / Nginx):**
+```bash
+python run_server.py --port 8000
+```
+Open `http://localhost:8000` in your web browser. For full production deployment with `systemd` and `Nginx` reverse proxy, see 👉 **[Server Deployment Guide](docs/SERVER_DEPLOYMENT.md)**.
+
 **To run the 3D Cosmological Model on GPU (NVIDIA CUDA / CuPy - Ultra-Fast):**
 ```bash
 python simulador_cosmologico_3d_gpu.py
@@ -127,8 +134,8 @@ python simulador_reotransductor.py
 
 ## Interactive Controls
 
-* **Acceleration Slider**: Dynamically adjust execution from **1x** up to **1000x** physics steps per frame.
-* **Matplotlib Navigation Toolbar**: Pan, zoom, and export vector or raster snapshots.
+* **Web Dashboard**: Real-time WebSocket streaming, speed slider (1x - 500x), pause/resume, manual checkpoint triggers, and multi-eon history log.
+* **Desktop Desktop Toolbar**: Pan, zoom, and export vector/raster snapshots directly from Matplotlib.
 
 ---
 
@@ -140,15 +147,22 @@ reotransductor/
 │   ├── preview.png                 # Core simulation snapshot
 │   ├── preview_cosmology.png       # 2D Cosmological simulation snapshot
 │   └── preview_cosmology_3d.png    # 3D Cosmological simulation snapshot
-├── .gitignore                      # Python & virtual environment ignore rules
-├── LICENSE                         # MIT License
-├── pyproject.toml                  # Project metadata & packaging configuration
+├── docs/
+│   ├── SERVER_DEPLOYMENT.md        # 24/7 Server deployment guide (Dell R820, systemd, Nginx)
+│   └── THEORY_AND_MATHEMATICAL_FORMULATION.md # Complete physical foundations and equations
+├── server/
+│   ├── __init__.py
+│   ├── engine.py                   # Autonomous headless physics engine with auto-checkpointing
+│   ├── app.py                      # FastAPI server with WebSocket real-time streaming hub
+│   └── static/                     # Web Dashboard frontend (HTML5, CSS3, ES6 Canvas/WebGL)
+├── run_server.py                   # 24/7 Server entrypoint
+├── simulador_cosmologico_3d_gpu.py # Desktop 3D GPU CUDA simulator
+├── simulador_cosmologico_3d.py     # Desktop 3D CPU NumPy simulator
+├── simulador_cosmologico.py        # Desktop 2D Cosmological simulator
+├── simulador_reotransductor.py     # Core thermodynamic simulator
+├── pyproject.toml                  # Project metadata
 ├── requirements.txt                # Production dependencies
-├── README.md                       # Documentation & mathematical foundations
-├── simulador_cosmologico.py        # 2D Cosmological model with cellular time emergence
-├── simulador_cosmologico_3d.py     # 3D Cosmological model (CPU / NumPy)
-├── simulador_cosmologico_3d_gpu.py # 3D Cosmological model (GPU / CUDA CuPy)
-└── simulador_reotransductor.py      # Core thermodynamic Rheotransducer simulation
+└── README.md                       # Documentation & guide
 ```
 
 ---
