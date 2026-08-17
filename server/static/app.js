@@ -399,6 +399,13 @@ function updateDashboard(payload) {
     document.getElementById('eraBadge').textContent = t.era;
     document.getElementById('progEon').textContent = t.eon;
 
+    // Sync speed slider with current server speed on initial connection
+    if (!window._speedSynced && t.steps_per_frame) {
+        document.getElementById('speedSlider').value = t.steps_per_frame;
+        document.getElementById('speedVal').textContent = t.steps_per_frame;
+        window._speedSynced = true;
+    }
+
     // Telemetry Card
     document.getElementById('telEon').textContent = `N = ${t.eon}`;
     document.getElementById('telScale').textContent = `a = ${t.scale_factor.toFixed(3)} (z = ${t.redshift.toFixed(2)})`;
