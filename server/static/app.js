@@ -437,8 +437,26 @@ function updateDashboard(payload) {
 }
 
 // =====================================================================
-// 5. WEBSOCKET CONNECTION & SNAPSHOT REPLAY
+// 5. WEBSOCKET CONNECTION & SNAPSHOT REPLAY (SUBPATH-AGNOSTIC)
 // =====================================================================
+
+// Auto-detect base path for seamless deployment under subdirectories (e.g., /reotransductor/)
+const currentPath = window.location.pathname;
+const basePath = currentPath.endsWith('/') 
+    ? currentPath 
+    : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+
+function getAppUrl(relPath) {
+    const cleanBase = basePath.endsWith('/') ? basePath : basePath + '/';
+    const cleanRel = relPath.startsWith('/') ? relPath.substring(1) : relPath;
+    return cleanBase + cleanRel;
+}
+
+// Ensure CSV download button points to the correct relative path
+const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+if (downloadCsvBtn) {
+    downloadCsvBtn.href = getAppUrl('api/history/export.csv');
+}
 
 let ws = null;
 const statusBadge = document.getElementById('connectionStatus');
@@ -449,7 +467,8 @@ const returnLiveBtn = document.getElementById('returnLiveBtn');
 
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+    const wsPath = getAppUrl('ws/live');
+    const wsUrl = `${protocol}//${window.location.host}${wsPath}`;
 
     ws = new WebSocket(wsUrl);
 
@@ -485,7 +504,7 @@ connectWebSocket();
 // Snapshot List Refresh
 async function refreshSnapshotList() {
     try {
-        const res = await fetch('/api/snapshots?t=' + Date.now());
+        const res = await fetch(getAppUrl('api/snapshots?t=' + Date.now()));
         const snapshots = await res.json();
         const currentVal = snapshotSelect.value;
         
@@ -512,7 +531,7 @@ snapshotSelect.addEventListener('change', async (e) => {
         document.getElementById('liveDot').style.display = 'inline-block';
     } else {
         try {
-            const res = await fetch(`/api/snapshot/${val}`);
+            const res = await fetch(getAppUrl(`api/snapshot/${encodeURIComponent(val)}`));
             if (res.ok) {
                 const snapshotPayload = await res.json();
                 isViewingSnapshot = true;
@@ -577,7 +596,7 @@ pauseBtn.addEventListener('click', () => {
 const saveBtn = document.getElementById('saveBtn');
 saveBtn.addEventListener('click', async () => {
     try {
-        const res = await fetch('/api/control', {
+        const res = await fetch(getAppUrl('api/control'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'save_checkpoint' })
@@ -606,7 +625,7 @@ const historyTableBody = document.getElementById('historyTableBody');
 historyBtn.addEventListener('click', async () => {
     historyModal.classList.add('active');
     try {
-        const res = await fetch('/api/history');
+        const res = await fetch(getAppUrl('api/history'));
         const data = await res.json();
         if (data.length === 0) {
             historyTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #94a3b8;">Aún no se ha completado el Eón 1. Los datos históricos se registrarán automáticamente tras el primer rebote cuántico.</td></tr>';
@@ -651,7 +670,7 @@ telegramBtn.addEventListener('click', async () => {
     telegramModal.classList.add('active');
     tgStatusMsg.style.display = 'none';
     try {
-        const res = await fetch('/api/telegram/config');
+        const res = await fetch(getAppUrl('api/telegram/config'));
         if (res.ok) {
             const cfg = await res.json();
             tgEnabled.checked = cfg.enabled;
@@ -671,7 +690,7 @@ telegramForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     tgStatusMsg.style.display = 'none';
     try {
-        const res = await fetch('/api/telegram/config', {
+        const res = await fetch(getAppUrl('api/telegram/config'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -699,7 +718,7 @@ testTelegramBtn.addEventListener('click', async () => {
     tgStatusMsg.style.display = 'none';
     // Save first to ensure server uses current values
     try {
-        await fetch('/api/telegram/config', {
+        await fetch(getAppUrl('api/telegram/config'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -710,7 +729,7 @@ testTelegramBtn.addEventListener('click', async () => {
             })
         });
 
-        const res = await fetch('/api/telegram/test', { method: 'POST' });
+        const res = await fetch(getAppUrl('api/telegram/test'), { method: 'POST' });
         const data = await res.json();
         if (res.ok) {
             tgStatusMsg.className = 'form-status-msg success';
@@ -748,7 +767,7 @@ resetModal.addEventListener('click', (e) => {
 confirmResetBtn.addEventListener('click', async () => {
     resetModal.classList.remove('active');
     try {
-        const res = await fetch('/api/control', {
+        const res = await fetch(getAppUrl('api/control'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'reset' })

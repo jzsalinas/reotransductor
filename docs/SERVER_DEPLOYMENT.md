@@ -110,6 +110,8 @@ To expose the dashboard over standard HTTP/HTTPS ports (80/443) or behind a doma
    ```
 
 2. **Add the reverse proxy configuration with WebSocket upgrade headers**:
+
+   **Option A: Root Domain Deployment (`http://yourdomain.com/`)**
    ```nginx
    server {
        listen 80;
@@ -119,6 +121,36 @@ To expose the dashboard over standard HTTP/HTTPS ports (80/443) or behind a doma
 
        location / {
            proxy_pass http://127.0.0.1:8000;
+           proxy_http_version 1.1;
+           
+           # WebSocket Upgrade Headers
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection "upgrade";
+           
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+           
+           # Disable buffering for low-latency live streaming
+           proxy_buffering off;
+           proxy_read_timeout 86400s;
+           proxy_send_timeout 86400s;
+       }
+   }
+   ```
+
+   **Option B: Subpath Deployment (`http://yourdomain.com/reotransductor/`)**
+   ```nginx
+   server {
+       listen 80;
+       server_name yourdomain.com;
+
+       client_max_body_size 50M;
+
+       # Note: The trailing slash in proxy_pass is required to strip the /reotransductor/ prefix
+       location /reotransductor/ {
+           proxy_pass http://127.0.0.1:8000/;
            proxy_http_version 1.1;
            
            # WebSocket Upgrade Headers
