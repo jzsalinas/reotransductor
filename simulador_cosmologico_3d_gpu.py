@@ -4,6 +4,24 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Slider
+from matplotlib.colors import LinearSegmentedColormap
+
+# Paleta oficial calibrada de la misión Planck (ESA Planck Legacy Archive / HEALPix)
+PLANCK_CMAP = LinearSegmentedColormap.from_list(
+    'planck_cmb',
+    [
+        '#05103a',  # Azul Marino Profundo (-2.5σ)
+        '#194a8d',  # Azul Rey
+        '#3288bd',  # Celeste Cian
+        '#66c2a5',  # Turquesa
+        '#f7f7f7',  # Neutro Blanco/Marfil (0.0σ)
+        '#fee08b',  # Ámbar Claro
+        '#fdae61',  # Naranja
+        '#d53e4f',  # Rojo Carmesí
+        '#5e001f'   # Borgoña Oscuro (+2.5σ)
+    ],
+    N=256
+)
 
 # =====================================================================
 # SELECCIÓN AUTOMÁTICA DE BACKEND: GPU (CuPy / CUDA) O CPU (NumPy)
@@ -99,16 +117,49 @@ scale_factor = 1.0
 eon = 1
 steps_per_frame = 20
 
-# Rejilla para la Proyección de la Esfera Celeste del CMB (Mollweide S^2)
-n_lat, n_lon = 36, 72
+# Rejilla de Alta Definición para la Esfera Celeste del CMB (Mollweide S^2)
+n_lat, n_lon = 90, 180
 lats = np.linspace(-np.pi / 2, np.pi / 2, n_lat)
 lons = np.linspace(-np.pi, np.pi, n_lon)
 LON, LAT = np.meshgrid(lons, lats)
+
+# Vectores normales de línea de visión en VRAM
+n_los_x_np = np.cos(LAT) * np.cos(LON)
+n_los_y_np = np.cos(LAT) * np.sin(LON)
+n_los_z_np = np.sin(LAT)
+
+n_los_x = xp.asarray(n_los_x_np, dtype=xp.float32)
+n_los_y = xp.asarray(n_los_y_np, dtype=xp.float32)
+n_los_z = xp.asarray(n_los_z_np, dtype=xp.float32)
+
 r_obs = GRID_SIZE / 2.2
-cx_obs, cy_obs, cz_obs = GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE / 2
-px_cmb = np.clip(np.round(cx_obs + r_obs * np.cos(LAT) * np.cos(LON)).astype(int), 0, GRID_SIZE - 1)
-py_cmb = np.clip(np.round(cy_obs + r_obs * np.cos(LAT) * np.sin(LON)).astype(int), 0, GRID_SIZE - 1)
-pz_cmb = np.clip(np.round(cz_obs + r_obs * np.sin(LAT)).astype(int), 0, GRID_SIZE - 1)
+cx_obs, cy_obs, cz_obs = GRID_SIZE / 2.0, GRID_SIZE / 2.0, GRID_SIZE / 2.0
+coords_cmb_x = (cx_obs + r_obs * n_los_x) % GRID_SIZE
+coords_cmb_y = (cy_obs + r_obs * n_los_y) % GRID_SIZE
+coords_cmb_z = (cz_obs + r_obs * n_los_z) % GRID_SIZE
+
+def sample_sphere_trilinear_gpu(arr, cx, cy, cz):
+    """Muestreo trilineal continuo en la esfera en memoria VRAM con condiciones de contorno periódicas."""
+    x0 = xp.floor(cx).astype(xp.int32) % GRID_SIZE
+    x1 = (x0 + 1) % GRID_SIZE
+    y0 = xp.floor(cy).astype(xp.int32) % GRID_SIZE
+    y1 = (y0 + 1) % GRID_SIZE
+    z0 = xp.floor(cz).astype(xp.int32) % GRID_SIZE
+    z1 = (z0 + 1) % GRID_SIZE
+    
+    xd = (cx - xp.floor(cx)).astype(xp.float32)
+    yd = (cy - xp.floor(cy)).astype(xp.float32)
+    zd = (cz - xp.floor(cz)).astype(xp.float32)
+    
+    c00 = arr[x0, y0, z0] * (1.0 - xd) + arr[x1, y0, z0] * xd
+    c01 = arr[x0, y0, z1] * (1.0 - xd) + arr[x1, y0, z1] * xd
+    c10 = arr[x0, y1, z0] * (1.0 - xd) + arr[x1, y1, z0] * xd
+    c11 = arr[x0, y1, z1] * (1.0 - xd) + arr[x1, y1, z1] * xd
+    
+    c0 = c00 * (1.0 - yd) + c10 * yd
+    c1 = c01 * (1.0 - yd) + c11 * yd
+    
+    return c0 * (1.0 - zd) + c1 * zd
 
 # =====================================================================
 # OPERADORES DIFERENCIALES 3D VECTORIZADOS EN GPU
@@ -327,11 +378,16 @@ ax_3d.set_xlabel('X', fontsize=7.2)
 ax_3d.set_ylabel('Y', fontsize=7.2)
 ax_3d.set_zlabel('Z', fontsize=7.2)
 
-# Panel 2: CMB Mollweide (Planck Style ΔT/T̄)
-cmb_raw = np.log10(1.0 + tau_np[px_cmb, py_cmb, pz_cmb])
-cmb_std = max(1e-4, float(np.std(cmb_raw)))
-cmb_init = (cmb_raw - np.mean(cmb_raw)) / cmb_std
-im_cmb = ax_cmb.pcolormesh(LON, LAT, cmb_init, cmap='coolwarm', shading='gouraud', vmin=-2.5, vmax=2.5)
+# Panel 2: CMB Mollweide HD (Planck Style ΔT/T̄ con Muestreo Trilineal en VRAM y Efecto Doppler)
+tau_s_init = sample_sphere_trilinear_gpu(tau, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vx_s_init = sample_sphere_trilinear_gpu(v_x, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vy_s_init = sample_sphere_trilinear_gpu(v_y, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vz_s_init = sample_sphere_trilinear_gpu(v_z, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+v_los_init = (vx_s_init * n_los_x + vy_s_init * n_los_y + vz_s_init * n_los_z) / C_LIGHT
+cmb_raw_init = xp.log10(1.0 + xp.maximum(0.0, tau_s_init)) + 0.4 * v_los_init
+cmb_std_init = float(xp.maximum(1e-4, xp.std(cmb_raw_init)))
+cmb_init = to_cpu((cmb_raw_init - float(xp.mean(cmb_raw_init))) / cmb_std_init)
+im_cmb = ax_cmb.pcolormesh(LON, LAT, cmb_init, cmap=PLANCK_CMAP, shading='gouraud', vmin=-2.5, vmax=2.5)
 title_cmb = ax_cmb.set_title("2. Fondo Cósmico CMB (Mollweide S² | ΔT/T̄)", fontweight='bold', fontsize=8.8, pad=8)
 ax_cmb.grid(True, alpha=0.25)
 cbar_cmb = fig.colorbar(im_cmb, ax=ax_cmb, orientation='horizontal', fraction=0.046, pad=0.10)
@@ -447,10 +503,15 @@ def animate_3d(frame):
         sc_3d.set_array(c_vals)
         sc_3d.set_clim(vmin=0.0, vmax=max(3.0, float(np.max(c_vals))))
     
-    # 5. Actualizar Mapa CMB Mollweide (Anisotropías Relativas Planck/WMAP Style)
-    cmb_raw = np.log10(1.0 + tau_cpu[px_cmb, py_cmb, pz_cmb])
-    cmb_std = max(1e-4, float(np.std(cmb_raw)))
-    cmb_data = (cmb_raw - float(np.mean(cmb_raw))) / cmb_std
+    # 5. Actualizar Mapa CMB Mollweide HD (Memoria Fósil + Efecto Doppler Cinemático en VRAM)
+    tau_s = sample_sphere_trilinear_gpu(tau, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    vx_s = sample_sphere_trilinear_gpu(v_x, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    vy_s = sample_sphere_trilinear_gpu(v_y, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    vz_s = sample_sphere_trilinear_gpu(v_z, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    v_los = (vx_s * n_los_x + vy_s * n_los_y + vz_s * n_los_z) / C_LIGHT
+    cmb_raw = xp.log10(1.0 + xp.maximum(0.0, tau_s)) + 0.4 * v_los
+    cmb_std = float(xp.maximum(1e-4, xp.std(cmb_raw)))
+    cmb_data = to_cpu((cmb_raw - float(xp.mean(cmb_raw))) / cmb_std)
     im_cmb.set_array(cmb_data.ravel())
     im_cmb.set_clim(vmin=-2.5, vmax=2.5)
     

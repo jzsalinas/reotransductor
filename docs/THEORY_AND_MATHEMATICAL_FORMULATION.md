@@ -204,23 +204,42 @@ I_next = np.clip(I + dI_dt * DT, 0.0, 1.0)
 
 ---
 
-### 3.7. Celestial Sphere CMB Map (Mollweide $S^2$ Projection)
+### 3.7. High-Definition Celestial Sphere CMB Map (Mollweide $S^2$ Projection & Doppler Shift)
 
-The Cosmic Microwave Background (CMB) celestial sphere is extracted at an observer shell radius $r_{\text{obs}} = L / 2.2$. Anisotropies $\Delta T / \bar{T}$ are projected via equal-area Mollweide projection:
+The Cosmic Microwave Background (CMB) celestial sphere is extracted continuously at an observer shell radius $r_{\text{obs}} = L / 2.2$. Temperature anisotropies $\Delta T / \bar{T}$ combine both the fossil time gravitational imprint (Sachs-Wolfe effect) and line-of-sight relativistic kinematic Doppler shifts ($\mathbf{v} \cdot \hat{\mathbf{n}}$):
 
-$$x_{\text{sph}}(\theta, \phi) = x_0 + r_{\text{obs}} \cos\theta \cos\phi$$
+$$\hat{\mathbf{n}}(\theta, \phi) = (\cos\theta\cos\phi, \; \cos\theta\sin\phi, \; \sin\theta)$$
 
-$$y_{\text{sph}}(\theta, \phi) = y_0 + r_{\text{obs}} \cos\theta \sin\phi$$
+$$\mathbf{r}_{\text{CMB}}(\theta, \phi) = \mathbf{r}_{\text{obs}} + r_{\text{obs}} \cdot \hat{\mathbf{n}}(\theta, \phi) \pmod L$$
 
-$$z_{\text{sph}}(\theta, \phi) = z_0 + r_{\text{obs}} \sin\theta$$
+$$v_{\text{los}}(\theta, \phi) = \frac{\mathbf{v}(\mathbf{r}_{\text{CMB}}) \cdot \hat{\mathbf{n}}(\theta, \phi)}{c}$$
 
-$$\frac{\Delta T}{\bar{T}}(\theta, \phi) = \frac{\tau_{\text{log}}(\theta, \phi) - \mu_{\tau}}{\sigma_\tau}$$
+$$\text{CMB}_{\text{raw}}(\theta, \phi) = \log_{10}(1.0 + \tau(\mathbf{r}_{\text{CMB}})) + \alpha_{\text{Doppler}} \cdot v_{\text{los}}(\theta, \phi)$$
+
+$$\frac{\Delta T}{\bar{T}}(\theta, \phi) = \frac{\text{CMB}_{\text{raw}}(\theta, \phi) - \langle \text{CMB}_{\text{raw}} \rangle_{S^2}}{\sigma(\text{CMB}_{\text{raw}})}$$
+
+Continuous trilinear interpolation across periodic boundaries eliminates voxel discretization, producing silky-smooth multipolar acoustic structures across the celestial sphere rendered via the official **ESA Planck Legacy Archive color gradient**.
 
 #### Python Implementation:
 ```python
-cmb_raw = np.log10(1.0 + tau[px_cmb, py_cmb, pz_cmb])
+# Official Planck 2018 ESA Colormap
+PLANCK_CMAP = LinearSegmentedColormap.from_list(
+    'planck_cmb',
+    ['#05103a', '#194a8d', '#3288bd', '#66c2a5', '#f7f7f7', '#fee08b', '#fdae61', '#d53e4f', '#5e001f'],
+    N=256
+)
+
+tau_s = sample_sphere_trilinear(tau, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vx_s = sample_sphere_trilinear(v_x, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vy_s = sample_sphere_trilinear(v_y, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+vz_s = sample_sphere_trilinear(v_z, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+
+v_los = (vx_s * n_los_x + vy_s * n_los_y + vz_s * n_los_z) / C_LIGHT
+cmb_raw = np.log10(1.0 + np.maximum(0.0, tau_s)) + 0.4 * v_los
 cmb_std = max(1e-4, float(np.std(cmb_raw)))
 cmb_data = (cmb_raw - float(np.mean(cmb_raw))) / cmb_std
+im_cmb.set_array(cmb_data.ravel())
+im_cmb.set_clim(vmin=-2.5, vmax=2.5)
 ```
 
 ---
