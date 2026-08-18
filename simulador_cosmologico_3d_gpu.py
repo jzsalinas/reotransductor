@@ -565,6 +565,10 @@ def animate_3d(frame):
     tau_core_val = float(np.max(tau_cpu))
     t_max_val = float(np.max(T_cpu))
     
+    p_conformal = max(0.0, min(1.0, (scale_factor - 1.0) / 6.0))
+    p_grav = min(mass_frac_val / 0.18, s_bh_val / max(1.0, s_crit))
+    prog_label_3d = f"Frontera Conforme CCC Eón {eon}" if (p_conformal > p_grav and mass_frac_val < 0.10) else f"Túnel Cuántico Eón {eon}"
+
     telemetry_str = (
         f"• Motor de Cómputo: {BACKEND_DESC}\n"
         f"• Eón Cósmico Actual: N = {eon}\n"
@@ -576,7 +580,7 @@ def animate_3d(frame):
         f"• Atractor Central 3D: (x={bx}, y={by}, z={bz})\n"
         f"• Entropía Eón N (S_BH): {s_bh_val:.0f} k_B\n"
         f"• Límite Bekenstein (S_max): {s_crit:.0f} k_B\n"
-        f"• Túnel Cuántico Eón {eon}: [{bar_str}] {progress * 100.0:.1f}%\n"
+        f"• {prog_label_3d}: [{bar_str}] {progress * 100.0:.1f}%\n"
         f"• Odómetro Fósil Total 3D: {tau_core_val:.0f} s\n"
         f"• Estado: {'Agujero Blanco 3D Inminente' if progress >= 0.95 else 'Evolución Hidrodinámica 3D'}"
     )

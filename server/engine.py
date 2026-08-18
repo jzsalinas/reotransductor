@@ -439,6 +439,19 @@ class CosmologicalEngine:
         else:
             status_banner = "Evolución Hidrodinámica 3D"
 
+        # Determine active driver route for UI display
+        p_mass = min(1.0, self.mass_frac_val / self.MASS_THRESHOLD)
+        p_entropy = min(1.0, self.s_bh_val / max(1.0, self.s_crit))
+        p_grav = min(p_mass, p_entropy)
+        p_conformal = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
+
+        if p_conformal > p_grav and self.mass_frac_val < 0.10:
+            prog_label = f"Frontera Conforme CCC Eón {self.eon}"
+            active_route = "conformal"
+        else:
+            prog_label = f"Túnel Cuántico Eón {self.eon}"
+            active_route = "quantum_tunnel"
+
         return {
             "eon": self.eon,
             "era": era_str,
@@ -451,6 +464,10 @@ class CosmologicalEngine:
             "s_bh": round(float(self.s_bh_val), 0),
             "s_crit": round(float(self.s_crit), 0),
             "tunnel_progress": round(float(self.progress * 100.0), 1),
+            "progress_label": prog_label,
+            "active_route": active_route,
+            "p_grav": round(float(p_grav * 100.0), 1),
+            "p_conformal": round(float(p_conformal * 100.0), 1),
             "fossil_odometer": round(float(np.max(self.tau)), 0),
             "attractor": {"x": int(bx), "y": int(by), "z": int(bz)},
             "z_slice": z_slice,

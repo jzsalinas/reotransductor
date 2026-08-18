@@ -395,9 +395,10 @@ function updateDashboard(payload) {
     lastKnownEon = t.eon;
 
     // Header
-    document.getElementById('eonNum').textContent = t.eon;
-    document.getElementById('eraBadge').textContent = t.era;
-    document.getElementById('progEon').textContent = t.eon;
+    const eonNumEl = document.getElementById('eonNum');
+    if (eonNumEl) eonNumEl.textContent = t.eon;
+    const eraBadgeEl = document.getElementById('eraBadge');
+    if (eraBadgeEl) eraBadgeEl.textContent = t.era;
 
     // Sync speed slider with current server speed on initial connection
     if (!window._speedSynced && t.steps_per_frame) {
@@ -420,7 +421,25 @@ function updateDashboard(payload) {
     // Progress Bar
     const progVal = t.tunnel_progress;
     document.getElementById('progVal').textContent = `${progVal.toFixed(1)}%`;
-    document.getElementById('progFill').style.width = `${progVal}%`;
+    
+    const progFillEl = document.getElementById('progFill');
+    if (progFillEl) {
+        progFillEl.style.width = `${progVal}%`;
+        if (t.active_route === 'conformal' || (t.p_conformal > t.p_grav && t.mass_fraction < 10)) {
+            progFillEl.style.background = 'linear-gradient(90deg, var(--accent-cyan), #a855f7)';
+        } else {
+            progFillEl.style.background = 'linear-gradient(90deg, var(--accent-cyan), var(--accent-amber))';
+        }
+    }
+
+    const progTitleEl = document.getElementById('progTitle');
+    const progLabel = t.progress_label || (t.active_route === 'conformal' 
+        ? `Frontera Conforme CCC Eón ${t.eon}` 
+        : `Túnel Cuántico Eón ${t.eon}`);
+    if (progTitleEl) {
+        progTitleEl.textContent = progLabel;
+    }
+
     document.getElementById('stateBanner').textContent = t.state_status;
 
     // Slice Coordinate Tags
@@ -491,7 +510,9 @@ function connectWebSocket() {
         try {
             const payload = JSON.parse(event.data);
             updateDashboard(payload);
-        } catch (e) {}
+        } catch (e) {
+            console.error('Error updating live dashboard payload:', e);
+        }
     };
 
     ws.onclose = () => {
