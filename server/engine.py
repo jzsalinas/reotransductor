@@ -9,6 +9,7 @@ import time
 import io
 import csv
 import shutil
+import re
 import numpy as np
 from server.notifier import TelegramNotifier
 
@@ -348,7 +349,7 @@ class CosmologicalEngine:
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
         if is_grav_bounce or is_conformal_bounce:
-            transition_type = "Rebote Gravitatorio (Singularidad)" if is_grav_bounce else "Transición Conforme CCC (Muerte Térmica)"
+            transition_type = "Rebote Gravitatorio (Túnel Cuántico)" if is_grav_bounce else "CCC (Muerte Térmica)"
             self._handle_bounce(transition_type=transition_type)
 
     def _handle_bounce(self, transition_type="Rebote Cuántico"):
@@ -558,8 +559,18 @@ class CosmologicalEngine:
                     pass
         return None
 
+    @staticmethod
+    def normalize_transition_name(transition_str):
+        """Normalizes legacy and modern transition names into standard nomenclature."""
+        if not transition_str:
+            return "Rebote Gravitatorio (Túnel Cuántico)"
+        t = str(transition_str).strip()
+        if "CCC" in t or "Muerte" in t or "Conforme" in t:
+            return "CCC (Muerte Térmica)"
+        return "Rebote Gravitatorio (Túnel Cuántico)"
+
     def get_available_snapshots(self):
-        """Returns list of all available snapshots (both automatic eon bounces and manual checkpoints)."""
+        """Returns list of all available snapshots with normalized transition labels."""
         if not os.path.exists(self.snapshots_dir):
             return []
         files = os.listdir(self.snapshots_dir)
@@ -570,30 +581,62 @@ class CosmologicalEngine:
                 try:
                     with open(path, "r", encoding="utf-8") as sfile:
                         data = json.load(sfile)
-                        meta = data.get("snapshot_meta")
-                        if meta:
-                            snapshots.append(meta)
+                        meta = data.get("snapshot_meta", {})
+                        snap_id = meta.get("id") or f.replace("snapshot_", "").replace(".json", "")
+                        snap_type = meta.get("type", "manual" if "manual" in snap_id else "eon_bounce")
+                        
+                        if snap_type == "eon_bounce" or str(snap_id).startswith("eon_"):
+                            eon_val = meta.get("eon")
+                            if eon_val is None:
+                                match_e = re.search(r'eon_(\d+)', str(snap_id))
+                                eon_val = int(match_e.group(1)) if match_e else "?"
+                            
+                            # Normalize transition name
+                            raw_trans = meta.get("transition") or meta.get("label", "")
+                            norm_trans = self.normalize_transition_name(raw_trans)
+                            
+                            snapshots.append({
+                                "id": str(snap_id),
+                                "label": f"📷 Fin Eón {eon_val} [{norm_trans}]",
+                                "type": "eon_bounce",
+                                "transition": norm_trans,
+                                "eon": eon_val,
+                                "scale_factor": meta.get("scale_factor"),
+                                "timestamp": meta.get("timestamp", "")
+                            })
                         else:
-                            # Fallback for older snapshots without explicit meta
-                            snap_id = f.replace("snapshot_", "").replace(".json", "")
-                            if snap_id.startswith("eon_"):
-                                eon_num = snap_id.replace("eon_", "")
-                                snapshots.append({
-                                    "id": snap_id,
-                                    "label": f"📷 Fin Eón {eon_num} [Rebote Cuántico]",
-                                    "type": "eon_bounce"
-                                })
-                            else:
-                                snapshots.append({
-                                    "id": snap_id,
-                                    "label": f"💾 Guardado: {snap_id}",
-                                    "type": "manual"
-                                })
+                            label = meta.get("label") or f"💾 Guardado: {snap_id}"
+                            snapshots.append({
+                                "id": str(snap_id),
+                                "label": label,
+                                "type": "manual",
+                                "eon": meta.get("eon"),
+                                "scale_factor": meta.get("scale_factor"),
+                                "timestamp": meta.get("timestamp", "")
+                            })
                 except Exception:
                     pass
-        
-        # Sort by timestamp / id
-        snapshots.sort(key=lambda x: x.get("id", ""), reverse=False)
+
+        def natural_sort_key(item):
+            eon_val = item.get("eon")
+            if eon_val is not None:
+                try:
+                    return (0, int(eon_val), item.get("timestamp", ""))
+                except (ValueError, TypeError):
+                    pass
+            
+            snap_id = str(item.get("id", ""))
+            match = re.search(r'eon_(\d+)', snap_id)
+            if match:
+                return (0, int(match.group(1)), item.get("timestamp", ""))
+            
+            match_man = re.search(r'manual_(\d+)', snap_id)
+            if match_man:
+                return (1, int(match_man.group(1)), item.get("timestamp", ""))
+            
+            return (2, 0, snap_id)
+
+        snapshots.sort(key=natural_sort_key)
         return snapshots
 
     def get_history_csv(self):
@@ -605,6 +648,7 @@ class CosmologicalEngine:
         # CSV Headers
         writer.writerow([
             "Eon",
+            "TransitionMechanism",
             "FinalScaleFactor_a",
             "PeakEntropy_kB",
             "BekensteinLimit_kB",
@@ -618,6 +662,7 @@ class CosmologicalEngine:
         for item in history:
             writer.writerow([
                 item.get("eon"),
+                item.get("transition", "Rebote Cuántico"),
                 item.get("final_scale_factor"),
                 item.get("peak_s_bh"),
                 item.get("s_crit"),
@@ -687,11 +732,14 @@ class CosmologicalEngine:
             json.dump(history, f, indent=2)
 
     def get_history(self):
-        """Reads and returns the list of historical eon records."""
+        """Reads and returns the list of historical eon records with normalized transition names."""
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    history = json.load(f)
+                    for item in history:
+                        item["transition"] = self.normalize_transition_name(item.get("transition"))
+                    return history
             except Exception:
                 return []
         return []

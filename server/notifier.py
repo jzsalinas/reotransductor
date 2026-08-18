@@ -114,6 +114,7 @@ class TelegramNotifier:
             msg = (
                 f"🌌 <b>ALERTA COSMOLÓGICA: EÓN N = {eon} COMPLETADO</b>\n"
                 f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"• <b>Mecanismo:</b> {eon_data.get('transition', 'Rebote Cuántico')}\n"
                 f"• <b>Factor de Escala:</b> a = {eon_data.get('final_scale_factor', 1.0):.3f}\n"
                 f"• <b>Entropía Pico (S_BH):</b> {eon_data.get('peak_s_bh', 0):,} k_B\n"
                 f"• <b>Límite Bekenstein:</b> {eon_data.get('s_crit', 0):,} k_B\n"

@@ -508,17 +508,36 @@ function connectWebSocket() {
 
 connectWebSocket();
 
-// Snapshot List Refresh
+// Snapshot List Refresh with Natural Numeric Sorting
 async function refreshSnapshotList() {
     try {
         const res = await fetch(getAppUrl('api/snapshots?t=' + Date.now()));
         const snapshots = await res.json();
         const currentVal = snapshotSelect.value;
         
+        // Natural numerical sorting: 1, 2, 3, ... 9, 10, 11 ... instead of 1, 10, 11, 2, 20
+        snapshots.sort((a, b) => {
+            const eonA = (typeof a === 'object' && a.eon != null) ? Number(a.eon) : null;
+            const eonB = (typeof b === 'object' && b.eon != null) ? Number(b.eon) : null;
+            if (eonA !== null && eonB !== null && !isNaN(eonA) && !isNaN(eonB) && eonA !== eonB) {
+                return eonA - eonB;
+            }
+            const idA = typeof a === 'object' ? String(a.id || '') : String(a);
+            const idB = typeof b === 'object' ? String(b.id || '') : String(b);
+            return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
         let html = '<option value="live">🔴 EN VIVO</option>';
         snapshots.forEach(item => {
             const id = typeof item === 'object' ? item.id : item;
-            const label = typeof item === 'object' ? item.label : `📷 Eón N = ${item}`;
+            let label = typeof item === 'object' ? item.label : `📷 Eón N = ${item}`;
+            
+            // Normalize legacy transition names on the fly
+            label = label
+                .replace(/\[Transición Conforme CCC \(Muerte Térmica\)\]/g, '[CCC (Muerte Térmica)]')
+                .replace(/\[Rebote Gravitatorio \(Singularidad\)\]/g, '[Rebote Gravitatorio (Túnel Cuántico)]')
+                .replace(/\[Rebote Cuántico\]/g, '[Rebote Gravitatorio (Túnel Cuántico)]');
+
             html += `<option value="${id}">${label}</option>`;
         });
         snapshotSelect.innerHTML = html;
@@ -635,12 +654,13 @@ historyBtn.addEventListener('click', async () => {
         const res = await fetch(getAppUrl('api/history'));
         const data = await res.json();
         if (data.length === 0) {
-            historyTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #94a3b8;">Aún no se ha completado el Eón 1. Los datos históricos se registrarán automáticamente tras el primer rebote cuántico.</td></tr>';
+            historyTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #94a3b8;">Aún no se ha completado el Eón 1. Los datos históricos se registrarán automáticamente tras el primer rebote cuántico.</td></tr>';
             return;
         }
         historyTableBody.innerHTML = data.map(item => `
             <tr>
                 <td><strong>N = ${item.eon}</strong></td>
+                <td><span style="color: ${item.transition && item.transition.includes('CCC') ? 'var(--accent-cyan)' : 'var(--accent-amber)'}; font-weight: 500;">${item.transition || 'Rebote Gravitatorio'}</span></td>
                 <td>${item.final_scale_factor}</td>
                 <td>${item.peak_s_bh.toLocaleString()} k_B</td>
                 <td>${item.s_crit.toLocaleString()} k_B</td>
@@ -652,7 +672,7 @@ historyBtn.addEventListener('click', async () => {
             </tr>
         `).join('');
     } catch (e) {
-        historyTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--accent-rose);">Error al cargar historial.</td></tr>';
+        historyTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--accent-rose);">Error al cargar historial.</td></tr>';
     }
 });
 
