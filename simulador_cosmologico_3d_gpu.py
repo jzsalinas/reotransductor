@@ -317,13 +317,15 @@ def evaluate_bekenstein_trigger_3d(rho_current, tau_current, tau_eon_start, v_x,
     s_bh_eon = float(to_cpu(xp.max(tau_current_eon)))
     tau_bekenstein_crit = ZETA_BEKENSTEIN * max(1.0, (core_mass / 5000.0)**2)
     
-    # Progreso unificado: condensación de masa y saturación entrópica sincronizados
+    # Progreso unificado dual: colapso gravitatorio o dilución asintótica conforme
     p_mass = min(1.0, mass_fraction / 0.18)
     p_entropy = min(1.0, s_bh_eon / max(1.0, tau_bekenstein_crit))
-    tunnel_progress = min(1.0, min(p_mass, p_entropy))
+    p_grav = min(p_mass, p_entropy)
+    p_conformal = max(0.0, min(1.0, (scale_factor - 1.0) / 6.0))
+    tunnel_progress = min(1.0, max(p_grav, p_conformal))
     
-    # En 3D, una concentración del 18%+ de la masa total representa un colapso maduro del núcleo
-    if mass_fraction >= 0.18 and s_bh_eon >= tau_bekenstein_crit:
+    # Disparo por Colapso Gravitatorio Maduro O por Transición Conforme de Penrose (Muerte Térmica a >= 7.0)
+    if (mass_fraction >= 0.18 and s_bh_eon >= tau_bekenstein_crit) or (scale_factor >= 7.0):
         eon += 1
         scale_factor = 1.0
         tau_eon_start = tau_current.copy()

@@ -244,19 +244,35 @@ im_cmb.set_clim(vmin=-2.5, vmax=2.5)
 
 ---
 
-### 3.8. Bekenstein-Hawking Entropy Saturation & Quantum Bounce Trigger
+### 3.8. Dual Cosmological Eon Transitions: Bekenstein Singularity vs. Penrose CCC Conformal Crossover
 
-In Loop Quantum Cosmology (LQC) and Black Hole Thermodynamics, maximum entropy capacity inside a horizon scales with surface area $A \propto M^2$:
+In multieonic cosmology, an eon can culminate through two fundamentally different, physically complementary pathways:
+
+#### Route A: Gravitational Singularity Collapse & Bekenstein Saturation
+When gravity successfully concentrates cosmic matter into a virialized central core ($\rho > 1.0$) exceeding the mass threshold $\mu_{\text{crit}} = 0.18$ (18% of total universe mass), the local black hole entropy saturates the Bekenstein-Hawking bound:
 
 $$S_{\text{BH}}(M_{\text{core}}) = \zeta_{\text{Bekenstein}} \cdot \max\left(1.0, \left(\frac{M_{\text{core}}}{M_0}\right)^2\right)$$
 
-The quantum tunneling progress $\mathcal{P} \in [0, 1]$ unifies gravitational mass condensation ($p_{\text{mass}}$) and entropic saturation ($p_{\text{entropy}}$):
-
 $$p_{\text{mass}} = \min\left(1.0, \frac{M_{\text{core}} / M_{\text{total}}}{\mu_{\text{crit}}}\right), \quad p_{\text{entropy}} = \min\left(1.0, \frac{S_{\text{eon}}}{S_{\text{BH}}(M_{\text{core}})}\right)$$
 
-$$\mathcal{P}_{\text{tunnel}} = \min\left(1.0, \min(p_{\text{mass}}, p_{\text{entropy}})\right)$$
+$$\mathcal{P}_{\text{grav}} = \min(p_{\text{mass}}, p_{\text{entropy}})$$
 
-When $\frac{M_{\text{core}}}{M_{\text{total}}} \ge \mu_{\text{crit}}$ and $S_{\text{eon}} \ge S_{\text{BH}}$, the system reaches critical Planck density and triggers the **White Hole Quantum Bounce** into Eon $N+1$.
+When $\mathcal{P}_{\text{grav}} = 1.0$, the singular core detonates in a local **White Hole Quantum Bounce**.
+
+---
+
+#### Route B: Penrose Conformal Cyclic Cosmology (CCC) Asymptotic Heat-Death Crossover
+In Roger Penrose's Conformal Cyclic Cosmology (CCC), if cosmic expansion dilutes matter before a single dominant core forms ($a \to a_{\text{max}} \ge 7.0$), the universe enters asymptotic thermal heat death ($T \to 2.73\text{ K}$, $\rho \to \bar{\rho}$, $\nabla\Phi \to 0$).
+
+In this asymptotic regime, rest mass scales become irrelevant and conformal symmetry is restored. The cold, infinitely expanded future conformal boundary ($\mathcal{I}^+$) of the old eon mathematically rescales to become the hot, dense past conformal boundary ($\mathcal{I}^-$ / Big Bang) of the new eon.
+
+$$\mathcal{P}_{\text{conformal}} = \max\left(0.0, \min\left(1.0, \frac{a(t) - 1.0}{a_{\text{max}} - 1.0}\right)\right)$$
+
+The unified quantum transition progress $\mathcal{P}_{\text{tunnel}} \in [0, 1]$ harmonizes both pathways:
+
+$$\mathcal{P}_{\text{tunnel}} = \min\left(1.0, \max(\mathcal{P}_{\text{grav}}, \mathcal{P}_{\text{conformal}})\right)$$
+
+$$\text{Trigger Condition: } \left(\frac{M_{\text{core}}}{M_{\text{total}}} \ge 0.18 \;\land\; S_{\text{eon}} \ge S_{\text{crit}}\right) \quad\lor\quad \left(a(t) \ge a_{\text{max}} = 7.0\right)$$
 
 #### Python Implementation:
 ```python
@@ -266,13 +282,18 @@ core_mass = float(np.sum(rho_next[core_mask]))
 mass_fraction = core_mass / max(1.0, total_mass)
 
 s_bh_eon = float(np.max(tau_current_eon))
-tau_bekenstein_crit = ZETA_BEKENSTEIN * max(1.0, (core_mass / M_0)**2)
+tau_bekenstein_crit = ZETA_BEKENSTEIN * max(1.0, (core_mass / M0_CORE)**2)
 
+# Dual Physical Route Progress
 p_mass = min(1.0, mass_fraction / MASS_THRESHOLD)
 p_entropy = min(1.0, s_bh_eon / max(1.0, tau_bekenstein_crit))
-tunnel_progress = min(1.0, min(p_mass, p_entropy))
+p_grav = min(p_mass, p_entropy)
+p_conformal = max(0.0, min(1.0, (scale_factor - 1.0) / (A_MAX_CONFORMAL - 1.0)))
 
-if mass_fraction >= MASS_THRESHOLD and s_bh_eon >= tau_bekenstein_crit:
+tunnel_progress = min(1.0, max(p_grav, p_conformal))
+
+# Trigger bounce upon either mature gravitational collapse OR Penrose conformal heat death
+if (mass_fraction >= MASS_THRESHOLD and s_bh_eon >= tau_bekenstein_crit) or (scale_factor >= A_MAX_CONFORMAL):
     eon += 1
     scale_factor = 1.0
     tau_eon_start = tau_next.copy()
@@ -280,6 +301,19 @@ if mass_fraction >= MASS_THRESHOLD and s_bh_eon >= tau_bekenstein_crit:
     I_next = np.clip((rho_next - 0.5) / 2.5, 0.0, 1.0)
     tunnel_progress = 0.0
 ```
+
+---
+
+### 3.9. Conformal Memory Carrier: The Fossil Time Tensor $\tau(\mathbf{x})$
+
+In standard CCC, information across eons is transmitted via conformal gravitational wave invariants and Hawking points (relics of supermassive black hole evaporation).
+
+In the Reotransductor formulation, the **fossil proper time field $\tau(\mathbf{x})$** acts as this exact conformal memory tensor:
+1. $\tau(\mathbf{x})$ is strictly monotonic ($\partial_t \tau \ge 0$) and is never reset across eons.
+2. When a conformal transition occurs, the spatial gradients and topological peaks of $\tau(\mathbf{x})$ dictate the white hole blast coordinates:
+   $$\mathbf{x}_0 = \begin{cases} \operatorname{argmax}(\rho(\mathbf{x})), & \text{if } \max(\rho) > 1.2 \\ \operatorname{argmax}(\tau(\mathbf{x})), & \text{if asymptotic dilution } (\rho \le 1.2) \end{cases}$$
+3. The smoothed fossil potential $\tau_{\text{smooth}} = \mathcal{F}^{-1}\{\hat{\tau} \cdot e^{-k^2\sigma^2/2}\}$ modulates the primordial perturbation spectrum of the new eon:
+   $$\rho_{\text{primordial}}(\mathbf{x}) = 1.0 + 0.35 \delta\rho_{\text{new}}(\mathbf{x}) + 0.25 \tau_{\text{smooth}}(\mathbf{x}) + \rho_{\text{blast}}(\mathbf{x})$$
 
 ---
 
@@ -294,3 +328,7 @@ Directly injecting astronomical absolute Kelvins ($T \approx 5000\text{ K}$) int
 
 ### 4.3. Continuous Periodic 3-Torus Topology
 Periodic boundary conditions eliminate artificial boundary reflections and simulate an infinite homogeneous universe. FFT gravity and finite difference roll operators maintain exact topological continuity across all six bounding faces.
+
+### 4.4. Heat-Death Resilience and Infinite Autonomous Execution
+Without the Penrose CCC conformal transition, a universe where matter expands without forming an overdense core freezes permanently in thermal equilibrium ($T = 2.73\text{ K}$, $\nabla\Phi = 0$). By establishing the dual transition criterion ($a \ge 7.0$), the simulation is mathematically guaranteed to run perpetually (24/7 autonomous operation) through an infinite sequence of diverse, self-consistent cosmic eons.
+

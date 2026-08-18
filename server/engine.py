@@ -42,6 +42,7 @@ class CosmologicalEngine:
         self.ZETA_BEKENSTEIN = 3500.0
         self.MASS_THRESHOLD = 0.18
         self.M0_CORE = 5000.0
+        self.A_MAX_CONFORMAL = 7.0  # Penrose CCC Asymptotic Heat-Death Conformal Transition Threshold
 
         # Spatial Coordinates & Fourier Mesh
         self.X, self.Y, self.Z = np.meshgrid(
@@ -196,7 +197,11 @@ class CosmologicalEngine:
 
     def _trigger_white_hole_eon_3d(self):
         """Detonates a white hole quantum bounce and initializes the next eon."""
-        x0, y0, z0 = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        # Locate bounce singularity: matter core if formed, or fossil field attractor if asymptotic
+        if np.max(self.rho) > 1.2:
+            x0, y0, z0 = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        else:
+            x0, y0, z0 = np.unravel_index(np.argmax(self.tau), self.tau.shape)
 
         dx = (self.X - x0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0
         dy = (self.Y - y0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0
@@ -318,7 +323,7 @@ class CosmologicalEngine:
         dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - thermal_noise - self.LANDAUER_DECAY * self.I)
         self.I = np.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
 
-        # 8. Bekenstein Quantum Saturation & Eon Bounce Trigger
+        # 8. Bekenstein Quantum Saturation & Eon Bounce Trigger (Dual Physical Route)
         tau_current_eon = self.tau - self.tau_eon_start
         total_mass = float(np.sum(self.rho))
         core_mask = self.rho > 1.0
@@ -328,16 +333,25 @@ class CosmologicalEngine:
         self.s_bh_val = float(np.max(tau_current_eon))
         self.s_crit = self.ZETA_BEKENSTEIN * max(1.0, (core_mass / self.M0_CORE)**2)
 
+        # Route A: Gravitational Singularity / Black Hole Core Condensation
         p_mass = min(1.0, self.mass_frac_val / self.MASS_THRESHOLD)
         p_entropy = min(1.0, self.s_bh_val / max(1.0, self.s_crit))
-        self.progress = min(1.0, min(p_mass, p_entropy))
+        p_grav = min(p_mass, p_entropy)
 
+        # Route B: Penrose Conformal Boundary Transition (Heat-Death Dilution a -> 7.0)
+        p_conformal = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
+
+        self.progress = min(1.0, max(p_grav, p_conformal))
         self.total_steps += 1
 
-        if self.mass_frac_val >= self.MASS_THRESHOLD and self.s_bh_val >= self.s_crit:
-            self._handle_bounce()
+        is_grav_bounce = (self.mass_frac_val >= self.MASS_THRESHOLD and self.s_bh_val >= self.s_crit)
+        is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
-    def _handle_bounce(self):
+        if is_grav_bounce or is_conformal_bounce:
+            transition_type = "Rebote Gravitatorio (Singularidad)" if is_grav_bounce else "Transición Conforme CCC (Muerte Térmica)"
+            self._handle_bounce(transition_type=transition_type)
+
+    def _handle_bounce(self, transition_type="Rebote Cuántico"):
         """Processes transition to next eon, logs history, archives full snapshot, and notifies Telegram."""
         eon_duration_wall = time.time() - self.eon_start_walltime
         eon_steps = self.total_steps - self.last_bounce_step
@@ -346,8 +360,9 @@ class CosmologicalEngine:
         final_snapshot = self.get_visual_payload()
         final_snapshot["snapshot_meta"] = {
             "id": f"eon_{self.eon}",
-            "label": f"📷 Fin Eón {self.eon} [Rebote Cuántico]",
+            "label": f"📷 Fin Eón {self.eon} [{transition_type}]",
             "type": "eon_bounce",
+            "transition": transition_type,
             "eon": self.eon,
             "scale_factor": round(float(self.scale_factor), 3),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
@@ -362,6 +377,7 @@ class CosmologicalEngine:
         # Record History Entry
         history_entry = {
             "eon": self.eon,
+            "transition": transition_type,
             "final_scale_factor": round(float(self.scale_factor), 3),
             "peak_s_bh": round(float(self.s_bh_val), 1),
             "s_crit": round(float(self.s_crit), 1),
@@ -404,16 +420,23 @@ class CosmologicalEngine:
             era_str = "Fase de Inflación Cuántica Primordial"
         elif self.scale_factor < 2.5:
             era_str = "Era de Filamentos y Panqueques 3D"
-        elif self.scale_factor < 7.0:
+        elif self.scale_factor < 5.5:
             era_str = "Era de Fusiones y Acreción 3D"
-        elif self.mass_frac_val >= 0.35:
+        elif self.mass_frac_val >= self.MASS_THRESHOLD:
             era_str = "Era del Agujero Negro Virializado 3D"
         else:
-            era_str = "Fase Asintótica Pre-Rebote 3D"
+            era_str = "Fase Asintótica Pre-Rebote 3D (Límite Conforme CCC)"
 
         redshift = max(0.0, (1.0 / self.scale_factor) - 1.0)
         temp_norm = float(np.percentile(self.T, 99))
         temp_astro = temp_norm * 120.0
+
+        if self.progress >= 0.95:
+            status_banner = "Agujero Blanco 3D / Transición Conforme Inminente"
+        elif self.scale_factor >= 5.5:
+            status_banner = "Dilución Asintótica (Fase Conforme de Penrose)"
+        else:
+            status_banner = "Evolución Hidrodinámica 3D"
 
         return {
             "eon": self.eon,
@@ -433,7 +456,7 @@ class CosmologicalEngine:
             "total_steps": self.total_steps,
             "is_running": self.is_running,
             "steps_per_frame": self.steps_per_frame,
-            "state_status": "Agujero Blanco 3D Inminente" if self.progress >= 0.95 else "Evolución Hidrodinámica 3D"
+            "state_status": status_banner
         }
 
     def get_visual_payload(self):
