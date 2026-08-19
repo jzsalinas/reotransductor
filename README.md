@@ -9,15 +9,25 @@ An open-source computational physics simulation suite and in-silico laboratory e
 
 ---
 
-## Available Simulations
+## Available Simulations & Architecture Scope
 
-| Simulation | File | Description |
-|---|---|---|
-| **24/7 Cosmological Server & Web Dashboard** | [`run_server.py`](run_server.py) | Autonomous headless multi-core engine with automated checkpointing, multi-eon history recorder, and real-time WebSocket Web Dashboard (Dell PowerEdge R820 / Nginx ready). |
-| **3D Cosmological Model (GPU CUDA)** | [`simulador_cosmologico_3d_gpu.py`](simulador_cosmologico_3d_gpu.py) | Desktop GPU-accelerated 3D simulation with CuPy in-VRAM integration, Planck CMB sky projection, and Matplotlib GUI. |
-| **3D Cosmological Model (CPU NumPy)** | [`simulador_cosmologico_3d.py`](simulador_cosmologico_3d.py) | Desktop 3D simulation with pure NumPy, 3D Poisson gravity, Planck CMB sky projection, and Matplotlib GUI. |
-| **2D Cosmological Model** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | 2D cosmological model with cellular time emergence, Bekenstein entropy saturation, White Hole bounce, and fossil memory. |
-| **Core Thermodynamic Rheotransducer** | [`simulador_reotransductor.py`](simulador_reotransductor.py) | Fundamental non-equilibrium thermodynamic simulation with finite boilers, Landauer negentropy decay, and Onsager dissipation. |
+The repository provides a tiered architecture separating rapid conceptual proof-of-concept demonstration from the full production-grade 3D theoretical cosmology framework:
+
+| Tier | Simulation | File | Description |
+|---|---|---|---|
+| **Production / Research** | **24/7 Cosmological Server & Web Dashboard** | [`run_server.py`](run_server.py) | Autonomous headless multi-core 3D engine with Planck 2018 observational pipeline, Hubble tension predictor, automated checkpointing, and real-time WebSocket dashboard. |
+| **Production / Research** | **3D Cosmological Model (GPU CUDA)** | [`simulador_cosmologico_3d_gpu.py`](simulador_cosmologico_3d_gpu.py) | Full 3D first-principles simulation with CuPy in-VRAM acceleration, Poisson gravity on $\mathbb{T}^3$, Spitzer conductivity, and $S^2$ Mollweide celestial sky. |
+| **Production / Research** | **3D Cosmological Model (CPU NumPy)** | [`simulador_cosmologico_3d.py`](simulador_cosmologico_3d.py) | Full 3D first-principles simulation with pure NumPy, 3D Poisson gravity on $\mathbb{T}^3$, Spitzer conductivity, and $S^2$ Mollweide celestial sky. |
+| **Proof of Concept** | **2D Cosmological Demonstrator** | [`simulador_cosmologico.py`](simulador_cosmologico.py) | Interactive 2D Proof-of-Concept for real-time visual exploration of emergent proper time ($\tau$), Bekenstein saturation, and cyclic white-hole bounces at 60 FPS. |
+| **Proof of Concept** | **Core Thermodynamic Rheotransducer** | [`simulador_reotransductor.py`](simulador_reotransductor.py) | Foundational 2D thermodynamic demonstrator showcasing finite energy boilers, Onsager entropy production, and Landauer informational decay. |
+
+### Architectural Clarification: 2D Proof-of-Concept vs. Full 3D Framework
+
+* **2D Proofs-of-Concept (`simulador_cosmologico.py`, `simulador_reotransductor.py`):**
+  Designed as lightweight, interactive visual demonstrators for desktop exploration. Due to fundamental mathematical differences in two spatial dimensions — specifically, logarithmic Poisson gravity ($\Phi \sim \ln r$ per the Ehrenfest theorem), 1D horizon perimeters ($L \propto M$), and 1D circular boundaries ($S^1$) rather than 2D spherical celestial skies ($S^2$) — the 2D scripts utilize calibrated visual parameters optimized for real-time pedagogical exploration.
+
+* **3D Production & Observational Framework (`simulador_cosmologico_3d.py`, `simulador_cosmologico_3d_gpu.py`, `server/engine.py`):**
+  The formal scientific foundation of the project. Implements exact $1/r^2$ Newtonian-Poisson gravity on a 3-Torus ($\mathbb{T}^3$), relativistic monoatomic sound speed ($c_s^2(T) \le c^2/3$), non-linear Spitzer-Braginskii conductivity ($\kappa_{\text{Spitzer}} \propto T^{5/2}/\rho$), quadratic Bekenstein-Hawking area-entropy scaling ($S_{\text{BH}} \propto M^2$), Holographic Phase-Locking in complex Fourier space ($\theta(\mathbf{k})$), and direct empirical validation against the **ESA Planck 2018 Legacy Archive (PR3/PR4)**.
 
 ---
 

@@ -4,14 +4,18 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Slider
 import matplotlib.patches as mpatches
 
+from server.physics_units import CosmologicalUnits
+
 # =====================================================================
-# CONFIGURACIÓN DE PARÁMETROS FÍSICOS
+# CONFIGURACIÓN DE PARÁMETROS FÍSICOS Y UNIDADES FUNDAMENTALES
 # =====================================================================
-GRID_SIZE = 50          # Resolución espacial
-DT = 0.1                # Intervalo temporal estable (CFL)
-DIFFUSION_COEFF = 0.5   # Conductividad térmica (k)
-KAPPA = 50.0            # Constante disipativa de Onsager
-LANDAUER_DECAY = 0.02   # Tasa de decaimiento entrópico de los Índices
+GRID_SIZE = 50          # Resolución espacial de la cuadrícula
+units = CosmologicalUnits(box_size_mpc=100.0, grid_resolution=GRID_SIZE)
+
+DT = units.DT                          # Intervalo temporal estable (CFL)
+KAPPA = units.get_cosmological_effective_kappa()  # Constante disipativa derivada de Planck-Boltzmann
+DIFFUSION_BASE = units.DIFFUSION_BASE  # Conductividad térmica base a T_CMB = 2.73 K
+LANDAUER_BASE = units.LANDAUER_BASE    # Tasa base de borrado de Landauer (k_B T ln 2)
 
 # Reservas iniciales de combustible térmico (Joules de la caldera)
 FUEL_1_INIT = 35000.0   # Caldera 1 (1000 K)
@@ -36,18 +40,21 @@ tau = np.zeros((GRID_SIZE, GRID_SIZE))
 steps_per_frame = 1
 
 # =====================================================================
-# MOTOR FÍSICO CON RECURSOS FINITOS
+# MOTOR FÍSICO CON RECURSOS FINITOS Y PRIMEROS PRINCIPIOS
 # =====================================================================
 def update_physics(T, I, tau):
     global fuel_1, fuel_2
     
-    # a. Conducción de Fourier (Diferencias finitas en volumen interno)
-    laplacian = np.zeros_like(T)
-    laplacian[1:-1, 1:-1] = (
-        T[:-2, 1:-1] + T[2:, 1:-1] +
-        T[1:-1, :-2] + T[1:-1, 2:] - 4 * T[1:-1, 1:-1]
-    )
-    T_next = T + DIFFUSION_COEFF * laplacian * DT
+    # a. Conductividad térmica dinámica de Spitzer-Braginskii kappa(T) ~ T^(5/2)
+    kappa_field = units.compute_spitzer_conductivity(T, rho=1.0)
+    
+    # Conducción de Fourier no-lineal: div(kappa * grad(T))
+    grad_T_y, grad_T_x = np.gradient(T)
+    J_x = -kappa_field * grad_T_x
+    J_y = -kappa_field * grad_T_y
+    div_J = np.gradient(J_x, axis=1) + np.gradient(J_y, axis=0)
+    
+    T_next = np.clip(T - div_J * DT, 2.73, 2000.0)
     
     # b. Inyección y enfriamiento gradual según combustible (Reservorio Lineal)
     # T_caldera(t) = T_base + (T_max - T_base) * (combustible / combustible_inicial)
@@ -70,27 +77,24 @@ def update_physics(T, I, tau):
     # Fronteras frías fijas (Sumidero cósmico a 2.73 K)
     T_next[0, :] = T_next[-1, :] = T_next[:, 0] = T_next[:, -1] = 2.73
     
-    # c. Gradiente inverso y corriente disipativa
+    # c. Gradiente inverso y corriente disipativa de Onsager
     inv_T = 1.0 / T_next
     grad_inv_T_y, grad_inv_T_x = np.gradient(inv_T)
     
-    grad_T_y, grad_T_x = np.gradient(T_next)
-    J_x = -DIFFUSION_COEFF * grad_T_x
-    J_y = -DIFFUSION_COEFF * grad_T_y
-    
-    # d. Velocidad del Reotransductor (Producción de Entropía)
+    # d. Velocidad del Reotransductor (Producción de Entropía sigma = J * grad(1/T))
     d_tau_dt = KAPPA * np.maximum(0.0, (J_x * grad_inv_T_x + J_y * grad_inv_T_y))
     tau_next = tau + d_tau_dt * DT
     
-    # e. Dinámica de Supervivencia de los Índices
+    # e. Dinámica de Supervivencia de los Índices con Decaimiento de Landauer gamma(T)
     energy_flux = np.sqrt(J_x**2 + J_y**2)
     thermal_noise = 0.001 * T_next
     sustenance = 5.0 * energy_flux
+    landauer_decay_field = units.compute_landauer_decay(T_next)
     
     # Solo las estructuras no extintas (I > 0) evolucionan
     mask = I > 0
     delta_I = np.zeros_like(I)
-    delta_I[mask] = (sustenance[mask] - thermal_noise[mask] - LANDAUER_DECAY) * DT
+    delta_I[mask] = (sustenance[mask] - thermal_noise[mask] - landauer_decay_field[mask]) * DT
     I_next = np.clip(I + delta_I, 0.0, 1.0)
     
     return T_next, I_next, tau_next, d_tau_dt
