@@ -2,11 +2,11 @@
 
 ## 1. Abstract and Physical Foundation
 
-The **Reotransductor** is a cosmological and thermodynamic computational framework designed to investigate the emergence of physical time, gravitational collapse, negentropic self-organization, and cyclic universe transitions across successive eons.
+The **Reotransductor** is an exploratory computational simulation suite and theoretical framework (In-Silico Dynamical Laboratory) designed to investigate the emergence of physical time, non-equilibrium Onsager entropy dissipation, Landauer informational limits, and cyclic cosmological phase transitions across successive eons.
 
-In standard relativistic physics, coordinate time $t$ is often treated as an external, absolute parameter. In contrast, the Reotransductor hypothesis posits that **proper linear time $\tau(\mathbf{x}, t)$ is an emergent macroscopic property generated continuously by the local irreversible entropy production rate $\sigma(\mathbf{x}, t)$**. Where irreversible thermodynamic processes occur (gravitational shear, shock compression, thermal dissipation), physical time flows faster; in quiescent cosmic voids, the flow of physical time decelerates asymptotically.
+In standard relativistic physics, coordinate time $t$ is often treated as an external, global parameter. In contrast, the Reotransductor hypothesis explores the proposal that **proper linear time $\tau(\mathbf{x}, t)$ is an emergent macroscopic property generated continuously by the local irreversible entropy production rate $\sigma(\mathbf{x}, t)$**. Where irreversible thermodynamic processes occur (gravitational shear, shock compression, thermal dissipation), physical time flows vigorously; in quiescent cosmic voids, the flow of physical time decelerates asymptotically.
 
-This document details the governing differential equations, thermodynamic relations, quantum gravity bounce triggers, and their exact algorithmic implementation in both two-dimensional and three-dimensional spaces.
+This document details the governing partial differential equations, thermodynamic relations, quantum gravity bounce triggers, dimensional scaling decisions, and the research roadmap for bridging this computational testbed with observational astrophysics.
 
 ---
 
@@ -331,4 +331,41 @@ Periodic boundary conditions eliminate artificial boundary reflections and simul
 
 ### 4.4. Heat-Death Resilience and Infinite Autonomous Execution
 Without the Penrose CCC conformal transition, a universe where matter expands without forming an overdense core freezes permanently in thermal equilibrium ($T = 2.73\text{ K}$, $\nabla\Phi = 0$). By establishing the dual transition criterion ($a \ge 7.0$), the simulation is mathematically guaranteed to run perpetually (24/7 autonomous operation) through an infinite sequence of diverse, self-consistent cosmic eons.
+
+---
+
+## 5. Epistemological Scope, Computational Limitations, and Observational Roadmap
+
+### 5.1. Distinguishing In-Silico Self-Consistency from Empirical Evidence
+In scientific methodology, a clear demarcation exists between a computational dynamical model and observational discovery:
+* **Mathematical Self-Consistency:** The statistical outputs generated across continuous multi-eon runs (such as the observed distribution of 81.5% gravitational bounces vs. 18.5% CCC conformal transitions) demonstrate that the coupled system of partial differential equations (Navier-Stokes, Poisson gravity, Fourier-Onsager dissipation, and Landauer negentropy) possesses well-behaved Lyapunov stability, non-divergent attractors, and numerical closure.
+* **Empirical Status:** These numerical runs represent internal dynamical solutions of the chosen differential operators under periodic boundary conditions. They do not constitute external astronomical confirmation by themselves.
+
+### 5.2. Phenomenological Dimensionless Units (Code Units vs. Fundamental Constants)
+The current simulation parameters ($\kappa = 50.0$, $\lambda_{\text{Landauer}} = 0.015$, $G = 0.04$, $c = 2.5$) represent normalized dimensionless code units (*lattice scale units*). In standard computational fluid dynamics and N-body modeling, code units allow integration without floating-point underflow/overflow:
+* **Dimensionless Mapping:** Coordinate spacing $\Delta x = 1$, time step $\Delta t = 0.05$, and grid domain $L = 32$ normalize the spatial and temporal scales.
+* **Fundamental Derivation Target:** In a fully derived physical theory, $\kappa$ must emerge from fundamental constants ($\hbar, c, G, k_B$). From dimensional analysis:
+  $$\left[\frac{d\tau}{dt}\right] = 1, \quad [\sigma] = \frac{\text{kg}}{\text{m} \cdot \text{s}^3 \cdot \text{K}} \implies [\kappa] = \frac{\text{m} \cdot \text{s}^3 \cdot \text{K}}{\text{kg}}$$
+  The candidate Planck-Boltzmann coupling constant is:
+  $$\kappa_0 \sim \frac{\ell_{\text{Planck}}^3 \cdot t_{\text{Planck}}}{k_B} = \frac{\hbar^2 G^2}{c^7 k_B}$$
+  Future analytical work focuses on formally deriving $\kappa_0$ from the non-reversible stress-energy tensor trace $T^{\mu\nu}_{\text{dissipative}}$.
+
+### 5.3. Falsifiable Hypotheses and Astrophysical Testbeds
+To advance from a phenomenological testbed to an empirically testable theory, the Reotransductor framework proposes specific observable signatures:
+
+#### 1. The Cosmological Hubble Tension ($H_0$ Discrepancy)
+* **Astrophysical Paradox:** Local distance-ladder measurements (Type Ia supernovae in virialized galactic environments where $\sigma > 0$) yield $H_0 \approx 73.0\text{ km/s/Mpc}$, while early-universe CMB sound-horizon measurements (isotropic low-dissipation plasma where $\sigma \approx 0$) yield $H_0 \approx 67.4\text{ km/s/Mpc}$.
+* **Reotransductor Hypothesis:** If local physical time flow $\tau$ accelerates in regions with active gravitational collapse and dissipative thermal gradients ($d\tau/dt = 1 + \kappa\sigma$), standard astronomical clocks embedded in dense galactic potentials naturally record a higher apparent local expansion rate than isotropic background void clocks.
+
+#### 2. CMB Angular Power Spectrum ($C_\ell$) Anisotropies
+* **Observational Test:** Extracting the spherical harmonic multipoles $C_\ell = \frac{1}{2\ell + 1}\sum_m |a_{\ell m}|^2$ from the simulated celestial sphere and comparing low-$\ell$ multipole alignments ($\ell = 2, 3$) against the ESA Planck 2018 Legacy Archive data.
+* **Pre-Inflationary Memory:** Testing whether the non-zero fossil field $\tau(\mathbf{x})$ generates specific anomalous power suppression or parity-violating modes at the largest angular scales ($\theta > 60^\circ$).
+
+#### 3. Concentric Hawking Point Ring Detection
+* **Conformal Boundary Test:** In accordance with Penrose CCC, looking for concentric low-temperature variance circles in CMB temperature maps centered at the focal coordinates of previous-eon supermassive black hole evaporation attractors.
+
+### 5.4. Research and Development Roadmap
+1. **Phase 1 (Theoretical Formulation):** Derivation of the covariant action $S = \int d^4x \sqrt{-g} \left[\frac{R}{16\pi G} + \mathcal{L}_{\text{matter}} + \mathcal{L}_{\tau}(\partial_\mu \tau, \sigma_{\mu\nu})\right]$ in curved spacetime.
+2. **Phase 2 (Observational Pipeline):** Integration of observational FITS loaders (`healpy` / Astropy) to ingest Planck 2018 PR3/PR4 CMB sky maps and Sloan Digital Sky Survey (SDSS) cosmic web matter catalogs.
+3. **Phase 3 (Parameter Estimation):** Execution of Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation to constrain the physical coupling constant $\kappa$ against observational cosmological datasets.
 

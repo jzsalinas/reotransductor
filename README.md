@@ -5,7 +5,7 @@
 [![NumPy](https://img.shields.io/badge/NumPy-2.0+-013243.svg?logo=numpy)](https://numpy.org/)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c.svg)](https://matplotlib.org/)
 
-A suite of physical and numerical simulations exploring the **Active Present Rheotransducer** (*Reotransductor del Presente Activo*) — modeling the emergence of local **thermal time** ($\tau$) driven by Onsager entropy production, non-equilibrium dissipative heat flows, finite energy reservoirs, and Landauer's informational limit.
+An open-source computational physics simulation suite and in-silico laboratory exploring the **Active Present Rheotransducer** (*Reotransductor del Presente Activo*) — modeling the emergence of local **thermal time** ($\tau$) driven by Onsager non-equilibrium entropy production, finite energy reservoirs, Landauer informational limits, and Penrose Conformal Cyclic Cosmology (CCC).
 
 ---
 
@@ -37,7 +37,7 @@ A suite of physical and numerical simulations exploring the **Active Present Rhe
 ## Theoretical Framework & Mathematical Formulation
 
 For the complete, rigorous mathematical derivations, differential equations, and code implementation mapping, see the dedicated document:
-👉 **[Comprehensive Theory and Mathematical Formulation](docs/THEORY_AND_MATHEMATICAL_FORMULATION.md)**
+**[Comprehensive Theory and Mathematical Formulation](docs/THEORY_AND_MATHEMATICAL_FORMULATION.md)**
 
 The project integrates non-equilibrium thermodynamics, gravitational collapse, and information theory across spatial continua:
 
@@ -71,6 +71,11 @@ In standard general relativity, gravitational collapse leads to non-physical mat
 * **Route B — Penrose Conformal Cyclic Cosmology (CCC Heat-Death Crossover)**: In accordance with **Sir Roger Penrose's Conformal Cyclic Cosmology (Nobel Prize 2020)**, if cosmological expansion disperses matter before a singular black hole forms ($a \to a_{\text{max}} \ge 7.0$), the universe dilutes into asymptotic thermal heat death ($T \to 2.73\text{ K}, \nabla\Phi \to 0$). In this scale-invariant conformal regime, the cold future conformal boundary ($\mathcal{I}^+$) seamlessly rescales into the hot Big Bang past boundary ($\mathcal{I}^-$) of Eon $N+1$.
 * **Conformal Memory Carrier ($\tau$)**: While scale factor $a$ and temperature $T$ undergo quantum reheating, the **Rheotransducer proper time field $\tau(\mathbf{x})$ is monotonically preserved across eons**, acting as the conformal memory tensor that seeds future structure formation.
 * **Cosmic Inflation & Causal Speed Limit ($c$)**: Each new eon initiates with a brief **quantum inflationary super-expansion** ($a < 1.05$) that homogeneously stretches primordial perturbation modes across cosmological scales, strictly obeying relativistic causal advection ($\|\mathbf{v}\| \le c$).
+
+### 6. Epistemological Scope & Empirical Research Roadmap
+* **In-Silico Dynamical Testbed:** The numerical runs (including long multi-eon executions) establish the mathematical consistency, Lyapunov stability, and non-divergent closure of the coupled partial differential equations. They are computational experiments, not direct observational discoveries.
+* **Dimensionless Code Units:** Model parameters ($\kappa, \lambda_{\text{Landauer}}, G, c$) operate in normalized lattice units. Future analytical derivations aim to map $\kappa_0 \sim \hbar^2 G^2 / (c^7 k_B)$ to fundamental Planck scales.
+* **Observational Hypotheses:** Proposed testbeds include addressing the **Hubble Tension ($H_0$ discrepancy)** via differential proper time rates in virialized clusters vs. cosmic voids, and evaluating low-$\ell$ multipole alignments in CMB temperature maps against **ESA Planck 2018 Legacy** survey data.
 
 ---
 
