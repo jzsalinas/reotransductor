@@ -21,6 +21,8 @@ def main():
 
     if args.reset:
         os.environ["REOTRANSDUCTOR_FORCE_RESET"] = "1"
+    if args.speed:
+        os.environ["REOTRANSDUCTOR_INITIAL_SPEED"] = str(args.speed)
 
     print("=" * 70)
     print("  🌌 REOTRANSDUCTOR 3D COSMOLOGICAL SERVER (24/7 AUTONOMOUS ENGINE)")

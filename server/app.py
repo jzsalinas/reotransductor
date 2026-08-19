@@ -36,9 +36,15 @@ class TelegramConfigRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
-    # Initialize Engine on Startup (check if reset requested via env)
+    # Initialize Engine on Startup (check if reset or custom speed requested via env)
     force_reset = os.environ.get("REOTRANSDUCTOR_FORCE_RESET", "0") == "1"
-    engine = CosmologicalEngine(checkpoint_dir="checkpoints", auto_resume=not force_reset, force_reset=force_reset)
+    initial_speed = int(os.environ.get("REOTRANSDUCTOR_INITIAL_SPEED", "20"))
+    engine = CosmologicalEngine(
+        checkpoint_dir="checkpoints",
+        auto_resume=not force_reset,
+        force_reset=force_reset,
+        initial_speed=initial_speed
+    )
     
     # Start background physics integration loop
     worker_task = asyncio.create_task(physics_worker())

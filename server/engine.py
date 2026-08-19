@@ -20,8 +20,9 @@ class CosmologicalEngine:
     Executes Navier-Stokes, Poisson Gravity, Onsager Emergent Time, and Bekenstein Quantum Bounce.
     """
 
-    def __init__(self, grid_size=32, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False):
+    def __init__(self, grid_size=32, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20):
         self.grid_size = grid_size
+        self.initial_speed = int(initial_speed)
         self.checkpoint_dir = checkpoint_dir
         self.snapshots_dir = os.path.join(self.checkpoint_dir, "snapshots")
         os.makedirs(self.checkpoint_dir, exist_ok=True)
@@ -95,7 +96,7 @@ class CosmologicalEngine:
 
         # Simulation State
         self.is_running = True
-        self.steps_per_frame = 20
+        self.steps_per_frame = self.initial_speed
         self.total_steps = 0
         self.eon = 1
         self.scale_factor = 1.0
