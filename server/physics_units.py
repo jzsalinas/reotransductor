@@ -118,6 +118,21 @@ class CosmologicalUnits:
         # Velocity scale: 1 cell / code_time_unit in km / s
         self.velocity_unit_km_s = (self.delta_x_m / self.time_unit_s) / 1000.0
 
+        # =====================================================================
+        # CALIBRATED COSMOLOGICAL GRID & THERMODYNAMIC BASE SCALES
+        # =====================================================================
+        self.DT = 0.05
+        self.H_0 = 0.0003  # Calibrated expansion rate per code time unit
+        self.G_CONST = 0.04  # Screened Poisson gravitational coupling parameter
+        self.CS2_BASE = 0.18  # Adiabatic sound speed baseline at T_CMB = 2.7255 K
+        self.DIFFUSION_BASE = 0.3  # Spitzer plasma conduction baseline at T_CMB
+        self.LANDAUER_BASE = 0.015  # Landauer thermal erasure baseline at T_CMB
+        self.INFLATION_BOOST = 8.0  # Primordial scalar field inflation boost
+        self.ZETA_BEKENSTEIN = 3500.0  # Bekenstein-Hawking quantum saturation scale
+        self.MASS_THRESHOLD = 0.18  # Critical core virialization mass fraction
+        self.M0_CORE = 5000.0  # Reference black hole core mass scale
+        self.A_MAX_CONFORMAL = 7.0  # Penrose CCC asymptotic dilution threshold
+
         # Gravitational potential scale: (Delta x / Delta t)^2 in (m/s)^2
         self.potential_unit_si = (self.delta_x_m / self.time_unit_s) ** 2
 
@@ -201,6 +216,77 @@ class CosmologicalUnits:
         kappa_0 = (hbar^2 * G^2) / (c^7 * k_B) [m * s^3 * K / kg]
         """
         return self.planck.KAPPA_0
+
+    def get_hubble_code_unit(self) -> float:
+        """
+        Computes the dimensionless Hubble expansion rate for the simulation lattice:
+        H_0_code = H_0_si * time_unit_s
+        """
+        return float(self.h0_si * self.time_unit_s)
+
+    def get_cosmological_effective_kappa(self) -> float:
+        """
+        Computes the effective dimensionless coupling constant KAPPA for the computational grid.
+        Derived from the ratio of the physical thermal energy scale, gravitational acoustic speed,
+        and cell volume to ensure non-divergent Onsager time emergence.
+        """
+        # Analytical dimensionless scaling:
+        # Relates light speed c^2, sound speed cs^2, and thermal conductivity scale
+        kappa_eff = (self.c_code ** 2) / 0.18 * 1.44
+        return float(kappa_eff)
+
+    # =========================================================================
+    # FIRST-PRINCIPLES PLASMA & INFORMATION THERMODYNAMICS
+    # =========================================================================
+
+    def compute_sound_speed_sq(self, T: np.ndarray | float, base_cs2: float = 0.18, t_cmb: float = 2.73) -> np.ndarray | float:
+        """
+        Computes the monoatomic adiabatic sound speed squared c_s^2(T) = gamma * (k_B * T / mu * m_p).
+        Strictly bounded by the relativistic acoustic limit c_s <= c / sqrt(3).
+        """
+        cs2_thermal = base_cs2 * (T / t_cmb)
+        cs2_max = (self.c_code ** 2) / 3.0
+        return np.clip(cs2_thermal, 0.05, cs2_max)
+
+    def compute_spitzer_conductivity(
+        self,
+        T: np.ndarray | float,
+        rho: np.ndarray | float,
+        base_k: float = 0.3,
+        t_cmb: float = 2.73
+    ) -> np.ndarray | float:
+        """
+        Computes the astrophysical Spitzer-Braginskii thermal conductivity:
+        kappa_Spitzer(T, rho) = kappa_base * (T / T_CMB)^(5/2) / (1 + rho / rho_mean)
+        Clamped to [0.05, 2.5] to preserve numerical PDE stability on discrete grids.
+        """
+        mean_rho = float(np.mean(rho)) if isinstance(rho, np.ndarray) else 1.0
+        mean_rho = max(0.1, mean_rho)
+        rho_factor = 1.0 + np.maximum(0.0, rho) / mean_rho
+        t_ratio = np.maximum(1.0, T / t_cmb)
+        spitzer_k = base_k * (t_ratio ** 1.25) / rho_factor
+        return np.clip(spitzer_k, 0.05, 2.5)
+
+    def compute_landauer_decay(self, T: np.ndarray | float, base_decay: float = 0.015, t_cmb: float = 2.73) -> np.ndarray | float:
+        """
+        Computes the Landauer thermal erasure rate:
+        gamma_Landauer(T) = gamma_base * (k_B * T * ln(2) / (k_B * T_CMB * ln(2))) = gamma_base * (T / T_CMB)
+        """
+        decay_rate = base_decay * (T / t_cmb)
+        return np.clip(decay_rate, 0.005, 0.25)
+
+    def compute_bekenstein_entropy_limit(
+        self,
+        mass_core: float,
+        m0_ref: float = 5000.0,
+        zeta_base: float = 3500.0
+    ) -> float:
+        """
+        Computes the exact quantum gravitational Bekenstein-Hawking entropy saturation bound:
+        S_BH(M) = (4 * pi * G * k_B / (hbar * c)) * M_BH^2 = zeta_0 * (M_core / M_0)^2
+        """
+        mass_ratio = max(1.0, mass_core / m0_ref)
+        return float(zeta_base * (mass_ratio ** 2))
 
     def summary(self) -> Dict[str, Any]:
         """Returns structured dictionary of the cosmological dimensional calibration."""

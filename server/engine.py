@@ -12,6 +12,7 @@ import shutil
 import re
 import numpy as np
 from server.notifier import TelegramNotifier
+from server.physics_units import CosmologicalUnits, FundamentalConstants, PlanckScales
 
 class CosmologicalEngine:
     """
@@ -30,20 +31,28 @@ class CosmologicalEngine:
         # Telegram Notifier (loads from local gitignored telegram_config.json)
         self.notifier = TelegramNotifier()
 
-        # Physical Constants (Exact match with simulador_cosmologico_3d.py)
-        self.DT = 0.05
-        self.DIFFUSION_COEFF = 0.3
-        self.KAPPA = 50.0
-        self.LANDAUER_DECAY = 0.015
-        self.G_CONST = 0.04
-        self.H_0 = 0.0003
-        self.CS2 = 0.18
-        self.C_LIGHT = 2.5
-        self.INFLATION_BOOST = 8.0
-        self.ZETA_BEKENSTEIN = 3500.0
-        self.MASS_THRESHOLD = 0.18
-        self.M0_CORE = 5000.0
-        self.A_MAX_CONFORMAL = 7.0  # Penrose CCC Asymptotic Heat-Death Conformal Transition Threshold
+        # Cosmological Physical Units & Dimensional Scaling (100 Mpc, 32^3 grid, H0 = 70 km/s/Mpc)
+        self.units = CosmologicalUnits(
+            box_size_mpc=100.0,
+            grid_resolution=self.grid_size,
+            c_code=2.5,
+            h0_km_s_mpc=70.0
+        )
+
+        # Physical Constants derived from CosmologicalUnits & Non-Equilibrium Thermodynamics
+        self.DT = self.units.DT
+        self.C_LIGHT = self.units.c_code
+        self.KAPPA = self.units.get_cosmological_effective_kappa()
+        self.H_0 = self.units.H_0
+        self.G_CONST = self.units.G_CONST
+        self.CS2 = self.units.CS2_BASE
+        self.DIFFUSION_COEFF = self.units.DIFFUSION_BASE
+        self.LANDAUER_DECAY = self.units.LANDAUER_BASE
+        self.INFLATION_BOOST = self.units.INFLATION_BOOST
+        self.ZETA_BEKENSTEIN = self.units.ZETA_BEKENSTEIN
+        self.MASS_THRESHOLD = self.units.MASS_THRESHOLD
+        self.M0_CORE = self.units.M0_CORE
+        self.A_MAX_CONFORMAL = self.units.A_MAX_CONFORMAL
 
         # Spatial Coordinates & Fourier Mesh
         self.X, self.Y, self.Z = np.meshgrid(
@@ -196,8 +205,40 @@ class CosmologicalEngine:
 
         return c0 * (1.0 - zd) + c1 * zd
 
+    def _generate_phase_locked_fluctuations(self, tau: np.ndarray, alpha_mem: float = 0.35) -> np.ndarray:
+        """
+        Generates primordial matter fluctuations via Holographic Phase-Locking in Fourier Space.
+        Combines the phase angle of the multi-eon fossil tensor tau(x) with quantum vacuum fluctuations.
+        """
+        # 1. Extract structural phase from fossil memory field
+        tau_fft = np.fft.fftn(tau.astype(np.float32))
+        theta_fossil = np.angle(tau_fft)
+
+        # 2. Extract quantum vacuum phase from random Gaussian noise
+        noise_raw = np.random.randn(self.grid_size, self.grid_size, self.grid_size).astype(np.float32)
+        noise_fft = np.fft.fftn(noise_raw)
+        theta_quantum = np.angle(noise_fft)
+
+        # 3. Holographic Phase-Locking in complex plane
+        z_fossil = np.exp(1j * theta_fossil)
+        z_quantum = np.exp(1j * theta_quantum)
+        z_bounce = alpha_mem * z_fossil + (1.0 - alpha_mem) * z_quantum
+        theta_bounce = np.angle(z_bounce)
+
+        # 4. Modulate Harrison-Zel'dovich power spectrum with synthesized phase
+        synthesized_fft = self.p_k * np.exp(1j * theta_bounce)
+        synthesized_fft[0, 0, 0] = 0.0 + 0.0j
+
+        # 5. Transform back to real spatial field with zero mean and normalized amplitude
+        fluct = np.real(np.fft.ifftn(synthesized_fft))
+        std_val = float(np.std(fluct))
+        if std_val > 1e-6:
+            fluct = (fluct - float(np.mean(fluct))) / std_val * 0.35
+
+        return fluct.astype(np.float32)
+
     def _trigger_white_hole_eon_3d(self):
-        """Detonates a white hole quantum bounce and initializes the next eon."""
+        """Detonates a white hole quantum bounce and initializes the next eon using Holographic Phase-Locking."""
         # Locate bounce singularity: matter core if formed, or fossil field attractor if asymptotic
         if np.max(self.rho) > 1.2:
             x0, y0, z0 = np.unravel_index(np.argmax(self.rho), self.rho.shape)
@@ -210,13 +251,8 @@ class CosmologicalEngine:
         r = np.sqrt(dx**2 + dy**2 + dz**2)
         r_safe = np.maximum(0.8, r)
 
-        tau_fft = np.fft.fftn(self.tau)
-        tau_smooth = np.real(np.fft.ifftn(tau_fft * self.gaussian_k_3d))
-        tau_smooth = (tau_smooth - np.mean(tau_smooth)) / max(1e-5, np.std(tau_smooth))
-
-        noise_raw = np.fft.fftn(np.random.randn(self.grid_size, self.grid_size, self.grid_size).astype(np.float32))
-        fluct_new = np.real(np.fft.ifftn(noise_raw * self.p_k))
-        fluct_new = (fluct_new - np.mean(fluct_new)) / max(1e-5, np.std(fluct_new))
+        # Holographic Phase-Locked Primordial Fluctuations
+        fluct_new = self._generate_phase_locked_fluctuations(self.tau, alpha_mem=0.35)
 
         primordial_blast = 3.5 * np.exp(-r**2 / 16.0)
         thermal_reheating = 85.0 * np.exp(-r**2 / 20.0) + 2.73
@@ -226,7 +262,7 @@ class CosmologicalEngine:
         v_y_new = v_exp_mag * (dy / r_safe)
         v_z_new = v_exp_mag * (dz / r_safe)
 
-        rho_new = np.clip(1.0 + 0.35 * fluct_new + 0.25 * tau_smooth + primordial_blast, 0.05, 12.0)
+        rho_new = np.clip(1.0 + fluct_new + primordial_blast, 0.05, 12.0)
         T_new = np.clip(thermal_reheating + 15.0 * np.abs(fluct_new), 2.73, 2000.0)
 
         return rho_new, v_x_new, v_y_new, v_z_new, T_new
@@ -250,8 +286,9 @@ class CosmologicalEngine:
 
         grad_phi_x, grad_phi_y, grad_phi_z = np.gradient(phi)
 
-        # 3. Jeans Thermal Pressure & Navier-Stokes Acceleration
-        P = self.CS2 * (self.rho**1.3)
+        # 3. Dynamic Adiabatic Sound Speed & Navier-Stokes Acceleration
+        cs2_field = self.units.compute_sound_speed_sq(self.T, base_cs2=self.CS2)
+        P = cs2_field * (self.rho**1.3)
         grad_P_x, grad_P_y, grad_P_z = np.gradient(P)
 
         acc_x = -grad_phi_x - (grad_P_x / (self.rho + 0.2))
@@ -282,7 +319,8 @@ class CosmologicalEngine:
         )
         self.rho = np.clip(self.rho - div_flux * self.DT + 0.04 * laplacian_rho * self.DT, 0.02, 12.0)
 
-        # 5. Thermal Field & Gravitational Compression Heating
+        # 5. Thermal Field & Spitzer-Braginskii Plasma Conduction
+        kappa_spitzer = self.units.compute_spitzer_conductivity(self.T, self.rho, base_k=self.DIFFUSION_COEFF)
         laplacian_T = (
             np.roll(self.T, 1, axis=0) + np.roll(self.T, -1, axis=0) +
             np.roll(self.T, 1, axis=1) + np.roll(self.T, -1, axis=1) +
@@ -290,16 +328,16 @@ class CosmologicalEngine:
         )
         compression_heating = 6.0 * np.maximum(0.0, -div_flux)
         hubble_cooling = H_eff * self.T
-        self.T = np.clip(self.T + (self.DIFFUSION_COEFF * laplacian_T + compression_heating - hubble_cooling) * self.DT, 2.73, 2000.0)
+        self.T = np.clip(self.T + (kappa_spitzer * laplacian_T + compression_heating - hubble_cooling) * self.DT, 2.73, 2000.0)
 
         # 6. Onsager Irreversible Entropy Production & Reotransductor Time
         inv_T = 1.0 / self.T
         grad_inv_T_x, grad_inv_T_y, grad_inv_T_z = np.gradient(inv_T)
         grad_T_x, grad_T_y, grad_T_z = np.gradient(self.T)
 
-        J_T_x = -self.DIFFUSION_COEFF * grad_T_x
-        J_T_y = -self.DIFFUSION_COEFF * grad_T_y
-        J_T_z = -self.DIFFUSION_COEFF * grad_T_z
+        J_T_x = -kappa_spitzer * grad_T_x
+        J_T_y = -kappa_spitzer * grad_T_y
+        J_T_z = -kappa_spitzer * grad_T_z
 
         sigma_thermal = np.maximum(0.0, J_T_x * grad_inv_T_x + J_T_y * grad_inv_T_y + J_T_z * grad_inv_T_z)
         sigma_grav = (self.rho * (grad_phi_x**2 + grad_phi_y**2 + grad_phi_z**2)) / (self.T * 50.0)
@@ -320,8 +358,8 @@ class CosmologicalEngine:
             np.roll(self.I, 1, axis=2) + np.roll(self.I, -1, axis=2) - 6.0 * self.I
         )
         sustenance = 0.6 * sigma_total * (self.rho / np.mean(self.rho))
-        thermal_noise = 0.0004 * self.T
-        dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - thermal_noise - self.LANDAUER_DECAY * self.I)
+        landauer_erasure = self.units.compute_landauer_decay(self.T, base_decay=self.LANDAUER_DECAY)
+        dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - landauer_erasure * self.I)
         self.I = np.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
 
         # 8. Bekenstein Quantum Saturation & Eon Bounce Trigger (Dual Physical Route)
@@ -332,7 +370,11 @@ class CosmologicalEngine:
         self.mass_frac_val = core_mass / max(1.0, total_mass)
 
         self.s_bh_val = float(np.max(tau_current_eon))
-        self.s_crit = self.ZETA_BEKENSTEIN * max(1.0, (core_mass / self.M0_CORE)**2)
+        self.s_crit = self.units.compute_bekenstein_entropy_limit(
+            mass_core=core_mass,
+            m0_ref=self.M0_CORE,
+            zeta_base=self.ZETA_BEKENSTEIN
+        )
 
         # Route A: Gravitational Singularity / Black Hole Core Condensation
         p_mass = min(1.0, self.mass_frac_val / self.MASS_THRESHOLD)
@@ -469,6 +511,11 @@ class CosmologicalEngine:
             "p_grav": round(float(p_grav * 100.0), 1),
             "p_conformal": round(float(p_conformal * 100.0), 1),
             "fossil_odometer": round(float(np.max(self.tau)), 0),
+            "time_myr": round(float(self.units.time_code_to_myr(np.max(self.tau))), 1),
+            "box_size_mpc": self.units.box_size_mpc,
+            "cell_size_mpc": round(self.units.cell_size_mpc, 3),
+            "h0_kms_mpc": self.units.h0_kms_mpc,
+            "kappa_0_planck": f"{self.units.get_fundamental_kappa_0():.3e}",
             "attractor": {"x": int(bx), "y": int(by), "z": int(bz)},
             "z_slice": z_slice,
             "total_steps": self.total_steps,

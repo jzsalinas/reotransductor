@@ -40,19 +40,24 @@ def to_cpu(arr):
     """Convierte arrays de GPU a NumPy para renderizado en Matplotlib."""
     return arr.get() if hasattr(arr, 'get') else arr
 
+from server.physics_units import CosmologicalUnits, FundamentalConstants, PlanckScales
+
 # =====================================================================
 # CONFIGURACIÓN DEL MODELO COSMOLÓGICO 3D Y CONSTANTES ASTROFÍSICAS
 # =====================================================================
 GRID_SIZE = 32              # Resolución de la malla espacial 3D (32 x 32 x 32 = 32,768 celdas)
-DT = 0.05                   # Paso temporal de integración
-DIFFUSION_COEFF = 0.3       # Conductividad térmica del plasma intergaláctico (k)
-KAPPA = 50.0                # Constante de acoplamiento del Reotransductor (κ)
-LANDAUER_DECAY = 0.015      # Tasa de decaimiento entrópico de Landauer (γ)
-G_CONST = 0.04              # Constante de gravitación efectiva 3D normalizada (G)
-H_0 = 0.0003                # Tasa de expansión asintótica de Hubble
-CS2 = 0.18                  # Velocidad del sonido al cuadrado (Presión de Jeans / Estabilización)
-C_LIGHT = 2.5               # Velocidad de la luz y límite causal relativista (v <= c)
-INFLATION_BOOST = 8.0       # Impulso de super-expansión inflacionaria primordial
+units_3d_gpu = CosmologicalUnits(box_size_mpc=100.0, grid_resolution=GRID_SIZE, c_code=2.5, h0_km_s_mpc=70.0)
+
+DT = units_3d_gpu.DT
+C_LIGHT = units_3d_gpu.c_code # Velocidad de la luz y límite causal relativista (v <= c)
+KAPPA = units_3d_gpu.get_cosmological_effective_kappa() # Constante de acoplamiento del Reotransductor derivada
+H_0 = units_3d_gpu.H_0        # Tasa de expansión asintótica de Hubble
+G_CONST = units_3d_gpu.G_CONST # Constante de gravitación efectiva 3D normalizada (G)
+CS2 = units_3d_gpu.CS2_BASE   # Velocidad del sonido base a T_CMB (Presión de Jeans / Estabilización)
+DIFFUSION_COEFF = units_3d_gpu.DIFFUSION_BASE # Conductividad térmica base del plasma intergaláctico
+LANDAUER_DECAY = units_3d_gpu.LANDAUER_BASE   # Tasa de decaimiento entrópico de Landauer base
+INFLATION_BOOST = units_3d_gpu.INFLATION_BOOST # Impulso de super-expansión inflacionaria primordial
+ZETA_BEKENSTEIN = units_3d_gpu.ZETA_BEKENSTEIN # Escala cuántica de Bekenstein-Hawking
 
 # Termodinámica Cósmica Real (Escala Kelvin Astrofísica):
 T_CMB = 2.7255              # Temperatura de fondo cósmico real (Fondo CMB medido por COBE/Planck)
@@ -61,7 +66,6 @@ GAMMA_ADIABATIC = 5.0 / 3.0 # Índice adiabático para plasma monoatómico ideal
 
 # Capacidad holográfica volumétrica 3D calibrada a M0 = 120.0
 M0_3D_CORE = 120.0
-ZETA_BEKENSTEIN = 3500.0
 
 # 1. Espectro de perturbaciones primordiales 3D P(k) ~ k^(-0.75)
 kx_np = 2 * np.pi * np.fft.fftfreq(GRID_SIZE)[:, None, None].astype(np.float32)
@@ -183,10 +187,14 @@ def trigger_white_hole_eon_3d(rho_current, tau_current):
     """
     Transición Agujero Negro -> Agujero Blanco 3D (Rovelli / LQC).
     Expulsa la masa comprimida en una onda de choque esférica tridimensional con
-    inercia cinética de Hubble, recalentamiento térmico primordial y acople a la red fósil tau.
+    inercia cinética de Hubble, recalentamiento térmico primordial y síntesis de fase holográfica tau.
     """
-    max_idx = int(to_cpu(xp.argmax(rho_current)))
-    x0, y0, z0 = np.unravel_index(max_idx, (GRID_SIZE, GRID_SIZE, GRID_SIZE))
+    if float(to_cpu(xp.max(rho_current))) > 1.2:
+        max_idx = int(to_cpu(xp.argmax(rho_current)))
+        x0, y0, z0 = np.unravel_index(max_idx, (GRID_SIZE, GRID_SIZE, GRID_SIZE))
+    else:
+        max_idx = int(to_cpu(xp.argmax(tau_current)))
+        x0, y0, z0 = np.unravel_index(max_idx, (GRID_SIZE, GRID_SIZE, GRID_SIZE))
     
     dx = (X - x0 + GRID_SIZE / 2) % GRID_SIZE - GRID_SIZE / 2
     dy = (Y - y0 + GRID_SIZE / 2) % GRID_SIZE - GRID_SIZE / 2
@@ -194,30 +202,40 @@ def trigger_white_hole_eon_3d(rho_current, tau_current):
     r = xp.sqrt(dx**2 + dy**2 + dz**2)
     r_safe = xp.maximum(0.8, r)
     
-    # 1. Acople fósil isotrópico 3D vía Fourier
-    tau_fft = xp.fft.fftn(tau_current)
-    tau_smooth = xp.real(xp.fft.ifftn(tau_fft * gaussian_k_3d))
-    tau_norm = (tau_smooth - xp.mean(tau_smooth)) / max(1e-4, float(to_cpu(xp.std(tau_smooth))))
-    fossil_fluct = xp.clip(tau_norm * 0.4, -0.8, 0.8)
+    # 1. Síntesis de Fase Holográfica en Espacio de Fourier (Phase-Locking)
+    alpha_mem = 0.35
+    tau_fft = xp.fft.fftn(tau_current.astype(xp.float32))
+    theta_fossil = xp.angle(tau_fft)
     
-    # 2. Nuevas perturbaciones cuánticas primordiales 3D
-    noise_fft_new = xp.fft.fftn(xp.asarray(np.random.randn(GRID_SIZE, GRID_SIZE, GRID_SIZE).astype(np.float32)))
-    fluct_new = xp.real(xp.fft.ifftn(noise_fft_new * p_k))
-    fluct_new = (fluct_new - xp.mean(fluct_new)) / float(to_cpu(xp.std(fluct_new))) * 0.35
+    noise_fft = xp.fft.fftn(xp.asarray(np.random.randn(GRID_SIZE, GRID_SIZE, GRID_SIZE).astype(np.float32)))
+    theta_quantum = xp.angle(noise_fft)
     
-    # 3. Plasma expulsado del Agujero Blanco 3D
+    z_fossil = xp.exp(1j * theta_fossil)
+    z_quantum = xp.exp(1j * theta_quantum)
+    z_bounce = alpha_mem * z_fossil + (1.0 - alpha_mem) * z_quantum
+    theta_bounce = xp.angle(z_bounce)
+    
+    synthesized_fft = p_k * xp.exp(1j * theta_bounce)
+    synthesized_fft[0, 0, 0] = 0.0 + 0.0j
+    
+    fluct_new = xp.real(xp.fft.ifftn(synthesized_fft))
+    std_val = float(to_cpu(xp.std(fluct_new)))
+    if std_val > 1e-6:
+        fluct_new = (fluct_new - xp.mean(fluct_new)) / std_val * 0.35
+    
+    # 2. Plasma expulsado del Agujero Blanco 3D
     core_blast = 1.8 * xp.exp(-(r**2) / 30.0)
     shell_blast = 1.5 * xp.exp(-((r - 9.0)**2) / 18.0)
     
-    rho_new = xp.maximum(0.05, 1.0 + fluct_new + fossil_fluct + core_blast + shell_blast)
+    rho_new = xp.maximum(0.05, 1.0 + fluct_new + core_blast + shell_blast)
     
-    # 4. Velocidades de eyección sublumínica 3D (v <= c)
+    # 3. Velocidades de eyección sublumínica 3D (v <= c)
     v_blast = 1.8 * xp.exp(-((r - 6.0)**2) / 22.0)
     vx_blast = v_blast * (dx / r_safe)
     vy_blast = v_blast * (dy / r_safe)
     vz_blast = v_blast * (dz / r_safe)
     
-    # 5. Recalentamiento Térmico Primordial
+    # 4. Recalentamiento Térmico Primordial
     T_new = 25.0 * (rho_new**0.5) + 35.0
     
     return rho_new, vx_blast, vy_blast, vz_blast, T_new
@@ -246,8 +264,9 @@ def update_cosmology_3d_batch(rho, T, I, tau, v_x, v_y, v_z, scale_factor, steps
         
         grad_phi_x, grad_phi_y, grad_phi_z = grad_3d(phi)
         
-        # c. Gradiente de Presión de Jeans 3D (Polítropo P = CS2 * ρ^1.3)
-        P = CS2 * (rho**1.3)
+        # c. Gradiente de Presión de Jeans 3D con Velocidad del Sonido Adiabática Dinámica
+        cs2_field = xp.clip(CS2 * (T / T_CMB), 0.05, (C_LIGHT**2) / 3.0)
+        P = cs2_field * (rho**1.3)
         grad_P_x, grad_P_y, grad_P_z = grad_3d(P)
         
         # Aceleración neta 3D
@@ -272,20 +291,22 @@ def update_cosmology_3d_batch(rho, T, I, tau, v_x, v_y, v_z, scale_factor, steps
         lap_rho = laplacian_3d(rho)
         rho = xp.clip(rho - div_flux * DT + 0.04 * lap_rho * DT, 0.02, 12.0)
         
-        # e. Evolución térmica 3D: Conducción + Compresión de Choque - Enfriamiento de Hubble
+        # e. Evolución térmica 3D: Conducción de Spitzer + Compresión - Enfriamiento de Hubble
+        mean_rho = xp.maximum(0.1, xp.mean(rho))
+        kappa_spitzer = xp.clip(DIFFUSION_COEFF * (xp.maximum(1.0, T / T_CMB)**1.25) / (1.0 + rho / mean_rho), 0.05, 2.5)
         lap_T = laplacian_3d(T)
         compression_heating = 6.0 * xp.maximum(0.0, -div_flux)
         hubble_cooling = H_eff * T
-        T = xp.clip(T + (DIFFUSION_COEFF * lap_T + compression_heating - hubble_cooling) * DT, 2.73, 2000.0)
+        T = xp.clip(T + (kappa_spitzer * lap_T + compression_heating - hubble_cooling) * DT, 2.73, 2000.0)
         
         # f. Producción de Entropía de Onsager 3D
         inv_T = 1.0 / T
         grad_inv_T_x, grad_inv_T_y, grad_inv_T_z = grad_3d(inv_T)
         grad_T_x, grad_T_y, grad_T_z = grad_3d(T)
         
-        J_T_x = -DIFFUSION_COEFF * grad_T_x
-        J_T_y = -DIFFUSION_COEFF * grad_T_y
-        J_T_z = -DIFFUSION_COEFF * grad_T_z
+        J_T_x = -kappa_spitzer * grad_T_x
+        J_T_y = -kappa_spitzer * grad_T_y
+        J_T_z = -kappa_spitzer * grad_T_z
         
         sigma_thermal = xp.maximum(0.0, J_T_x * grad_inv_T_x + J_T_y * grad_inv_T_y + J_T_z * grad_inv_T_z)
         sigma_grav = (rho * (grad_phi_x**2 + grad_phi_y**2 + grad_phi_z**2)) / (T * 50.0)
@@ -295,12 +316,12 @@ def update_cosmology_3d_batch(rho, T, I, tau, v_x, v_y, v_z, scale_factor, steps
         d_tau_dt = KAPPA * sigma_total
         tau += d_tau_dt * DT
         
-        # h. Campo Informacional Continuo 3D I(r, t)
+        # h. Campo Informacional Continuo 3D I(r, t) con Borrado de Landauer Térmico
         div_flux_I = grad_3d(I * v_x)[0] + grad_3d(I * v_y)[1] + grad_3d(I * v_z)[2]
         lap_I = laplacian_3d(I)
-        sustenance = 0.6 * sigma_total * (rho / xp.mean(rho))
-        thermal_noise = 0.0004 * T
-        dI_dt = -div_flux_I + 0.02 * lap_I + (sustenance - thermal_noise - LANDAUER_DECAY * I)
+        sustenance = 0.6 * sigma_total * (rho / mean_rho)
+        landauer_erasure = xp.clip(LANDAUER_DECAY * (T / T_CMB), 0.005, 0.25)
+        dI_dt = -div_flux_I + 0.02 * lap_I + (sustenance - landauer_erasure * I)
         I = xp.clip(I + dI_dt * DT, 0.0, 1.0)
         
     return rho, T, I, tau, v_x, v_y, v_z, scale_factor, d_tau_dt, phi
@@ -315,7 +336,11 @@ def evaluate_bekenstein_trigger_3d(rho_current, tau_current, tau_eon_start, v_x,
     mass_fraction = core_mass / max(1.0, total_mass)
     
     s_bh_eon = float(to_cpu(xp.max(tau_current_eon)))
-    tau_bekenstein_crit = ZETA_BEKENSTEIN * max(1.0, (core_mass / 5000.0)**2)
+    tau_bekenstein_crit = units_3d_gpu.compute_bekenstein_entropy_limit(
+        mass_core=core_mass,
+        m0_ref=5000.0,
+        zeta_base=ZETA_BEKENSTEIN
+    )
     
     # Progreso unificado dual: colapso gravitatorio o dilución asintótica conforme
     p_mass = min(1.0, mass_fraction / 0.18)

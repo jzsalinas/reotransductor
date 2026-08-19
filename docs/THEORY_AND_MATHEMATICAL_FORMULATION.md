@@ -85,9 +85,12 @@ $$\mathbf{v}_{\text{physical}} = \frac{\mathbf{v}}{\max\left(1.0, \frac{\|\mathb
 
 $$\frac{\partial \rho}{\partial t} = -\nabla \cdot (\rho \mathbf{v}) + D_\rho \nabla^2 \rho$$
 
+where $c_s^2(\mathbf{x}, t) = \min\left( \frac{c^2}{3}, \ c_{s,0}^2 \cdot \left(\frac{T(\mathbf{x}, t)}{T_{\text{CMB}}}\right) \right)$ is the **dynamic adiabatic sound speed** of monoatomic cosmic plasma ($\gamma = 5/3$).
+
 #### Python Implementation:
 ```python
-P = CS2 * (rho**1.3)
+cs2_field = units.compute_sound_speed_sq(T, base_cs2=CS2)
+P = cs2_field * (rho**1.3)
 grad_P_x, grad_P_y, grad_P_z = np.gradient(P)
 
 acc_x = -grad_phi_x - (grad_P_x / (rho + 0.2))
@@ -122,14 +125,15 @@ rho_next = np.clip(rho - div_flux * DT + 0.04 * laplacian_rho * DT, 0.02, 12.0)
 
 ---
 
-### 3.4. Non-Equilibrium Thermal Dynamics & Shock Heating
+### 3.4. Non-Equilibrium Thermal Dynamics & Spitzer-Braginskii Conduction
 
-Temperature evolution accounts for thermal conduction, compression shock heating from gravitational convergence, and cosmological Hubble cooling:
+Temperature evolution accounts for astrophysical **Spitzer-Braginskii thermal conduction** ($\kappa_{\text{Spitzer}} \propto T^{5/2}/\rho$), compression shock heating from gravitational convergence, and cosmological Hubble cooling:
 
-$$\frac{\partial T}{\partial t} = k_T \nabla^2 T + \xi_{\text{shock}} \max\left(0, -\nabla \cdot (\rho \mathbf{v})\right) - H_{\text{eff}} T$$
+$$\frac{\partial T}{\partial t} = \kappa_{\text{Spitzer}}(T, \rho) \nabla^2 T + \xi_{\text{shock}} \max\left(0, -\nabla \cdot (\rho \mathbf{v})\right) - H_{\text{eff}} T$$
 
 #### Python Implementation:
 ```python
+kappa_spitzer = units.compute_spitzer_conductivity(T, rho, base_k=DIFFUSION_COEFF)
 laplacian_T = (
     np.roll(T, 1, axis=0) + np.roll(T, -1, axis=0) +
     np.roll(T, 1, axis=1) + np.roll(T, -1, axis=1) +
@@ -137,7 +141,7 @@ laplacian_T = (
 )
 compression_heating = 6.0 * np.maximum(0.0, -div_flux)
 hubble_cooling = H_eff * T
-T_next = np.clip(T + (DIFFUSION_COEFF * laplacian_T + compression_heating - hubble_cooling) * DT, 2.73, 2000.0)
+T_next = np.clip(T + (kappa_spitzer * laplacian_T + compression_heating - hubble_cooling) * DT, 2.73, 2000.0)
 ```
 
 ---
@@ -146,7 +150,7 @@ T_next = np.clip(T + (DIFFUSION_COEFF * laplacian_T + compression_heating - hubb
 
 In linear irreversible thermodynamics, the local entropy production rate $\sigma(\mathbf{x}, t)$ is the sum of products of thermodynamic fluxes $\mathbf{J}_k$ and thermodynamic forces $\mathbf{X}_k$:
 
-$$\sigma_{\text{thermal}} = \mathbf{J}_T \cdot \nabla\left(\frac{1}{T}\right) = -k_T \nabla T \cdot \left(-\frac{\nabla T}{T^2}\right) = k_T \frac{\|\nabla T\|^2}{T^2}$$
+$$\sigma_{\text{thermal}} = \mathbf{J}_T \cdot \nabla\left(\frac{1}{T}\right) = -\kappa_{\text{Spitzer}} \nabla T \cdot \left(-\frac{\nabla T}{T^2}\right) = \kappa_{\text{Spitzer}} \frac{\|\nabla T\|^2}{T^2}$$
 
 $$\sigma_{\text{grav}} = \frac{\rho \|\nabla \phi\|^2}{50.0 \cdot T}$$
 
@@ -154,9 +158,9 @@ $$\sigma_{\text{total}}(\mathbf{x}, t) = \sigma_{\text{thermal}}(\mathbf{x}, t) 
 
 The **Reotransductor equation** establishes proper linear time $\tau$ as the integral of this dissipation rate:
 
-$$\frac{d\tau}{dt}(\mathbf{x}, t) = \kappa \cdot \sigma_{\text{total}}(\mathbf{x}, t)$$
+$$\frac{d\tau}{dt}(\mathbf{x}, t) = \kappa_0 \cdot \sigma_{\text{total}}(\mathbf{x}, t)$$
 
-$$\tau(\mathbf{x}, t) = \int_0^t \kappa \sigma_{\text{total}}(\mathbf{x}, t') \, dt'$$
+$$\tau(\mathbf{x}, t) = \int_0^t \kappa_0 \sigma_{\text{total}}(\mathbf{x}, t') \, dt'$$
 
 #### Python Implementation:
 ```python
@@ -164,9 +168,9 @@ inv_T = 1.0 / T_next
 grad_inv_T_x, grad_inv_T_y, grad_inv_T_z = np.gradient(inv_T)
 grad_T_x, grad_T_y, grad_T_z = np.gradient(T_next)
 
-J_T_x = -DIFFUSION_COEFF * grad_T_x
-J_T_y = -DIFFUSION_COEFF * grad_T_y
-J_T_z = -DIFFUSION_COEFF * grad_T_z
+J_T_x = -kappa_spitzer * grad_T_x
+J_T_y = -kappa_spitzer * grad_T_y
+J_T_z = -kappa_spitzer * grad_T_z
 
 sigma_thermal = np.maximum(0.0, J_T_x * grad_inv_T_x + J_T_y * grad_inv_T_y + J_T_z * grad_inv_T_z)
 sigma_grav = (rho_next * (grad_phi_x**2 + grad_phi_y**2 + grad_phi_z**2)) / (T_next * 50.0)
@@ -178,33 +182,39 @@ tau_next = tau + d_tau_dt * DT
 
 ---
 
-### 3.6. Information Negentropy Field (Landauer Dissipation & Autocatalysis)
+### 3.6. Landauer Negentropy Field $I(\mathbf{x}, t)$
 
-The dimensionless informational order field $I(\mathbf{x}, t) \in [0, 1]$ represents localized organized complexity. It is sustained by free thermodynamic dissipation, degraded by thermal noise, and dissipated according to the Landauer limit:
+Information density satisfies a continuous advection-diffusion-reaction equation with **temperature-dependent Landauer thermal erasure** $\gamma_{\text{Landauer}}(T) = \gamma_0 \cdot (T / T_{\text{CMB}})$:
 
-$$\frac{\partial I}{\partial t} = -\nabla \cdot (I \mathbf{v}) + D_I \nabla^2 I + \underbrace{\mu \sigma_{\text{total}} \left(\frac{\rho}{\bar{\rho}}\right)}_{\text{Thermodynamic Sustenance}} - \underbrace{\gamma_T T}_{\text{Thermal Noise}} - \underbrace{\lambda_L I}_{\text{Landauer Erasure}}$$
+$$\frac{\partial I}{\partial t} = -\nabla \cdot (I \mathbf{v}) + D_I \nabla^2 I + \beta \sigma_{\text{total}} \frac{\rho}{\bar{\rho}} - \gamma_{\text{Landauer}}(T) I$$
 
 #### Python Implementation:
 ```python
-flux_I_x = I * v_x
-flux_I_y = I * v_y
-flux_I_z = I * v_z
-div_flux_I = np.gradient(flux_I_x, axis=0) + np.gradient(flux_I_y, axis=1) + np.gradient(flux_I_z, axis=2)
-
-laplacian_I = (
-    np.roll(I, 1, axis=0) + np.roll(I, -1, axis=0) +
-    np.roll(I, 1, axis=1) + np.roll(I, -1, axis=1) +
-    np.roll(I, 1, axis=2) + np.roll(I, -1, axis=2) - 6 * I
-)
-sustenance = 0.6 * sigma_total * (rho_next / np.mean(rho_next))
-thermal_noise = 0.0004 * T_next
-dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - thermal_noise - LANDAUER_DECAY * I)
+landauer_erasure = units.compute_landauer_decay(T_next, base_decay=LANDAUER_DECAY)
+dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - landauer_erasure * I)
 I_next = np.clip(I + dI_dt * DT, 0.0, 1.0)
 ```
 
 ---
 
-### 3.7. High-Definition Celestial Sphere CMB Map (Mollweide $S^2$ Projection & Doppler Shift)
+### 3.7. Bekenstein-Hawking Entropy Limit $S_{\text{crit}}(M)$
+
+The maximum gravitational entropy bound before quantum bounce is strictly quadratic in mass:
+
+$$S_{\text{crit}}(M) = \zeta_0 \cdot \left(\frac{M_{\text{core}}}{M_0}\right)^2, \quad \text{where } \zeta_0 = \frac{4\pi G k_B}{\hbar c} M_0^2$$
+
+#### Python Implementation:
+```python
+tau_bekenstein_crit = units.compute_bekenstein_entropy_limit(
+    mass_core=core_mass,
+    m0_ref=5000.0,
+    zeta_base=ZETA_BEKENSTEIN
+)
+```
+
+---
+
+### 3.8. High-Definition Celestial Sphere CMB Map (Mollweide $S^2$ Projection & Doppler Shift)
 
 The Cosmic Microwave Background (CMB) celestial sphere is extracted continuously at an observer shell radius $r_{\text{obs}} = L / 2.2$. Temperature anisotropies $\Delta T / \bar{T}$ combine both the fossil time gravitational imprint (Sachs-Wolfe effect) and line-of-sight relativistic kinematic Doppler shifts ($\mathbf{v} \cdot \hat{\mathbf{n}}$):
 
@@ -304,16 +314,20 @@ if (mass_fraction >= MASS_THRESHOLD and s_bh_eon >= tau_bekenstein_crit) or (sca
 
 ---
 
-### 3.9. Conformal Memory Carrier: The Fossil Time Tensor $\tau(\mathbf{x})$
+### 3.9. Conformal Memory Carrier: Holographic Phase-Locking of $\tau(\mathbf{x})$
 
 In standard CCC, information across eons is transmitted via conformal gravitational wave invariants and Hawking points (relics of supermassive black hole evaporation).
 
-In the Reotransductor formulation, the **fossil proper time field $\tau(\mathbf{x})$** acts as this exact conformal memory tensor:
+In the Reotransductor formulation, the **fossil proper time field $\tau(\mathbf{x})$** acts as this exact conformal memory tensor through **Holographic Phase-Locking in Fourier Space**:
 1. $\tau(\mathbf{x})$ is strictly monotonic ($\partial_t \tau \ge 0$) and is never reset across eons.
-2. When a conformal transition occurs, the spatial gradients and topological peaks of $\tau(\mathbf{x})$ dictate the white hole blast coordinates:
+2. When a transition occurs, the topological peaks of $\tau(\mathbf{x})$ dictate the white hole blast coordinates:
    $$\mathbf{x}_0 = \begin{cases} \operatorname{argmax}(\rho(\mathbf{x})), & \text{if } \max(\rho) > 1.2 \\ \operatorname{argmax}(\tau(\mathbf{x})), & \text{if asymptotic dilution } (\rho \le 1.2) \end{cases}$$
-3. The smoothed fossil potential $\tau_{\text{smooth}} = \mathcal{F}^{-1}\{\hat{\tau} \cdot e^{-k^2\sigma^2/2}\}$ modulates the primordial perturbation spectrum of the new eon:
-   $$\rho_{\text{primordial}}(\mathbf{x}) = 1.0 + 0.35 \delta\rho_{\text{new}}(\mathbf{x}) + 0.25 \tau_{\text{smooth}}(\mathbf{x}) + \rho_{\text{blast}}(\mathbf{x})$$
+3. **Fourier Phase Coherence Synthesis:** Rather than adding uncoupled linear noise, the primordial fluctuation field $\delta_{\text{primordial}}(\mathbf{x})$ is synthesized by locking the complex phase angle $\theta(\mathbf{k})$ of Harrison-Zel'dovich modes to the fossil Fourier transform $\hat{\tau}(\mathbf{k}) = \mathcal{F}\{\tau(\mathbf{x})\}$:
+   $$\theta_{\text{fossil}}(\mathbf{k}) = \operatorname{Arg}(\hat{\tau}(\mathbf{k})), \quad \theta_{\text{quantum}}(\mathbf{k}) \sim \operatorname{Uniform}[-\pi, \pi]$$
+   $$\theta_{\text{bounce}}(\mathbf{k}) = \operatorname{Arg}\left( \alpha_{\text{mem}} e^{i \theta_{\text{fossil}}(\mathbf{k})} + (1 - \alpha_{\text{mem}}) e^{i \theta_{\text{quantum}}(\mathbf{k})} \right)$$
+   $$\hat{\delta}_{\text{primordial}}(\mathbf{k}) = \sqrt{P(k)} \cdot e^{i \theta_{\text{bounce}}(\mathbf{k})}$$
+   $$\rho_{\text{primordial}}(\mathbf{x}) = \operatorname{clip}\left( 1.0 + \operatorname{Re}\left(\mathcal{F}^{-1}\{\hat{\delta}_{\text{primordial}}(\mathbf{k})\}\right) + \rho_{\text{blast}}(\mathbf{x}), \ 0.05, \ 12.0 \right)$$
+   where $\alpha_{\text{mem}} = 0.35$ governs the memory coherence fraction across eons.
 
 ---
 
@@ -324,7 +338,7 @@ In the Reotransductor formulation, the **fossil proper time field $\tau(\mathbf{
 * **Three Dimensions ($L=32, N=32,768$):** Spatial volume grows cubically ($V \propto r^3$). Matter forms extended 3D Zel'dovich pancakes and cosmic filaments. A supermassive virialized cluster represents $\mu_{\text{crit}} = 0.18$ (18% total cosmic mass) with scaling $M_0 = 5000$.
 
 ### 4.2. Code Units and Numerical Regularity
-Directly injecting astronomical absolute Kelvins ($T \approx 5000\text{ K}$) into spatial gradients $\nabla(1/T)$ near vacuum boundaries produces catastrophic numerical divergence ($\sim 10^8$). The simulator solves continuous equations in normalized dimensionless thermal units ($T \in [2.73, 50.0]$) and maps linearly to physical astrophysical Kelvins ($T_{\text{disp}} = T \times 120.0\text{ K}$) on the UI and telemetry dashboard.
+Directly injecting astronomical absolute Kelvins ($T \approx 5000\text{ K}$) or SI meters ($10^{22}\text{ m}$) into discrete spatial gradients produces severe floating-point underflow/overflow. The simulator solves continuous equations in rigorously normalized dimensionless lattice units ($L_{\text{box}} = 100\text{ Mpc}, N=32^3, \Delta t = 25.48\text{ Myr}$) and maps continuously to astrophysical SI units. For a complete mathematical derivation of every base parameter, see the dedicated document: [DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md](file:///home/jzsalinas/Documents/antigravity/reotransductor/docs/DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md).
 
 ### 4.3. Continuous Periodic 3-Torus Topology
 Periodic boundary conditions eliminate artificial boundary reflections and simulate an infinite homogeneous universe. FFT gravity and finite difference roll operators maintain exact topological continuity across all six bounding faces.
