@@ -156,11 +156,23 @@ reotransductor/
 │   ├── DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md # Physical justification of code units & scales
 │   ├── SERVER_DEPLOYMENT.md        # 24/7 Server deployment guide (Dell R820, systemd, Nginx)
 │   └── THEORY_AND_MATHEMATICAL_FORMULATION.md # Complete physical foundations and equations
+├── observational/
+│   ├── __init__.py
+│   ├── planck_data.py              # ESA Planck 2018 Legacy Archive TT spectrum loader
+│   ├── cmb_analyzer.py             # S^2 Spherical harmonics decomposition (C_ell) & Mollweide maps
+│   ├── hubble_tension.py           # Dissipative time dilation & H_0 tension resolution predictor
+│   └── compare_planck.py           # Observational CLI and publication comparison plotting
 ├── server/
 │   ├── __init__.py
 │   ├── engine.py                   # Autonomous headless physics engine with auto-checkpointing
+│   ├── physics_units.py            # Rigorous physical units & first-principles thermodynamic scales
 │   ├── app.py                      # FastAPI server with WebSocket real-time streaming hub
 │   └── static/                     # Web Dashboard frontend (HTML5, CSS3, ES6 Canvas/WebGL)
+├── tests/
+│   ├── test_first_principles.py    # Unit tests for plasma conduction, sound speed, Landauer decay
+│   ├── test_observational.py       # Unit tests for spherical harmonics, Planck data, Hubble tension
+│   ├── test_phase_locking.py       # Unit tests for holographic Fourier phase-locking
+│   └── test_physics_units.py       # Unit tests for dimensional conversion scales
 ├── run_server.py                   # 24/7 Server entrypoint
 ├── simulador_cosmologico_3d_gpu.py # Desktop 3D GPU CUDA simulator
 ├── simulador_cosmologico_3d.py     # Desktop 3D CPU NumPy simulator

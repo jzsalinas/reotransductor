@@ -417,6 +417,14 @@ class CosmologicalEngine:
         except Exception:
             pass
 
+        # Generate Observational Reports (CMB Mollweide Map + Planck Power Spectrum)
+        observational_metrics = {}
+        try:
+            from observational.compare_planck import generate_eon_observational_report
+            observational_metrics = generate_eon_observational_report(self, output_dir=self.snapshots_dir)
+        except Exception as ex:
+            observational_metrics = {"error": str(ex)}
+
         # Record History Entry
         history_entry = {
             "eon": self.eon,
@@ -428,7 +436,8 @@ class CosmologicalEngine:
             "fossil_odometer_total": round(float(np.max(self.tau)), 1),
             "eon_steps": eon_steps,
             "walltime_seconds": round(eon_duration_wall, 1),
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "observational": observational_metrics
         }
         self._append_history(history_entry)
 

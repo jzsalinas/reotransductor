@@ -379,7 +379,8 @@ To advance from a phenomenological testbed to an empirically testable theory, th
 * **Conformal Boundary Test:** In accordance with Penrose CCC, looking for concentric low-temperature variance circles in CMB temperature maps centered at the focal coordinates of previous-eon supermassive black hole evaporation attractors.
 
 ### 5.4. Research and Development Roadmap
-1. **Phase 1 (Theoretical Formulation):** Derivation of the covariant action $S = \int d^4x \sqrt{-g} \left[\frac{R}{16\pi G} + \mathcal{L}_{\text{matter}} + \mathcal{L}_{\tau}(\partial_\mu \tau, \sigma_{\mu\nu})\right]$ in curved spacetime.
-2. **Phase 2 (Observational Pipeline):** Integration of observational FITS loaders (`healpy` / Astropy) to ingest Planck 2018 PR3/PR4 CMB sky maps and Sloan Digital Sky Survey (SDSS) cosmic web matter catalogs.
-3. **Phase 3 (Parameter Estimation):** Execution of Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation to constrain the physical coupling constant $\kappa$ against observational cosmological datasets.
+1. **Phase 1 (Theoretical Formulation - COMPLETED):** Derivation of the physical coupling constant $\kappa_0 = \hbar^2 G^2 / (c^7 k_B)$ and first-principles plasma kinetics (Spitzer conduction, adiabatic sound speed, Landauer dissipation, Bekenstein horizon limit).
+2. **Phase 2 (Phase-Locking Synthesis - COMPLETED):** Synthesis of primordial fluctuations $\delta(\mathbf{k})$ via Holographic Phase-Locking in complex Fourier space across cosmic eons.
+3. **Phase 3 (Observational Pipeline - COMPLETED):** Ingestion of official ESA Planck 2018 Legacy Archive data (`observational/planck_data.py`), spherical harmonics decomposition $C_\ell, D_\ell$ on $S^2$ (`observational/cmb_analyzer.py`), Mollweide projection mapping, and Hubble tension quantitative evaluation (`observational/hubble_tension.py`).
+4. **Phase 4 (Scientific Manuscript - IN PROGRESS):** Formal manuscript preparation in Markdown/LaTeX format for publication and Overleaf integration.
 
