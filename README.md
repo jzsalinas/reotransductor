@@ -154,6 +154,7 @@ reotransductor/
 │   └── preview_cosmology_3d.png    # 3D Cosmological simulation snapshot
 ├── docs/
 │   ├── DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md # Physical justification of code units & scales
+│   ├── MATHEMATICAL_GENEALOGY_AND_THEORETICAL_LINEAGE.md # Complete historical & theoretical derivation tree
 │   ├── SERVER_DEPLOYMENT.md        # 24/7 Server deployment guide (Dell R820, systemd, Nginx)
 │   └── THEORY_AND_MATHEMATICAL_FORMULATION.md # Complete physical foundations and equations
 ├── observational/
