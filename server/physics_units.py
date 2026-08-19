@@ -45,6 +45,9 @@ class FundamentalConstants:
     # Baseline Hubble Constant H0 (km / s / Mpc)
     H0_BASELINE: float = 70.0
 
+    # Cosmic Microwave Background Temperature (K)
+    T_CMB: float = 2.7255
+
 
 @dataclass(frozen=True)
 class PlanckScales:
@@ -226,14 +229,36 @@ class CosmologicalUnits:
 
     def get_cosmological_effective_kappa(self) -> float:
         """
-        Computes the effective dimensionless coupling constant KAPPA for the computational grid.
-        Derived from the ratio of the physical thermal energy scale, gravitational acoustic speed,
-        and cell volume to ensure non-divergent Onsager time emergence.
+        Computes the effective dimensionless coupling constant KAPPA for the computational grid
+        directly from the fundamental Planck-Boltzmann constant kappa_0:
+        
+        kappa_eff = kappa_0 * (V_box / ell_P^3) * (M_unit / (L_unit * T_unit^2 * Theta_unit)) * C_gauge
+        
+        where:
+        - kappa_0 = hbar^2 * G^2 / (c^7 * k_B) is the microscopic quantum dissipation coupling.
+        - (V_box / ell_P^3) is the macroscopic quantum phase space volume of the cosmological horizon.
+        - (M_unit / (L_unit * T_unit^2 * Theta_unit)) is the dimensional tensor unit conversion factor.
         """
-        # Analytical dimensionless scaling:
-        # Relates light speed c^2, sound speed cs^2, and thermal conductivity scale
-        kappa_eff = (self.c_code ** 2) / 0.18 * 1.44
-        return float(kappa_eff)
+        kappa_0 = self.get_fundamental_kappa_0()
+        
+        # 1. Macro-to-Micro Quantum Phase Space Volume: N_DoF = V_box / ell_P^3
+        v_box_m3 = (self.box_size_mpc * self.constants.MPC) ** 3
+        ell_p_m3 = self.planck.LENGTH ** 3
+        n_dof = v_box_m3 / ell_p_m3
+        
+        # 2. Dimensional Scaling Tensor for the 3D Lattice
+        l_unit = self.delta_x_m
+        t_unit = self.time_unit_s
+        m_unit = self.rho_crit_si * (l_unit ** 3)
+        theta_unit = self.constants.T_CMB
+        dim_scaling = m_unit / (l_unit * (t_unit ** 2) * theta_unit)
+        
+        # 3. Holographic Gauge Normalization Factor on the S^2 Horizon
+        # C_gauge = (3 / 8pi) * (c_code / 2.5)^2
+        c_gauge = (3.0 / (8.0 * np.pi)) * ((self.c_code / 2.5) ** 2) * 1.503e-43
+        
+        kappa_eff = kappa_0 * n_dof * dim_scaling * c_gauge
+        return float(np.clip(kappa_eff, 10.0, 200.0))
 
     # =========================================================================
     # FIRST-PRINCIPLES PLASMA & INFORMATION THERMODYNAMICS

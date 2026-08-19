@@ -61,20 +61,16 @@ p_k[0, 0, 0] = 0.0
 sigma_g = 2.2
 gaussian_k_3d = np.exp(-0.5 * k2 * (sigma_g**2)).astype(np.float32)
 
-np.random.seed(42)
+# 3D Cartesian Coordinate Grids for Spatial Advection & Bounces
 X, Y, Z = np.meshgrid(np.arange(GRID_SIZE), np.arange(GRID_SIZE), np.arange(GRID_SIZE), indexing='ij')
 
+# Primordial Gaussian Random Field (GRF) with scale-invariant Harrison-Zel'dovich power spectrum P(k)
 noise_fft = np.fft.fftn(np.random.randn(GRID_SIZE, GRID_SIZE, GRID_SIZE).astype(np.float32))
-fluct = np.real(np.fft.ifftn(noise_fft * p_k))
-fluct = (fluct - np.mean(fluct)) / np.std(fluct) * 0.35
+fluct = np.real(np.fft.ifftn(noise_fft * np.sqrt(p_k)))
+fluct = (fluct - np.mean(fluct)) / max(1e-4, np.std(fluct)) * 0.45
 
-# Semillas gaussianas 3D para el Eón 1:
-seed_A = 2.8 * np.exp(-((X - 16.0)**2 + (Y - 16.0)**2 + (Z - 16.0)**2) / 18.0)
-seed_B = 1.9 * np.exp(-((X - 24.0)**2 + (Y - 8.0)**2 + (Z - 20.0)**2) / 12.0)
-void_C = -0.6 * np.exp(-((X - 8.0)**2 + (Y - 24.0)**2 + (Z - 8.0)**2) / 22.0)
-
-# Estado primordial inicial del Eón 1
-rho = np.maximum(0.05, 1.0 + fluct + seed_A + seed_B + void_C).astype(np.float32)
+# Organic primordial matter density field: rho_mean = 1.0 + delta_rho(k)
+rho = np.maximum(0.05, 1.0 + fluct).astype(np.float32)
 T = 12.0 * (rho**0.5) + 2.73
 I = np.clip((rho - 0.5) / 2.5, 0.0, 1.0).astype(np.float32)
 tau = np.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), dtype=np.float32)

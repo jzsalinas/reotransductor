@@ -117,16 +117,13 @@ class CosmologicalEngine:
 
     def _init_primordial_state(self):
         """Initializes primordial cosmological fields identically to local 3D simulator."""
-        np.random.seed(42)
+        # Primordial Gaussian Random Field (GRF) with scale-invariant Harrison-Zel'dovich power spectrum P(k)
         noise_fft = np.fft.fftn(np.random.randn(self.grid_size, self.grid_size, self.grid_size).astype(np.float32))
-        fluct = np.real(np.fft.ifftn(noise_fft * self.p_k))
-        fluct = (fluct - np.mean(fluct)) / np.std(fluct) * 0.35
+        fluct = np.real(np.fft.ifftn(noise_fft * np.sqrt(self.p_k)))
+        fluct = (fluct - np.mean(fluct)) / max(1e-4, np.std(fluct)) * 0.45
 
-        seed_A = 2.8 * np.exp(-((self.X - 16.0)**2 + (self.Y - 16.0)**2 + (self.Z - 16.0)**2) / 18.0)
-        seed_B = 1.9 * np.exp(-((self.X - 24.0)**2 + (self.Y - 8.0)**2 + (self.Z - 20.0)**2) / 12.0)
-        void_C = -0.6 * np.exp(-((self.X - 8.0)**2 + (self.Y - 24.0)**2 + (self.Z - 8.0)**2) / 22.0)
-
-        self.rho = np.maximum(0.05, 1.0 + fluct + seed_A + seed_B + void_C).astype(np.float32)
+        # Organic primordial matter density field: rho_mean = 1.0 + delta_rho(k)
+        self.rho = np.maximum(0.05, 1.0 + fluct).astype(np.float32)
         self.T = (12.0 * (self.rho**0.5) + 2.73).astype(np.float32)
         self.I = np.clip((self.rho - 0.5) / 2.5, 0.0, 1.0).astype(np.float32)
         self.tau = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)

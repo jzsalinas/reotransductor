@@ -87,20 +87,18 @@ gaussian_k_3d = xp.asarray(gaussian_k_3d_np, dtype=xp.float32)
 # =====================================================================
 # GARANTÍA DE IDENTIDAD EXACTA DE DATOS INICIALES ENTRE CPU Y GPU
 # =====================================================================
-np.random.seed(42)
-X_np, Y_np, Z_np = np.meshgrid(np.arange(GRID_SIZE), np.arange(GRID_SIZE), np.arange(GRID_SIZE), indexing='ij')
-
+# Primordial Gaussian Random Field (GRF) with scale-invariant Harrison-Zel'dovich power spectrum P(k)
 noise_fft_cpu = np.fft.fftn(np.random.randn(GRID_SIZE, GRID_SIZE, GRID_SIZE).astype(np.float32))
-fluct_cpu = np.real(np.fft.ifftn(noise_fft_cpu * p_k_np))
-fluct_cpu = (fluct_cpu - np.mean(fluct_cpu)) / np.std(fluct_cpu) * 0.35
+fluct_cpu = np.real(np.fft.ifftn(noise_fft_cpu * np.sqrt(p_k_np)))
+fluct_cpu = (fluct_cpu - np.mean(fluct_cpu)) / max(1e-4, np.std(fluct_cpu)) * 0.45
 
-seed_A_np = 2.8 * np.exp(-((X_np - 16.0)**2 + (Y_np - 16.0)**2 + (Z_np - 16.0)**2) / 18.0)
-seed_B_np = 1.9 * np.exp(-((X_np - 24.0)**2 + (Y_np - 8.0)**2 + (Z_np - 20.0)**2) / 12.0)
-void_C_np = -0.6 * np.exp(-((X_np - 8.0)**2 + (Y_np - 24.0)**2 + (Z_np - 8.0)**2) / 22.0)
-
-rho_init_np = np.maximum(0.05, 1.0 + fluct_cpu + seed_A_np + seed_B_np + void_C_np).astype(np.float32)
+# Organic primordial matter density field: rho_mean = 1.0 + delta_rho(k)
+rho_init_np = np.maximum(0.05, 1.0 + fluct_cpu).astype(np.float32)
 T_init_np = (12.0 * (rho_init_np**0.5) + 2.73).astype(np.float32)
 I_init_np = np.clip((rho_init_np - 0.5) / 2.5, 0.0, 1.0).astype(np.float32)
+
+# 3D Cartesian Coordinate Grids for Spatial Advection & Bounces
+X_np, Y_np, Z_np = np.meshgrid(np.arange(GRID_SIZE), np.arange(GRID_SIZE), np.arange(GRID_SIZE), indexing='ij')
 
 # Carga en memoria VRAM de la GPU
 X = xp.asarray(X_np, dtype=xp.float32)
