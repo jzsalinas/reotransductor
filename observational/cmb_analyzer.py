@@ -109,14 +109,18 @@ class CMBSphericalHarmonicsAnalyzer:
     def extract_celestial_sphere_from_grid(
         self,
         tau_3d: np.ndarray,
+        T_3d: Optional[np.ndarray] = None,
+        rho_3d: Optional[np.ndarray] = None,
         v_x: Optional[np.ndarray] = None,
         v_y: Optional[np.ndarray] = None,
         v_z: Optional[np.ndarray] = None,
-        c_light: float = 2.5
+        c_light: float = 2.5,
+        alpha_mem: float = 0.35
     ) -> np.ndarray:
         """
-        Extracts an observer celestial sphere at radius R_obs = L / 2.2 with trilinear interpolation
-        and Doppler line-of-sight shift.
+        Extracts an observer celestial sphere at radius R_obs = L / 2.2 using first-principles
+        Sachs-Wolfe gravitational potential, intrinsic plasma temperature perturbations,
+        line-of-sight Doppler velocity, and holographic non-equilibrium fossil memory.
         """
         grid_size = tau_3d.shape[0]
         center = grid_size / 2.0
@@ -138,36 +142,53 @@ class CMBSphericalHarmonicsAnalyzer:
         yd = coords_y - y0
         zd = coords_z - z0
 
-        c000 = tau_3d[x0, y0, z0]
-        c100 = tau_3d[x1, y0, z0]
-        c010 = tau_3d[x0, y1, z0]
-        c110 = tau_3d[x1, y1, z0]
-        c001 = tau_3d[x0, y0, z1]
-        c101 = tau_3d[x1, y0, z1]
-        c011 = tau_3d[x0, y1, z1]
-        c111 = tau_3d[x1, y1, z1]
+        def _trilinear(arr_3d):
+            c000 = arr_3d[x0, y0, z0]
+            c100 = arr_3d[x1, y0, z0]
+            c010 = arr_3d[x0, y1, z0]
+            c110 = arr_3d[x1, y1, z0]
+            c001 = arr_3d[x0, y0, z1]
+            c101 = arr_3d[x1, y0, z1]
+            c011 = arr_3d[x0, y1, z1]
+            c111 = arr_3d[x1, y1, z1]
 
-        c00 = c000 * (1.0 - xd) + c100 * xd
-        c01 = c001 * (1.0 - xd) + c101 * xd
-        c10 = c010 * (1.0 - xd) + c110 * xd
-        c11 = c011 * (1.0 - xd) + c111 * xd
+            c00 = c000 * (1.0 - xd) + c100 * xd
+            c01 = c001 * (1.0 - xd) + c101 * xd
+            c10 = c010 * (1.0 - xd) + c110 * xd
+            c11 = c011 * (1.0 - xd) + c111 * xd
 
-        c0 = c00 * (1.0 - yd) + c10 * yd
-        c1 = c01 * (1.0 - yd) + c11 * yd
-        tau_s = c0 * (1.0 - zd) + c1 * zd
+            c0 = c00 * (1.0 - yd) + c10 * yd
+            c1 = c01 * (1.0 - yd) + c11 * yd
+            return c0 * (1.0 - zd) + c1 * zd
 
-        # Doppler Shift computation if velocity field is provided
+        tau_s = _trilinear(tau_3d)
+
+        # Line-of-Sight Doppler Shift
         doppler_shift = np.zeros_like(tau_s)
         if v_x is not None and v_y is not None and v_z is not None:
-            # Sample velocity components
-            vx_s = v_x[x0, y0, z0]
-            vy_s = v_y[x0, y0, z0]
-            vz_s = v_z[x0, y0, z0]
+            vx_s = _trilinear(v_x)
+            vy_s = _trilinear(v_y)
+            vz_s = _trilinear(v_z)
             v_los = (vx_s * self.n_x + vy_s * self.n_y + vz_s * self.n_z) / c_light
-            doppler_shift = 0.4 * v_los
+            doppler_shift = v_los
 
-        # Normalized celestial map (Delta T / T)
-        cmb_raw = np.log10(1.0 + np.maximum(0.0, tau_s)) + doppler_shift
+        # First-Principles Relativistic Sachs-Wolfe + Plasma Temperature + Holographic Memory
+        if T_3d is not None and rho_3d is not None:
+            T_s = _trilinear(T_3d)
+            rho_s = _trilinear(rho_3d)
+
+            mean_T = max(1e-4, float(np.mean(T_3d)))
+            mean_rho = max(1e-4, float(np.mean(rho_3d)))
+            mean_tau = max(1e-4, float(np.mean(tau_3d)) + 1.0)
+
+            delta_T_int = (T_s - mean_T) / mean_T
+            delta_rho = (rho_s - mean_rho) / mean_rho
+            delta_tau = (tau_s - float(np.mean(tau_3d))) / mean_tau
+
+            cmb_raw = delta_T_int + (1.0 / 3.0) * delta_rho + doppler_shift + alpha_mem * delta_tau
+        else:
+            cmb_raw = np.log10(1.0 + np.maximum(0.0, tau_s)) + 0.4 * doppler_shift
+
         std_val = max(1e-4, float(np.std(cmb_raw)))
         delta_T_map = (cmb_raw - float(np.mean(cmb_raw))) / std_val
         return delta_T_map

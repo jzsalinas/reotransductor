@@ -553,11 +553,21 @@ async function refreshSnapshotList() {
             const id = typeof item === 'object' ? item.id : item;
             let label = typeof item === 'object' ? item.label : `📷 Eón N = ${item}`;
             
-            // Normalize legacy transition names on the fly
-            label = label
-                .replace(/\[Transición Conforme CCC \(Muerte Térmica\)\]/g, '[CCC (Muerte Térmica)]')
-                .replace(/\[Rebote Gravitatorio \(Singularidad\)\]/g, '[Rebote Gravitatorio (Túnel Cuántico)]')
-                .replace(/\[Rebote Cuántico\]/g, '[Rebote Gravitatorio (Túnel Cuántico)]');
+            // Exact physical classification based on A_MAX_CONFORMAL = 7.0:
+            const sf = (typeof item === 'object' && item.scale_factor != null) ? Number(item.scale_factor) : null;
+            const eon = (typeof item === 'object' && item.eon != null) ? item.eon : id;
+            
+            if (sf !== null && !isNaN(sf)) {
+                if (sf < 6.9) {
+                    label = `📷 Fin Eón ${eon} [Rebote Gravitatorio (Túnel Cuántico)]`;
+                } else {
+                    label = `📷 Fin Eón ${eon} [CCC (Muerte Térmica)]`;
+                }
+            } else {
+                label = label
+                    .replace(/\[.*?(CCC|Muerte|Conforme).*?\]/gi, '[CCC (Muerte Térmica)]')
+                    .replace(/\[.*?(Rebote|Singularidad|Túnel).*?\]/gi, '[Rebote Gravitatorio (Túnel Cuántico)]');
+            }
 
             html += `<option value="${id}">${label}</option>`;
         });

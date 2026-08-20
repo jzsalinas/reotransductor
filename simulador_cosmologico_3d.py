@@ -450,14 +450,24 @@ def animate_3d(frame):
         sc_3d.set_array(c_vals)
         sc_3d.set_clim(vmin=0.0, vmax=max(3.0, float(np.max(c_vals))))
     
-    # 2. Actualizar Mapa CMB Mollweide HD (Memoria Fósil + Efecto Doppler Cinemático)
+    # 2. Actualizar Mapa CMB Mollweide HD (Sachs-Wolfe + Plasma Primordial + Memoria Fósil + Doppler)
     tau_s = sample_sphere_trilinear(tau, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    T_s = sample_sphere_trilinear(T, coords_cmb_x, coords_cmb_y, coords_cmb_z)
+    rho_s = sample_sphere_trilinear(rho, coords_cmb_x, coords_cmb_y, coords_cmb_z)
     vx_s = sample_sphere_trilinear(v_x, coords_cmb_x, coords_cmb_y, coords_cmb_z)
     vy_s = sample_sphere_trilinear(v_y, coords_cmb_x, coords_cmb_y, coords_cmb_z)
     vz_s = sample_sphere_trilinear(v_z, coords_cmb_x, coords_cmb_y, coords_cmb_z)
     
     v_los = (vx_s * n_los_x + vy_s * n_los_y + vz_s * n_los_z) / C_LIGHT
-    cmb_raw = np.log10(1.0 + np.maximum(0.0, tau_s)) + 0.4 * v_los
+    mean_T = max(1e-4, float(np.mean(T)))
+    mean_rho = max(1e-4, float(np.mean(rho)))
+    mean_tau = max(1e-4, float(np.mean(tau)) + 1.0)
+
+    delta_T_int = (T_s - mean_T) / mean_T
+    delta_rho = (rho_s - mean_rho) / mean_rho
+    delta_tau = (tau_s - float(np.mean(tau))) / mean_tau
+
+    cmb_raw = delta_T_int + (1.0 / 3.0) * delta_rho + v_los + 0.35 * delta_tau
     cmb_std = max(1e-4, float(np.std(cmb_raw)))
     cmb_data = (cmb_raw - float(np.mean(cmb_raw))) / cmb_std
     im_cmb.set_array(cmb_data.ravel())

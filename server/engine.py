@@ -494,7 +494,7 @@ class CosmologicalEngine:
         p_grav = min(p_mass, p_entropy)
         p_conformal = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
 
-        if p_conformal > p_grav and self.mass_frac_val < 0.10:
+        if p_conformal > p_grav:
             prog_label = f"Frontera Conforme CCC Eón {self.eon}"
             active_route = "conformal"
         else:
@@ -548,14 +548,24 @@ class CosmologicalEngine:
                     round(float(self.rho[xs[i], ys[i], zs[i]]), 2)
                 ])
 
-        # 2. HD Mollweide CMB (90x180) with Trilinear Sampling & Doppler Shift
+        # 2. HD Mollweide CMB (90x180) with Physical Sachs-Wolfe, Plasma Perturbations & Doppler Shift
         tau_s = self._sample_sphere_trilinear(self.tau, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
+        T_s = self._sample_sphere_trilinear(self.T, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
+        rho_s = self._sample_sphere_trilinear(self.rho, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
         vx_s = self._sample_sphere_trilinear(self.v_x, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
         vy_s = self._sample_sphere_trilinear(self.v_y, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
         vz_s = self._sample_sphere_trilinear(self.v_z, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
 
         v_los = (vx_s * self.n_los_x + vy_s * self.n_los_y + vz_s * self.n_los_z) / self.C_LIGHT
-        cmb_raw = np.log10(1.0 + np.maximum(0.0, tau_s)) + 0.4 * v_los
+        mean_T = max(1e-4, float(np.mean(self.T)))
+        mean_rho = max(1e-4, float(np.mean(self.rho)))
+        mean_tau = max(1e-4, float(np.mean(self.tau)) + 1.0)
+
+        delta_T_int = (T_s - mean_T) / mean_T
+        delta_rho = (rho_s - mean_rho) / mean_rho
+        delta_tau = (tau_s - float(np.mean(self.tau))) / mean_tau
+
+        cmb_raw = delta_T_int + (1.0 / 3.0) * delta_rho + v_los + 0.35 * delta_tau
         cmb_std = max(1e-4, float(np.std(cmb_raw)))
         cmb_norm = np.clip((cmb_raw - float(np.mean(cmb_raw))) / cmb_std, -2.5, 2.5)
 
@@ -662,9 +672,21 @@ class CosmologicalEngine:
                                 match_e = re.search(r'eon_(\d+)', str(snap_id))
                                 eon_val = int(match_e.group(1)) if match_e else "?"
                             
-                            # Normalize transition name
-                            raw_trans = meta.get("transition") or meta.get("label", "")
-                            norm_trans = self.normalize_transition_name(raw_trans)
+                            # Accurately classify transition from physical scale factor (A_MAX_CONFORMAL = 7.0)
+                            sf_val = meta.get("scale_factor")
+                            if sf_val is not None:
+                                try:
+                                    sf_f = float(sf_val)
+                                    if sf_f < 6.9:
+                                        norm_trans = "Rebote Gravitatorio (Túnel Cuántico)"
+                                    else:
+                                        norm_trans = "CCC (Muerte Térmica)"
+                                except (ValueError, TypeError):
+                                    raw_trans = meta.get("transition") or meta.get("label", "")
+                                    norm_trans = self.normalize_transition_name(raw_trans)
+                            else:
+                                raw_trans = meta.get("transition") or meta.get("label", "")
+                                norm_trans = self.normalize_transition_name(raw_trans)
                             
                             snapshots.append({
                                 "id": str(snap_id),
@@ -672,7 +694,7 @@ class CosmologicalEngine:
                                 "type": "eon_bounce",
                                 "transition": norm_trans,
                                 "eon": eon_val,
-                                "scale_factor": meta.get("scale_factor"),
+                                "scale_factor": sf_val,
                                 "timestamp": meta.get("timestamp", "")
                             })
                         else:
