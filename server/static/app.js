@@ -422,10 +422,13 @@ function updateDashboard(payload) {
     const progVal = t.tunnel_progress;
     document.getElementById('progVal').textContent = `${progVal.toFixed(1)}%`;
     
+    // Dynamic physical determination of the active driver (CCC vs Quantum Tunnel)
+    const isConformalRoute = (t.scale_factor >= 6.9) || (t.active_route === 'conformal') || (t.p_conformal > t.p_grav && (!t.mass_fraction || t.mass_fraction < 18.0));
+
     const progFillEl = document.getElementById('progFill');
     if (progFillEl) {
         progFillEl.style.width = `${progVal}%`;
-        if (t.active_route === 'conformal' || (t.p_conformal > t.p_grav && t.mass_fraction < 10)) {
+        if (isConformalRoute) {
             progFillEl.style.background = 'linear-gradient(90deg, var(--accent-cyan), #a855f7)';
         } else {
             progFillEl.style.background = 'linear-gradient(90deg, var(--accent-cyan), var(--accent-amber))';
@@ -433,9 +436,9 @@ function updateDashboard(payload) {
     }
 
     const progTitleEl = document.getElementById('progTitle');
-    const progLabel = t.progress_label || (t.active_route === 'conformal' 
-        ? `Frontera Conforme CCC Eón ${t.eon}` 
-        : `Túnel Cuántico Eón ${t.eon}`);
+    let progLabel = isConformalRoute
+        ? `Frontera Conforme CCC Eón ${t.eon}`
+        : `Túnel Cuántico Eón ${t.eon}`;
     if (progTitleEl) {
         progTitleEl.textContent = progLabel;
     }
