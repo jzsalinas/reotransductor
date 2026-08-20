@@ -167,11 +167,15 @@ def generate_eon_observational_report(engine, output_dir: str = "checkpoints/sna
 
 
 def process_all_existing_checkpoints(checkpoints_dir: str = "checkpoints"):
-    """Scans and processes all existing eon_*.npz checkpoints, generating full observational plots."""
+    """Scans and processes all existing CMB checkpoints (cmb_eon_*.npz or eon_*.npz), generating full plots."""
     import glob
-    npz_files = sorted(glob.glob(os.path.join(checkpoints_dir, "eon_*.npz")))
+    # Prioritize dedicated CMB epoch checkpoints (a ~ 1.0)
+    npz_files = sorted(glob.glob(os.path.join(checkpoints_dir, "cmb_eon_*.npz")))
     if not npz_files:
-        print(f"No eon_*.npz files found in '{checkpoints_dir}'.")
+        npz_files = sorted(glob.glob(os.path.join(checkpoints_dir, "eon_*.npz")))
+
+    if not npz_files:
+        print(f"No CMB or eon checkpoints found in '{checkpoints_dir}'.")
         return
 
     print(f"• Found {len(npz_files)} historical eon checkpoints in '{checkpoints_dir}'. Processing observational reports...")

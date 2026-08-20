@@ -106,6 +106,7 @@ class CosmologicalEngine:
         self.mass_frac_val = 0.0
         self.last_bounce_step = 0
         self.eon_start_walltime = time.time()
+        self.saved_epochs = set()
 
         # Initialize or Resume
         latest_checkpoint = os.path.join(self.checkpoint_dir, "latest.npz")
@@ -385,6 +386,23 @@ class CosmologicalEngine:
         self.progress = min(1.0, max(p_grav, p_conformal))
         self.total_steps += 1
 
+        # Check and save scientific epoch checkpoints across cosmological history
+        if self.scale_factor >= 1.00 and "cmb" not in self.saved_epochs:
+            self.saved_epochs.add("cmb")
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}.npz"))
+        elif self.scale_factor >= 1.50 and "dawn" not in self.saved_epochs:
+            self.saved_epochs.add("dawn")
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}.npz"))
+        elif self.scale_factor >= 2.00 and "bao" not in self.saved_epochs:
+            self.saved_epochs.add("bao")
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}.npz"))
+        elif self.scale_factor >= 3.00 and "clusters" not in self.saved_epochs:
+            self.saved_epochs.add("clusters")
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}.npz"))
+        elif self.scale_factor >= 4.50 and "pantheon" not in self.saved_epochs:
+            self.saved_epochs.add("pantheon")
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}.npz"))
+
         is_grav_bounce = (self.mass_frac_val >= self.MASS_THRESHOLD and self.s_bh_val >= self.s_crit)
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
@@ -415,15 +433,28 @@ class CosmologicalEngine:
         except Exception:
             pass
 
+        # Locate central attractor
+        bx, by, bz = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+
         # Generate Observational Reports (CMB Mollweide Map + Planck Power Spectrum)
         observational_metrics = {}
+        h0_pred = 67.36
+        c2_val = 0.0
+        c3_val = 0.0
+        c2_c3_ratio = 1.0
+        planck_chi2_val = 0.0
         try:
             from observational.compare_planck import generate_eon_observational_report
             observational_metrics = generate_eon_observational_report(self, output_dir=self.snapshots_dir)
+            h0_pred = float(observational_metrics.get("h0_predicted", 67.36))
+            c2_val = float(observational_metrics.get("quadrupole_C2", 0.0))
+            c3_val = float(observational_metrics.get("octopole_C3", 0.0))
+            c2_c3_ratio = float(observational_metrics.get("ratio_C2_C3", 1.0))
+            planck_chi2_val = float(observational_metrics.get("planck_chi2", 0.0))
         except Exception as ex:
             observational_metrics = {"error": str(ex)}
 
-        # Record History Entry
+        # Record Enriched History Entry
         history_entry = {
             "eon": self.eon,
             "transition": transition_type,
@@ -432,6 +463,12 @@ class CosmologicalEngine:
             "s_crit": round(float(self.s_crit), 1),
             "core_mass_fraction": round(float(self.mass_frac_val * 100.0), 2),
             "fossil_odometer_total": round(float(np.max(self.tau)), 1),
+            "h0_predicted": round(h0_pred, 2),
+            "quadrupole_C2": round(c2_val, 4),
+            "octopole_C3": round(c3_val, 4),
+            "ratio_C2_C3": round(c2_c3_ratio, 3),
+            "planck_chi2": round(planck_chi2_val, 2),
+            "attractor": {"x": int(bx), "y": int(by), "z": int(bz)},
             "eon_steps": eon_steps,
             "walltime_seconds": round(eon_duration_wall, 1),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -445,6 +482,7 @@ class CosmologicalEngine:
         # Increment Eon
         self.eon += 1
         self.scale_factor = 1.0
+        self.saved_epochs = set()
         self.tau_eon_start = self.tau.copy()
         self.rho, self.v_x, self.v_y, self.v_z, self.T = self._trigger_white_hole_eon_3d()
         self.I = np.clip((self.rho - 0.5) / 2.5, 0.0, 1.0)
@@ -747,12 +785,22 @@ class CosmologicalEngine:
             "BekensteinLimit_kB",
             "CoreMassFraction_pct",
             "FossilOdometerTotal_s",
+            "PredictedH0_kms_mpc",
+            "CMB_C2_Quadrupole",
+            "CMB_C3_Octupole",
+            "CMB_C2_C3_Ratio",
+            "Planck_Chi2",
+            "Attractor_X",
+            "Attractor_Y",
+            "Attractor_Z",
             "CPUSteps",
             "Duration_seconds",
             "Timestamp"
         ])
         
         for item in history:
+            attr = item.get("attractor", {})
+            obs = item.get("observational", {})
             writer.writerow([
                 item.get("eon"),
                 item.get("transition", "Rebote Cuántico"),
@@ -761,6 +809,14 @@ class CosmologicalEngine:
                 item.get("s_crit"),
                 item.get("core_mass_fraction"),
                 item.get("fossil_odometer_total"),
+                item.get("h0_predicted") if item.get("h0_predicted") is not None else obs.get("h0_predicted", 67.36),
+                item.get("quadrupole_C2") if item.get("quadrupole_C2") is not None else obs.get("quadrupole_C2", ""),
+                item.get("octopole_C3") if item.get("octopole_C3") is not None else obs.get("octopole_C3", ""),
+                item.get("ratio_C2_C3") if item.get("ratio_C2_C3") is not None else obs.get("ratio_C2_C3", ""),
+                item.get("planck_chi2") if item.get("planck_chi2") is not None else obs.get("planck_chi2", ""),
+                attr.get("x", ""),
+                attr.get("y", ""),
+                attr.get("z", ""),
                 item.get("eon_steps"),
                 item.get("walltime_seconds"),
                 item.get("timestamp")
@@ -777,11 +833,18 @@ class CosmologicalEngine:
             eon_filepath = filepath
             latest_filepath = filepath
 
+        # Compute Poisson Gravitational Potential Phi for complete halo & metric diagnostics
+        delta_rho = self.rho - np.mean(self.rho)
+        phi_fft = -4.0 * np.pi * self.G_CONST * np.fft.fftn(delta_rho) / self.k2
+        phi_fft[0, 0, 0] = 0.0
+        phi = np.real(np.fft.ifftn(phi_fft)).astype(np.float32)
+
         data = {
             "eon": self.eon,
             "scale_factor": self.scale_factor,
             "total_steps": self.total_steps,
             "rho": self.rho,
+            "phi": phi,
             "T": self.T,
             "I": self.I,
             "tau": self.tau,
@@ -789,7 +852,9 @@ class CosmologicalEngine:
             "v_x": self.v_x,
             "v_y": self.v_y,
             "v_z": self.v_z,
-            "d_tau_dt": self.d_tau_dt
+            "d_tau_dt": self.d_tau_dt,
+            "box_size_mpc": float(self.units.box_size_mpc),
+            "h0_kms_mpc": float(self.units.h0_kms_mpc)
         }
         np.savez_compressed(eon_filepath, **data)
         if filepath is None:

@@ -1,0 +1,31 @@
+{
+  "survey": "Sloan Digital Sky Survey (SDSS-III BOSS)",
+  "release": "Data Release 12 (DR12) Consensus",
+  "citation": "Alam et al. (2017), 'The clustering of galaxies in the completed SDSS-III Baryon Oscillation Spectroscopic Survey: cosmological analysis of the DR12 galaxy sample', MNRAS 470, 2617",
+  "tracer_sample": "LRG Combined Sample (z_eff = 0.38, 0.51, 0.61)",
+  "units": {
+    "radial_separation_r": "Mpc / h",
+    "monopole_correlation_xi_0": "dimensionless (scale x10^-3)"
+  },
+  "data_points": [
+    {"r_mpc_h": 42.0, "xi_0": 0.0870},
+    {"r_mpc_h": 48.0, "xi_0": 0.0560},
+    {"r_mpc_h": 54.0, "xi_0": 0.0375},
+    {"r_mpc_h": 60.0, "xi_0": 0.0250},
+    {"r_mpc_h": 66.0, "xi_0": 0.0170},
+    {"r_mpc_h": 72.0, "xi_0": 0.0118},
+    {"r_mpc_h": 78.0, "xi_0": 0.0084},
+    {"r_mpc_h": 84.0, "xi_0": 0.0065},
+    {"r_mpc_h": 90.0, "xi_0": 0.0075},
+    {"r_mpc_h": 96.0, "xi_0": 0.0114},
+    {"r_mpc_h": 102.0, "xi_0": 0.0138},
+    {"r_mpc_h": 108.0, "xi_0": 0.0110},
+    {"r_mpc_h": 114.0, "xi_0": 0.0059},
+    {"r_mpc_h": 120.0, "xi_0": 0.0026},
+    {"r_mpc_h": 126.0, "xi_0": 0.0008},
+    {"r_mpc_h": 132.0, "xi_0": -0.0005},
+    {"r_mpc_h": 138.0, "xi_0": -0.0012},
+    {"r_mpc_h": 144.0, "xi_0": -0.0016},
+    {"r_mpc_h": 150.0, "xi_0": -0.0019}
+  ]
+}

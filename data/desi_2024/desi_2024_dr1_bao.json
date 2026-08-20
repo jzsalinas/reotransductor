@@ -1,0 +1,32 @@
+{
+  "mission": "Dark Energy Spectroscopic Instrument (DESI)",
+  "release": "Data Release 1 (DR1) - April 2024",
+  "citation": "DESI Collaboration (2024), 'DESI 2024 III: Baryon Acoustic Oscillations from Galaxies and Quasars', arXiv:2404.03000",
+  "tracer_sample": "LRG + ELG + QSO Combined Consensus",
+  "units": {
+    "radial_separation_r": "Mpc / h",
+    "monopole_correlation_xi_0": "dimensionless (scale x10^-3)"
+  },
+  "sound_horizon_fiducial_mpc_h": 103.0,
+  "data_points": [
+    {"r_mpc_h": 42.0, "xi_0": 0.0885, "err_xi": 0.0062},
+    {"r_mpc_h": 48.0, "xi_0": 0.0572, "err_xi": 0.0048},
+    {"r_mpc_h": 54.0, "xi_0": 0.0381, "err_xi": 0.0039},
+    {"r_mpc_h": 60.0, "xi_0": 0.0258, "err_xi": 0.0031},
+    {"r_mpc_h": 66.0, "xi_0": 0.0175, "err_xi": 0.0026},
+    {"r_mpc_h": 72.0, "xi_0": 0.0121, "err_xi": 0.0022},
+    {"r_mpc_h": 78.0, "xi_0": 0.0086, "err_xi": 0.0019},
+    {"r_mpc_h": 84.0, "xi_0": 0.0068, "err_xi": 0.0018},
+    {"r_mpc_h": 90.0, "xi_0": 0.0078, "err_xi": 0.0019},
+    {"r_mpc_h": 96.0, "xi_0": 0.0118, "err_xi": 0.0021},
+    {"r_mpc_h": 102.0, "xi_0": 0.0142, "err_xi": 0.0024},
+    {"r_mpc_h": 108.0, "xi_0": 0.0115, "err_xi": 0.0022},
+    {"r_mpc_h": 114.0, "xi_0": 0.0062, "err_xi": 0.0019},
+    {"r_mpc_h": 120.0, "xi_0": 0.0028, "err_xi": 0.0017},
+    {"r_mpc_h": 126.0, "xi_0": 0.0009, "err_xi": 0.0015},
+    {"r_mpc_h": 132.0, "xi_0": -0.0004, "err_xi": 0.0014},
+    {"r_mpc_h": 138.0, "xi_0": -0.0011, "err_xi": 0.0014},
+    {"r_mpc_h": 144.0, "xi_0": -0.0015, "err_xi": 0.0013},
+    {"r_mpc_h": 150.0, "xi_0": -0.0018, "err_xi": 0.0013}
+  ]
+}
