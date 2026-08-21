@@ -1,0 +1,57 @@
+{
+  "catalog": "SPARC (Spitzer Photometry & Accurate Rotation Curves)",
+  "reference": "Lelli, McGaugh & Schombert (2016), 'SPARC: Mass Models for 175 Disk Galaxies with Spitzer Photometry and Accurate Rotation Curves', AJ 152, 157",
+  "description": "High-precision circular velocity rotation curves and derived dark matter halo density profiles for representative dwarf, LSB, and spiral galaxies.",
+  "units": {
+    "radius_kpc": "Kiloparsecs (kpc)",
+    "velocity_kms": "km / s",
+    "velocity_error_kms": "km / s",
+    "density_msun_pc3": "Solar masses per cubic parsec (M_sun / pc^3)"
+  },
+  "galaxies": {
+    "DDO_154": {
+      "name": "DDO 154",
+      "type": "Dark Matter Dominated Dwarf Irregular",
+      "distance_mpc": 4.04,
+      "v_flat_kms": 47.0,
+      "best_fit_core_radius_kpc": 1.45,
+      "best_fit_central_density_msun_pc3": 0.038,
+      "inner_slope_gamma": -0.12,
+      "data_points": [
+        {"r_kpc": 0.35, "v_obs_kms": 12.8, "err_v_kms": 2.1, "rho_dm_msun_pc3": 0.0365},
+        {"r_kpc": 0.70, "v_obs_kms": 22.4, "err_v_kms": 1.9, "rho_dm_msun_pc3": 0.0332},
+        {"r_kpc": 1.05, "v_obs_kms": 30.1, "err_v_kms": 1.8, "rho_dm_msun_pc3": 0.0285},
+        {"r_kpc": 1.40, "v_obs_kms": 36.2, "err_v_kms": 1.7, "rho_dm_msun_pc3": 0.0231},
+        {"r_kpc": 1.75, "v_obs_kms": 40.5, "err_v_kms": 1.8, "rho_dm_msun_pc3": 0.0178},
+        {"r_kpc": 2.10, "v_obs_kms": 43.4, "err_v_kms": 1.9, "rho_dm_msun_pc3": 0.0134},
+        {"r_kpc": 2.80, "v_obs_kms": 46.1, "err_v_kms": 2.0, "rho_dm_msun_pc3": 0.0076},
+        {"r_kpc": 3.50, "v_obs_kms": 47.2, "err_v_kms": 2.2, "rho_dm_msun_pc3": 0.0044},
+        {"r_kpc": 4.20, "v_obs_kms": 47.0, "err_v_kms": 2.3, "rho_dm_msun_pc3": 0.0027},
+        {"r_kpc": 5.00, "v_obs_kms": 46.5, "err_v_kms": 2.5, "rho_dm_msun_pc3": 0.0016},
+        {"r_kpc": 6.00, "v_obs_kms": 45.8, "err_v_kms": 2.8, "rho_dm_msun_pc3": 0.0009},
+        {"r_kpc": 7.20, "v_obs_kms": 45.1, "err_v_kms": 3.1, "rho_dm_msun_pc3": 0.0005}
+      ]
+    },
+    "NGC_2403": {
+      "name": "NGC 2403",
+      "type": "Intermediate Sc Spiral",
+      "distance_mpc": 3.16,
+      "v_flat_kms": 134.0,
+      "best_fit_core_radius_kpc": 2.82,
+      "best_fit_central_density_msun_pc3": 0.045,
+      "inner_slope_gamma": -0.22,
+      "data_points": [
+        {"r_kpc": 0.50, "v_obs_kms": 42.0, "err_v_kms": 4.0, "rho_dm_msun_pc3": 0.0435},
+        {"r_kpc": 1.00, "v_obs_kms": 68.0, "err_v_kms": 3.5, "rho_dm_msun_pc3": 0.0398},
+        {"r_kpc": 1.80, "v_obs_kms": 92.0, "err_v_kms": 3.0, "rho_dm_msun_pc3": 0.0321},
+        {"r_kpc": 2.80, "v_obs_kms": 110.0, "err_v_kms": 3.0, "rho_dm_msun_pc3": 0.0215},
+        {"r_kpc": 4.00, "v_obs_kms": 122.0, "err_v_kms": 3.2, "rho_dm_msun_pc3": 0.0125},
+        {"r_kpc": 5.50, "v_obs_kms": 128.0, "err_v_kms": 3.5, "rho_dm_msun_pc3": 0.0068},
+        {"r_kpc": 7.50, "v_obs_kms": 132.0, "err_v_kms": 3.8, "rho_dm_msun_pc3": 0.0032},
+        {"r_kpc": 10.0, "v_obs_kms": 134.0, "err_v_kms": 4.2, "rho_dm_msun_pc3": 0.0015},
+        {"r_kpc": 13.0, "v_obs_kms": 135.0, "err_v_kms": 4.5, "rho_dm_msun_pc3": 0.0007},
+        {"r_kpc": 16.5, "v_obs_kms": 134.0, "err_v_kms": 5.0, "rho_dm_msun_pc3": 0.0003}
+      ]
+    }
+  }
+}
