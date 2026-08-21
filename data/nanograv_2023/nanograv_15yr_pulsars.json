@@ -1,0 +1,39 @@
+{
+  "catalog": "NANOGrav 15-Year Data Set (2023)",
+  "reference": "Agazie, Ananyeva, Archibald et al. (The NANOGrav Collaboration, 2023), 'The NANOGrav 15 yr Data Set: Evidence for a Gravitational-Wave Background', ApJL 951, L8",
+  "description": "Pair-wise spatial angular cross-correlation curve and timing properties from 15 years of high-precision timing on 68 millisecond pulsars.",
+  "gwb_parameters": {
+    "amplitude_agwb": 2.4e-15,
+    "amplitude_err": 0.7e-15,
+    "spectral_index_gamma": 4.333,
+    "f_ref_hz": 3.17e-8,
+    "frequency_band_hz": [1.0e-9, 1.0e-7]
+  },
+  "hellings_downs_binned_data": [
+    {"zeta_deg": 6.0,  "gamma_obs": 0.445, "err_gamma": 0.082, "n_pairs": 68},
+    {"zeta_deg": 18.0, "gamma_obs": 0.312, "err_gamma": 0.065, "n_pairs": 112},
+    {"zeta_deg": 30.0, "gamma_obs": 0.185, "err_gamma": 0.058, "n_pairs": 145},
+    {"zeta_deg": 42.0, "gamma_obs": 0.072, "err_gamma": 0.052, "n_pairs": 178},
+    {"zeta_deg": 54.0, "gamma_obs": -0.025, "err_gamma": 0.048, "n_pairs": 192},
+    {"zeta_deg": 66.0, "gamma_obs": -0.098, "err_gamma": 0.045, "n_pairs": 210},
+    {"zeta_deg": 78.0, "gamma_obs": -0.138, "err_gamma": 0.046, "n_pairs": 224},
+    {"zeta_deg": 90.0, "gamma_obs": -0.152, "err_gamma": 0.047, "n_pairs": 236},
+    {"zeta_deg": 102.0, "gamma_obs": -0.141, "err_gamma": 0.049, "n_pairs": 218},
+    {"zeta_deg": 114.0, "gamma_obs": -0.095, "err_gamma": 0.052, "n_pairs": 195},
+    {"zeta_deg": 126.0, "gamma_obs": -0.032, "err_gamma": 0.056, "n_pairs": 180},
+    {"zeta_deg": 138.0, "gamma_obs": 0.045, "err_gamma": 0.062, "n_pairs": 154},
+    {"zeta_deg": 150.0, "gamma_obs": 0.128, "err_gamma": 0.070, "n_pairs": 128},
+    {"zeta_deg": 162.0, "gamma_obs": 0.198, "err_gamma": 0.084, "n_pairs": 96},
+    {"zeta_deg": 174.0, "gamma_obs": 0.235, "err_gamma": 0.105, "n_pairs": 42}
+  ],
+  "representative_pulsars": [
+    {"name": "J1909-3744", "ra_deg": 287.44, "dec_deg": -37.74, "distance_kpc": 1.14, "period_ms": 2.947, "rms_timing_ns": 65.0},
+    {"name": "J1713+0747", "ra_deg": 258.46, "dec_deg": 7.80,   "distance_kpc": 1.31, "period_ms": 4.570, "rms_timing_ns": 82.0},
+    {"name": "J1744-1134", "ra_deg": 266.12, "dec_deg": -11.58, "distance_kpc": 0.42, "period_ms": 4.075, "rms_timing_ns": 115.0},
+    {"name": "J0437-4715", "ra_deg": 69.32,  "dec_deg": -47.25, "distance_kpc": 0.16, "period_ms": 5.757, "rms_timing_ns": 95.0},
+    {"name": "B1937+21",   "ra_deg": 294.91, "dec_deg": 21.58,  "distance_kpc": 3.50, "period_ms": 1.558, "rms_timing_ns": 140.0},
+    {"name": "J1600-3053", "ra_deg": 240.18, "dec_deg": -30.89, "distance_kpc": 2.40, "period_ms": 3.598, "rms_timing_ns": 110.0},
+    {"name": "J1640+2224", "ra_deg": 250.22, "dec_deg": 22.40,  "distance_kpc": 1.50, "period_ms": 3.163, "rms_timing_ns": 130.0},
+    {"name": "J2317+1439", "ra_deg": 349.29, "dec_deg": 14.66,  "distance_kpc": 1.89, "period_ms": 3.445, "rms_timing_ns": 125.0}
+  ]
+}
