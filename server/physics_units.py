@@ -133,7 +133,7 @@ class CosmologicalUnits:
         self.INFLATION_BOOST = 8.0  # Primordial scalar field inflation boost
         self.ZETA_BEKENSTEIN = 3500.0  # Bekenstein-Hawking quantum saturation scale
         self.MASS_THRESHOLD = 0.18  # Critical core virialization mass fraction
-        self.M0_CORE = 5000.0  # Reference black hole core mass scale
+        self.M0_CORE = float(5000.0 * ((self.grid_resolution / 32.0) ** 3))  # Reference black hole core mass scale scaled with volume
         self.A_LOCAL_UNIVERSE = 4.5  # Scale factor of the Local Universe (z = 0)
         self.A_MAX_CONFORMAL = 7.0  # Penrose CCC asymptotic dilution threshold
 
@@ -316,15 +316,17 @@ class CosmologicalUnits:
     def compute_bekenstein_entropy_limit(
         self,
         mass_core: float,
-        m0_ref: float = 5000.0,
-        zeta_base: float = 3500.0
+        m0_ref: float = None,
+        zeta_base: float = None
     ) -> float:
         """
         Computes the exact quantum gravitational Bekenstein-Hawking entropy saturation bound:
         S_BH(M) = (4 * pi * G * k_B / (hbar * c)) * M_BH^2 = zeta_0 * (M_core / M_0)^2
         """
-        mass_ratio = max(1.0, mass_core / m0_ref)
-        return float(zeta_base * (mass_ratio ** 2))
+        ref_m0 = m0_ref if m0_ref is not None else self.M0_CORE
+        ref_zeta = zeta_base if zeta_base is not None else self.ZETA_BEKENSTEIN
+        mass_ratio = max(1.0, mass_core / max(1.0, ref_m0))
+        return float(ref_zeta * (mass_ratio ** 2))
 
     def summary(self) -> Dict[str, Any]:
         """Returns structured dictionary of the cosmological dimensional calibration."""
