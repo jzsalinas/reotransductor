@@ -60,11 +60,10 @@ The autonomous 3D cosmological engine (`server/engine.py`) continuously tracks c
 
 ## Theoretical Foundations
 
-For full mathematical derivations and data provenance, see:
+For mathematical documentation, architectural analysis, and data provenance, see:
 * **[Data Provenance Manifest](data/PROVENANCE.md)**
-* **[Salinas Theorem of Emergent Time & Conformal Memory](paper/SALINAS_THEOREM_OF_EMERGENT_TIME_AND_CONFORMAL_MEMORY.md)**
 * **[Comprehensive Theory and Mathematical Formulation](docs/THEORY_AND_MATHEMATICAL_FORMULATION.md)**
-* **[Theoretical Paradoxes & Resolutions](paper/THEORETICAL_PARADOXES_AND_RESOLUTIONS.md)**
+* **[Mathematical Genealogy & Theoretical Lineage](docs/MATHEMATICAL_GENEALOGY_AND_THEORETICAL_LINEAGE.md)**
 * **[Dimensionless Units & Grid Calibration](docs/DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md)**
 
 ### 1. Fundamental Emergence Equation of Time
@@ -186,11 +185,7 @@ reotransductor/
 │   ├── MATHEMATICAL_GENEALOGY_AND_THEORETICAL_LINEAGE.md
 │   ├── SERVER_DEPLOYMENT.md
 │   └── THEORY_AND_MATHEMATICAL_FORMULATION.md
-├── paper/
-│   ├── MANUSCRIPT.md
-│   ├── SALINAS_THEOREM_OF_EMERGENT_TIME_AND_CONFORMAL_MEMORY.md
-│   └── THEORETICAL_PARADOXES_AND_RESOLUTIONS.md
-├── tests/                         # Full automated test suite (43 unit tests, 100% pass)
+├── tests/                         # Full automated test suite (54 unit tests, 100% pass)
 └── assets/                        # Publication figures (Planck, DESI, SPARC, Pantheon+, NANOGrav)
 ```
 

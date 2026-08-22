@@ -627,6 +627,12 @@ class CosmologicalEngine:
         # Trigger Telegram Alert if configured
         self.notifier.check_and_notify_eon(history_entry)
 
+        # Save Completed Eon Final Archive (Epoch 6)
+        g_tag = f"_g{self.grid_size}"
+        self.save_checkpoint(os.path.join(self.checkpoint_dir, f"eon_{self.eon}{g_tag}.npz"))
+        if self.grid_size == 32:
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"eon_{self.eon}.npz"))
+
         # Increment Eon
         self.eon += 1
         self.scale_factor = 1.0
@@ -1003,11 +1009,9 @@ class CosmologicalEngine:
         """Saves current state to compressed .npz archive."""
         g_tag = f"_g{self.grid_size}"
         if filepath is None:
-            eon_filepath = os.path.join(self.checkpoint_dir, f"eon_{self.eon}{g_tag}.npz")
-            latest_filepath = os.path.join(self.checkpoint_dir, f"latest{g_tag}.npz")
+            target_filepath = os.path.join(self.checkpoint_dir, f"latest{g_tag}.npz")
         else:
-            eon_filepath = filepath
-            latest_filepath = filepath
+            target_filepath = filepath
 
         # Compute Poisson Gravitational Potential Phi for complete halo & metric diagnostics
         delta_rho = self.rho - self.xp.mean(self.rho)
@@ -1036,12 +1040,9 @@ class CosmologicalEngine:
             "box_size_mpc": float(self.units.box_size_mpc),
             "h0_kms_mpc": float(self.units.h0_kms_mpc)
         }
-        np.savez_compressed(eon_filepath, **data)
-        if filepath is None:
-            np.savez_compressed(latest_filepath, **data)
-            if self.grid_size == 32:
-                np.savez_compressed(os.path.join(self.checkpoint_dir, f"eon_{self.eon}.npz"), **data)
-                np.savez_compressed(os.path.join(self.checkpoint_dir, "latest.npz"), **data)
+        np.savez_compressed(target_filepath, **data)
+        if filepath is None and self.grid_size == 32:
+            np.savez_compressed(os.path.join(self.checkpoint_dir, "latest.npz"), **data)
 
     def load_checkpoint(self, filepath):
         """Loads and restores simulation state from an .npz archive."""
