@@ -51,3 +51,6 @@ gpu = [
 test = [
     "pytest>=8.0"
 ]
+
+[tool.setuptools]
+packages = ["server", "observational"]
