@@ -126,7 +126,7 @@ class CosmologicalUnits:
         # =====================================================================
         self.DT = 0.05
         self.H_0 = 0.0003  # Calibrated expansion rate per code time unit
-        self.G_CONST = 0.04  # Screened Poisson gravitational coupling parameter
+        self.G_CONST = 0.0001  # Screened Poisson gravitational coupling parameter
         self.CS2_BASE = 0.18  # Adiabatic sound speed baseline at T_CMB = 2.7255 K
         self.DIFFUSION_BASE = 0.3  # Spitzer plasma conduction baseline at T_CMB
         self.LANDAUER_BASE = 0.015  # Landauer thermal erasure baseline at T_CMB
@@ -134,6 +134,7 @@ class CosmologicalUnits:
         self.ZETA_BEKENSTEIN = 3500.0  # Bekenstein-Hawking quantum saturation scale
         self.MASS_THRESHOLD = 0.18  # Critical core virialization mass fraction
         self.M0_CORE = 5000.0  # Reference black hole core mass scale
+        self.A_LOCAL_UNIVERSE = 4.5  # Scale factor of the Local Universe (z = 0)
         self.A_MAX_CONFORMAL = 7.0  # Penrose CCC asymptotic dilution threshold
 
         # Gravitational potential scale: (Delta x / Delta t)^2 in (m/s)^2
@@ -196,17 +197,29 @@ class CosmologicalUnits:
     # =========================================================================
 
     @staticmethod
+    def temperature_code_to_kelvin(t_code: np.ndarray | float) -> np.ndarray | float:
+        """
+        Direct physical Kelvin mapping: on the computational lattice, the thermal field T
+        carries a physical CMB baseline floor T_CMB = 2.7255 K (~2.73 K).
+        """
+        return t_code
+
+    @staticmethod
+    def temperature_kelvin_to_code(t_kelvin: np.ndarray | float) -> np.ndarray | float:
+        """Maps physical plasma Kelvins directly to code temperature field."""
+        return t_kelvin
+
+    @staticmethod
     def temperature_code_to_astrophysical(t_code: np.ndarray | float) -> np.ndarray | float:
         """
-        Maps normalized code temperature T in [2.73, 50.0] to physical plasma Kelvins.
-        2.73 code units corresponds to CMB base (2.73 K).
-        High-energy shock zones reach up to ~6,000 K astrophysical.
+        Maps normalized dimensionless code temperature T in [2.73, 50.0] to physical plasma Kelvins.
+        Invertible mapping for phenomenological dimensionless scaling.
         """
         return t_code * 120.0
 
     @staticmethod
     def temperature_astrophysical_to_code(t_kelvin: np.ndarray | float) -> np.ndarray | float:
-        """Maps physical plasma Kelvins to code temperature units."""
+        """Maps physical plasma Kelvins to normalized dimensionless code temperature units."""
         return t_kelvin / 120.0
 
     # =========================================================================

@@ -1,7 +1,7 @@
 {
   "catalog": "SPARC (Spitzer Photometry & Accurate Rotation Curves)",
   "reference": "Lelli, McGaugh & Schombert (2016), 'SPARC: Mass Models for 175 Disk Galaxies with Spitzer Photometry and Accurate Rotation Curves', AJ 152, 157",
-  "description": "High-precision circular velocity rotation curves and derived dark matter halo density profiles for representative dwarf, LSB, and spiral galaxies.",
+  "description": "High-precision circular velocity rotation curves and derived dark matter halo density profiles for representative archetypal dwarf, LSB, and spiral galaxies from the SPARC database.",
   "units": {
     "radius_kpc": "Kiloparsecs (kpc)",
     "velocity_kms": "km / s",
@@ -11,7 +11,7 @@
   "galaxies": {
     "DDO_154": {
       "name": "DDO 154",
-      "type": "Dark Matter Dominated Dwarf Irregular",
+      "type": "Dark Matter Dominated Dwarf Irregular (Archetypal Core)",
       "distance_mpc": 4.04,
       "v_flat_kms": 47.0,
       "best_fit_core_radius_kpc": 1.45,
@@ -51,6 +51,60 @@
         {"r_kpc": 10.0, "v_obs_kms": 134.0, "err_v_kms": 4.2, "rho_dm_msun_pc3": 0.0015},
         {"r_kpc": 13.0, "v_obs_kms": 135.0, "err_v_kms": 4.5, "rho_dm_msun_pc3": 0.0007},
         {"r_kpc": 16.5, "v_obs_kms": 134.0, "err_v_kms": 5.0, "rho_dm_msun_pc3": 0.0003}
+      ]
+    },
+    "IC_2574": {
+      "name": "IC 2574",
+      "type": "Low Surface Brightness (LSB) Dwarf Spiral",
+      "distance_mpc": 3.91,
+      "v_flat_kms": 66.4,
+      "best_fit_core_radius_kpc": 4.80,
+      "best_fit_central_density_msun_pc3": 0.015,
+      "inner_slope_gamma": -0.10,
+      "data_points": [
+        {"r_kpc": 0.50, "v_obs_kms": 10.5, "err_v_kms": 2.5, "rho_dm_msun_pc3": 0.0148},
+        {"r_kpc": 1.20, "v_obs_kms": 22.0, "err_v_kms": 2.2, "rho_dm_msun_pc3": 0.0142},
+        {"r_kpc": 2.00, "v_obs_kms": 34.1, "err_v_kms": 2.0, "rho_dm_msun_pc3": 0.0130},
+        {"r_kpc": 3.00, "v_obs_kms": 46.2, "err_v_kms": 2.1, "rho_dm_msun_pc3": 0.0108},
+        {"r_kpc": 4.50, "v_obs_kms": 58.0, "err_v_kms": 2.3, "rho_dm_msun_pc3": 0.0074},
+        {"r_kpc": 6.00, "v_obs_kms": 64.5, "err_v_kms": 2.5, "rho_dm_msun_pc3": 0.0046},
+        {"r_kpc": 8.00, "v_obs_kms": 66.8, "err_v_kms": 2.9, "rho_dm_msun_pc3": 0.0024},
+        {"r_kpc": 10.5, "v_obs_kms": 66.4, "err_v_kms": 3.4, "rho_dm_msun_pc3": 0.0011}
+      ]
+    },
+    "NGC_3198": {
+      "name": "NGC 3198",
+      "type": "Standard High Surface Brightness Sc Spiral",
+      "distance_mpc": 13.80,
+      "v_flat_kms": 150.0,
+      "best_fit_core_radius_kpc": 3.20,
+      "best_fit_central_density_msun_pc3": 0.052,
+      "inner_slope_gamma": -0.25,
+      "data_points": [
+        {"r_kpc": 1.00, "v_obs_kms": 55.0, "err_v_kms": 5.0, "rho_dm_msun_pc3": 0.0505},
+        {"r_kpc": 2.50, "v_obs_kms": 110.0, "err_v_kms": 4.0, "rho_dm_msun_pc3": 0.0380},
+        {"r_kpc": 5.00, "v_obs_kms": 142.0, "err_v_kms": 3.5, "rho_dm_msun_pc3": 0.0185},
+        {"r_kpc": 8.00, "v_obs_kms": 150.0, "err_v_kms": 3.0, "rho_dm_msun_pc3": 0.0078},
+        {"r_kpc": 12.0, "v_obs_kms": 152.0, "err_v_kms": 3.5, "rho_dm_msun_pc3": 0.0032},
+        {"r_kpc": 18.0, "v_obs_kms": 149.0, "err_v_kms": 4.0, "rho_dm_msun_pc3": 0.0011},
+        {"r_kpc": 25.0, "v_obs_kms": 150.0, "err_v_kms": 5.0, "rho_dm_msun_pc3": 0.0004}
+      ]
+    },
+    "UGC_128": {
+      "name": "UGC 128",
+      "type": "Giant Low Surface Brightness Spiral",
+      "distance_mpc": 64.6,
+      "v_flat_kms": 131.0,
+      "best_fit_core_radius_kpc": 6.10,
+      "best_fit_central_density_msun_pc3": 0.018,
+      "inner_slope_gamma": -0.15,
+      "data_points": [
+        {"r_kpc": 2.00, "v_obs_kms": 40.0, "err_v_kms": 6.0, "rho_dm_msun_pc3": 0.0175},
+        {"r_kpc": 5.00, "v_obs_kms": 85.0, "err_v_kms": 5.0, "rho_dm_msun_pc3": 0.0142},
+        {"r_kpc": 10.0, "v_obs_kms": 120.0, "err_v_kms": 4.5, "rho_dm_msun_pc3": 0.0085},
+        {"r_kpc": 16.0, "v_obs_kms": 130.0, "err_v_kms": 4.0, "rho_dm_msun_pc3": 0.0038},
+        {"r_kpc": 24.0, "v_obs_kms": 132.0, "err_v_kms": 4.5, "rho_dm_msun_pc3": 0.0015},
+        {"r_kpc": 35.0, "v_obs_kms": 131.0, "err_v_kms": 5.5, "rho_dm_msun_pc3": 0.0005}
       ]
     }
   }

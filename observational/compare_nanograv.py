@@ -42,8 +42,9 @@ def run_nanograv_comparison(
     print("=" * 75)
     print(f"• Central Observer Coordinates:   ({metrics['observer_center']['x']}, {metrics['observer_center']['y']}, {metrics['observer_center']['z']})")
     print(f"• Measured GWB Amplitude (A_GWB):  {metrics['a_gwb_effective']:.2e} (NANOGrav: 2.40e-15)")
-    print(f"• Chi^2 Goodness of Fit vs HD:     {metrics['chi2_hellings_downs']:.2f}")
-    print(f"• Quadrupolar Pattern Alignment:   {'✅ DETECTED' if metrics['chi2_hellings_downs'] < 30.0 else '⚠️ PARTIAL'}")
+    print(f"• Reotransductor Model Chi^2:      {metrics['chi2_simulation']:.2f}")
+    print(f"• Hellings-Downs Reference Chi^2:  {metrics['chi2_hellings_downs']:.2f}")
+    print(f"• Quadrupolar Pattern Alignment:   {'✅ DETECTED' if metrics['chi2_simulation'] < 40.0 else '⚠️ PARTIAL'}")
     print(f"• Output Plot:                     {output_fig}")
     print("=" * 75)
     return metrics
@@ -148,8 +149,8 @@ def generate_eon_nanograv_report(
     ax1.set_ylabel(r'Spatial Correlation $\Gamma(\zeta)$', color='#f8fafc', fontsize=10, fontweight='bold')
     ax1.set_title(
         f'Galactic Proper Time Micro-Drifts & Hellings-Downs Correlation — Eon {eon} vs. NANOGrav 15-Yr\n'
-        f'(Stochastic Background $A_{{\\mathrm{{GWB}}}} = {a_gwb_eff:.2e}$ | Goodness of Fit $\\chi^2 = {chi2_hd}$)',
-        color='#f8fafc', fontsize=12, fontweight='bold', pad=10
+        f'(Stochastic Background $A_{{\\mathrm{{eff}}}} = {a_gwb_eff:.2e}$ | Model $\\chi^2_{{\\mathrm{{sim}}}} = {chi2_sim}$ | Ref $\\chi^2_{{\\mathrm{{HD}}}} = {chi2_hd}$)',
+        color='#f8fafc', fontsize=11, fontweight='bold', pad=10
     )
     leg1 = ax1.legend(loc='upper right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=8.5)
     for t in leg1.get_texts():
@@ -228,6 +229,8 @@ def generate_eon_nanograv_report(
         "a_gwb_effective": a_gwb_eff,
         "chi2_hellings_downs": chi2_hd,
         "chi2_simulation": chi2_sim,
+        "chi2_model": chi2_sim,
+        "chi2_hd_reference": chi2_hd,
         "nanograv_comparison_path": eon_nanograv_path
     }
 

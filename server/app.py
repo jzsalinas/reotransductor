@@ -7,6 +7,7 @@ import os
 import asyncio
 import json
 import time
+import threading
 from typing import Set, Optional
 from contextlib import asynccontextmanager
 
@@ -18,10 +19,14 @@ from pydantic import BaseModel
 from server.engine import CosmologicalEngine
 
 # Global Engine & Synchronization
-engine: CosmologicalEngine = None
-active_connections: Set[WebSocket] = set()
+engine: Optional[CosmologicalEngine] = None
+active_connections: dict[WebSocket, asyncio.Lock] = {}
 is_paused = False
-target_fps = 15
+target_fps = 20
+shutdown_requested = False
+payload_lock = threading.Lock()
+latest_payload: Optional[dict] = None
+physics_thread: Optional[threading.Thread] = None
 
 class ControlRequest(BaseModel):
     action: str
@@ -33,24 +38,102 @@ class TelegramConfigRequest(BaseModel):
     chat_id: str
     interval_eons: int = 10
 
+def physics_loop():
+    """
+    Dedicated high-performance worker thread.
+    Executes the exact batch of cosmological steps configured by the user (steps_per_frame)
+    and updates the real-time visual payload.
+    """
+    global is_paused, latest_payload, shutdown_requested, engine
+
+    while not shutdown_requested:
+        try:
+            if not is_paused and engine is not None:
+                target_steps = engine.steps_per_frame
+                for _ in range(target_steps):
+                    if shutdown_requested or is_paused:
+                        break
+                    engine.step()
+
+                p = engine.get_visual_payload()
+                with payload_lock:
+                    latest_payload = p
+
+            # For small speeds (<= 100 p/f), pace at smooth ~20 FPS
+            if engine is not None and engine.steps_per_frame <= 100:
+                time.sleep(0.04)
+            elif is_paused:
+                time.sleep(0.02)
+        except Exception:
+            time.sleep(0.05)
+
+async def broadcast_worker():
+    """Lightweight async worker streaming latest frames to connected WebSocket clients."""
+    global latest_payload, shutdown_requested
+    last_sent_steps = -1
+    broadcast_interval = 1.0 / target_fps
+
+    while not shutdown_requested:
+        try:
+            if active_connections:
+                payload = None
+                with payload_lock:
+                    payload = latest_payload
+                if payload is not None and payload.get("telemetry", {}).get("total_steps") != last_sent_steps:
+                    last_sent_steps = payload.get("telemetry", {}).get("total_steps")
+                    message_str = json.dumps(payload)
+                    dead_sockets = []
+                    for ws, lock in list(active_connections.items()):
+                        try:
+                            async with lock:
+                                await ws.send_text(message_str)
+                        except Exception:
+                            dead_sockets.append(ws)
+                    for ds in dead_sockets:
+                        active_connections.pop(ds, None)
+            await asyncio.sleep(broadcast_interval)
+        except asyncio.CancelledError:
+            break
+        except Exception:
+            await asyncio.sleep(0.05)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global engine
+    global engine, shutdown_requested, physics_thread, latest_payload
+    shutdown_requested = False
+
     # Initialize Engine on Startup (check if reset or custom speed requested via env)
     force_reset = os.environ.get("REOTRANSDUCTOR_FORCE_RESET", "0") == "1"
     initial_speed = int(os.environ.get("REOTRANSDUCTOR_INITIAL_SPEED", "20"))
+    use_gpu = os.environ.get("REOTRANSDUCTOR_USE_GPU", "0") == "1"
+    grid_size = int(os.environ.get("REOTRANSDUCTOR_GRID_SIZE", "32"))
     engine = CosmologicalEngine(
+        grid_size=grid_size,
         checkpoint_dir="checkpoints",
         auto_resume=not force_reset,
         force_reset=force_reset,
-        initial_speed=initial_speed
+        initial_speed=initial_speed,
+        use_gpu=use_gpu
     )
-    
-    # Start background physics integration loop
-    worker_task = asyncio.create_task(physics_worker())
+
+    # Generate initial visual payload
+    with payload_lock:
+        latest_payload = engine.get_visual_payload()
+
+    # Start dedicated background physics thread
+    physics_thread = threading.Thread(target=physics_loop, name="GPU-Physics-Engine", daemon=True)
+    physics_thread.start()
+
+    # Start async WebSocket broadcast worker
+    broadcast_task = asyncio.create_task(broadcast_worker())
+
     yield
-    # Cleanup on Shutdown
-    worker_task.cancel()
+
+    # Clean Shutdown (No Segfaults, No Deadlocks)
+    shutdown_requested = True
+    broadcast_task.cancel()
+    if physics_thread and physics_thread.is_alive():
+        physics_thread.join(timeout=1.0)
     if engine:
         engine.save_checkpoint()
 
@@ -60,41 +143,6 @@ app = FastAPI(
     version="2.2.0",
     lifespan=lifespan
 )
-
-async def physics_worker():
-    """Background task executing continuous cosmological integration and broadcasting to WebSocket clients."""
-    global is_paused
-    last_broadcast_time = time.time()
-    broadcast_interval = 1.0 / target_fps
-
-    while True:
-        try:
-            if not is_paused and engine is not None:
-                # Run computation in thread pool to keep async event loop responsive
-                await asyncio.to_thread(engine.step_batch)
-
-            current_time = time.time()
-            if current_time - last_broadcast_time >= broadcast_interval:
-                last_broadcast_time = current_time
-                if active_connections and engine is not None:
-                    payload = await asyncio.to_thread(engine.get_visual_payload)
-                    message_str = json.dumps(payload)
-                    
-                    # Broadcast to all connected web clients
-                    dead_sockets = set()
-                    for websocket in active_connections:
-                        try:
-                            await websocket.send_text(message_str)
-                        except Exception:
-                            dead_sockets.add(websocket)
-                    
-                    active_connections.difference_update(dead_sockets)
-
-            await asyncio.sleep(0.005)
-        except asyncio.CancelledError:
-            break
-        except Exception as e:
-            await asyncio.sleep(0.1)
 
 # =====================================================================
 # REST API ENDPOINTS
@@ -151,26 +199,36 @@ async def get_snapshot(snapshot_id: str):
 # Telegram Alert Configuration Endpoints
 @app.get("/api/telegram/config")
 async def get_telegram_config():
-    """Returns Telegram notification settings."""
+    """Returns Telegram notification settings without leaking sensitive secrets."""
     if engine is None:
         raise HTTPException(status_code=503, detail="Engine initializing")
-    cfg = engine.notifier.config.copy()
-    if cfg.get("bot_token"):
-        cfg["bot_token_masked"] = cfg["bot_token"][:6] + "..." + cfg["bot_token"][-4:]
-    else:
-        cfg["bot_token_masked"] = ""
-    return cfg
+    cfg = engine.notifier.config
+    token = str(cfg.get("bot_token") or "").strip()
+    masked = (token[:6] + "..." + token[-4:]) if len(token) > 10 else ("***" if token else "")
+    return {
+        "enabled": bool(cfg.get("enabled", False)),
+        "chat_id": cfg.get("chat_id", ""),
+        "interval_eons": int(cfg.get("interval_eons", 10)),
+        "bot_token_masked": masked,
+        "bot_token_configured": bool(token)
+    }
 
 @app.post("/api/telegram/config")
 async def set_telegram_config(req: TelegramConfigRequest):
-    """Updates Telegram notification settings."""
+    """Updates Telegram notification settings safely."""
     if engine is None:
         raise HTTPException(status_code=503, detail="Engine initializing")
     
+    current_cfg = engine.notifier.config
+    token_to_save = req.bot_token.strip() if req.bot_token else ""
+    # If the submitted token is masked or unchanged, preserve the existing secret
+    if "..." in token_to_save or (token_to_save == "" and current_cfg.get("bot_token")):
+        token_to_save = current_cfg.get("bot_token", "")
+
     new_cfg = {
         "enabled": req.enabled,
-        "bot_token": req.bot_token,
-        "chat_id": req.chat_id,
+        "bot_token": token_to_save,
+        "chat_id": req.chat_id.strip() if req.chat_id else "",
         "interval_eons": max(1, req.interval_eons)
     }
     engine.notifier.save_config(new_cfg)
@@ -186,7 +244,7 @@ async def test_telegram_alert():
         "🌌 <b>TEST DE CONEXIÓN: REOTRANSDUCTOR 3D</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "✅ <b>¡Conexión establecida con éxito!</b>\n"
-        "Tu servidor Dell PowerEdge R820 está listo para enviarte alertas automáticas en cada hito de eones configurado.\n"
+        "Tu servidor de simulación cosmológica 3D está listo para enviarte alertas automáticas en cada hito de eones configurado.\n"
         f"• <b>Eón Actual:</b> N = {engine.eon}\n"
         f"• <b>Intervalo de Alertas:</b> Cada {engine.notifier.config.get('interval_eons', 10)} eones.\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -211,7 +269,7 @@ async def handle_control(request: ControlRequest):
     elif request.action == "toggle_pause":
         is_paused = not is_paused
     elif request.action == "set_speed":
-        engine.steps_per_frame = max(1, min(1000, request.value))
+        engine.steps_per_frame = max(1, min(100000, request.value))
     elif request.action == "save_checkpoint":
         snapshot_meta = engine.save_manual_snapshot()
         return {"status": "success", "message": "Checkpoint y fotograma guardados", "snapshot": snapshot_meta}
@@ -242,15 +300,18 @@ async def handle_control(request: ControlRequest):
 @app.websocket("/ws/live")
 async def websocket_endpoint(websocket: WebSocket):
     """Real-time bi-directional streaming connection."""
-    global is_paused
+    global is_paused, latest_payload
     await websocket.accept()
-    active_connections.add(websocket)
+    send_lock = asyncio.Lock()
+    active_connections[websocket] = send_lock
 
     try:
         # Send initial snapshot immediately upon connection
-        if engine is not None:
-            initial_payload = engine.get_visual_payload()
-            await websocket.send_text(json.dumps(initial_payload))
+        with payload_lock:
+            p = latest_payload or (engine.get_visual_payload() if engine else None)
+        if p is not None:
+            async with send_lock:
+                await websocket.send_text(json.dumps(p))
 
         while True:
             # Listen for client control commands via WebSocket
@@ -261,7 +322,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if action == "set_speed":
                     val = int(msg.get("value", 20))
                     if engine:
-                        engine.steps_per_frame = max(1, min(1000, val))
+                        engine.steps_per_frame = max(1, min(100000, val))
                 elif action == "toggle_pause":
                     is_paused = not is_paused
                 elif action == "save_checkpoint":
@@ -269,16 +330,16 @@ async def websocket_endpoint(websocket: WebSocket):
                         engine.save_manual_snapshot()
                 elif action == "reset":
                     if engine:
-                        engine.reset_simulation(archive_existing=True)
-                        is_paused = False
-                        fresh_payload = engine.get_visual_payload()
-                        await websocket.send_text(json.dumps(fresh_payload))
+                        with payload_lock:
+                            engine.reset_simulation(archive_existing=True)
+                            is_paused = False
+                            latest_payload = engine.get_visual_payload()
             except Exception:
                 pass
-    except WebSocketDisconnect:
-        active_connections.discard(websocket)
-    except Exception:
-        active_connections.discard(websocket)
+    except (WebSocketDisconnect, Exception):
+        pass
+    finally:
+        active_connections.pop(websocket, None)
 
 # =====================================================================
 # STATIC WEB DASHBOARD HOSTING

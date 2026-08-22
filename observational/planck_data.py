@@ -12,7 +12,7 @@ from typing import Dict, Any, Tuple
 
 class Planck2018Data:
     """
-    Official ESA Planck 2018 Legacy Archive (PR3/PR4) CMB TT Angular Power Spectrum.
+    Official ESA Planck 2018 Legacy Archive (PR3) CMB TT Angular Power Spectrum.
     Data format: D_ell = ell*(ell+1)/(2*pi) * C_ell [in muK^2]
     Acoustic Peaks:
       - 1st Peak: ell ~ 220 (D_ell ~ 5750 muK^2)

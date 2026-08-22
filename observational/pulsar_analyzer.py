@@ -200,8 +200,9 @@ class PulsarTimingAnalyzer:
         lons = np.linspace(-np.pi, np.pi, n_lon)
         sky_map = np.zeros((n_lat, n_lon), dtype=np.float64)
 
+        grid_n = field_3d.shape[0]
         cx, cy, cz = center
-        radius = 8.0
+        radius = max(1.0, float(grid_n) / 4.0)
 
         for i, lat in enumerate(lats):
             for j, lon in enumerate(lons):
@@ -209,9 +210,9 @@ class PulsarTimingAnalyzer:
                 ny = np.cos(lat) * np.sin(lon)
                 nz = np.sin(lat)
 
-                vx = int((cx + radius * nx) % self.grid_size)
-                vy = int((cy + radius * ny) % self.grid_size)
-                vz = int((cz + radius * nz) % self.grid_size)
+                vx = int(np.floor(cx + radius * nx)) % grid_n
+                vy = int(np.floor(cy + radius * ny)) % grid_n
+                vz = int(np.floor(cz + radius * nz)) % grid_n
 
                 sky_map[i, j] = field_3d[vx, vy, vz]
 

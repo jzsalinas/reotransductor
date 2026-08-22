@@ -39,6 +39,8 @@ class BAOSpatialCorrelationAnalyzer:
         Computes 3D periodic autocorrelation volume xi_3d(r) via Wiener-Khinchin theorem:
           xi_3d = IFFT[ |FFT(delta)|^2 ] / N_voxels
         """
+        if hasattr(field_3d, 'get'):
+            field_3d = field_3d.get()
         mean_val = float(np.mean(field_3d))
         if abs(mean_val) > 1e-6:
             delta = (field_3d - mean_val) / mean_val

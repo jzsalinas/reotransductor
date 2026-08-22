@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+title: "Reotransductor: Emergent Proper Time from Non-Equilibrium Dissipation in Computational Cosmology"
+version: 2.2.0
+date-released: 2026-08-21
+authors:
+  - family-names: "Salinas"
+    given-names: "José"
+    email: "jzsalinas@gmail.com"
+repository-code: "https://github.com/jzsalinas/reotransductor"
+license: "MIT"
+keywords:
+  - "cosmology"
+  - "thermodynamics"
+  - "emergent-time"
+  - "onsager-prigogine"
+  - "conformal-cyclic-cosmology"
+  - "hubble-tension"
+  - "planck"
+  - "desi"
+  - "sparc"
+  - "pantheon"
+  - "nanograv"

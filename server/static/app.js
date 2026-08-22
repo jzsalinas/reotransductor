@@ -49,6 +49,12 @@ const INFERNO_LUT = createColormapLUT([
     [0.00, '#000004'], [0.25, '#420a68'], [0.50, '#932667'], [0.75, '#dd513a'], [0.90, '#fca50a'], [1.00, '#fcffa4']
 ]);
 
+const THERMAL_LUT = createColormapLUT([
+    [0.00, '#080526'], [0.10, '#1c0e48'], [0.20, '#39126d'], [0.32, '#5e178a'],
+    [0.45, '#872190'], [0.58, '#b3307e'], [0.70, '#dc4d5c'], [0.82, '#f4783c'],
+    [0.91, '#fca83a'], [0.97, '#fce36f'], [1.00, '#ffffff']
+]);
+
 // =====================================================================
 // 2. CANVAS ELEMENTS & 3D PERSPECTIVE STATE
 // =====================================================================
@@ -145,7 +151,12 @@ function render2DSlice(ctx, data2D, lut, vmin = null, vmax = null) {
     }
     const range = Math.max(1e-5, max - min);
 
-    const imgData = ctx.createImageData(cols, rows);
+    // 1. Create 32x32 Offscreen Pixel Buffer
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = cols;
+    offCanvas.height = rows;
+    const offCtx = offCanvas.getContext('2d');
+    const imgData = offCtx.createImageData(cols, rows);
     const buf = imgData.data;
 
     for (let r = 0; r < rows; r++) {
@@ -162,7 +173,15 @@ function render2DSlice(ctx, data2D, lut, vmin = null, vmax = null) {
             buf[bufIdx + 3] = 255;
         }
     }
-    ctx.putImageData(imgData, 0, 0);
+    offCtx.putImageData(imgData, 0, 0);
+
+    // 2. Render onto visible canvas with High-Quality Smooth Interpolation
+    const targetW = ctx.canvas.width;
+    const targetH = ctx.canvas.height;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, targetW, targetH);
+    ctx.drawImage(offCanvas, 0, 0, targetW, targetH);
 }
 
 function renderCMBMap(ctx, cmbData) {
@@ -249,14 +268,26 @@ function renderCMBMap(ctx, cmbData) {
 /**
  * 3D True Coordinate Box & Cosmic Web Filament Renderer
  */
-function render3DCosmicWeb(ctx, points) {
+function render3DCosmicWeb(ctx, points, gridSize = null) {
     const width = canvas3D.width;
     const height = canvas3D.height;
     ctx.clearRect(0, 0, width, height);
 
     const cx = width / 2;
     const cy = height / 2;
-    const boxSize = 32.0;
+    
+    // Auto-detect boxSize from parameter, telemetry, or point cloud bounds
+    let detectedGrid = gridSize || (currentPayload && currentPayload.telemetry && currentPayload.telemetry.grid_size);
+    if (!detectedGrid && points && points.length > 0) {
+        let maxCoord = 0;
+        for (let i = 0; i < points.length; i++) {
+            if (points[i][0] > maxCoord) maxCoord = points[i][0];
+            if (points[i][1] > maxCoord) maxCoord = points[i][1];
+            if (points[i][2] > maxCoord) maxCoord = points[i][2];
+        }
+        detectedGrid = maxCoord > 160 ? 256 : (maxCoord > 80 ? 128 : (maxCoord > 40 ? 64 : 32));
+    }
+    const boxSize = Number(detectedGrid || 32);
     const scale = Math.min(width, height) * 0.42 * zoom3D;
 
     // Trigonometric rotation matrices
@@ -294,21 +325,22 @@ function render3DCosmicWeb(ctx, points) {
     // 1. Draw 3D Box Floor Grids (z=0, y=0, x=0 backplanes)
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
     ctx.lineWidth = 1;
-    for (let step = 8; step <= 24; step += 8) {
+    const stepDelta = boxSize / 4.0;
+    for (let step = stepDelta; step < boxSize; step += stepDelta) {
         // XY base grid at z=0
         const p1 = project3D(0, step, 0);
-        const p2 = project3D(32, step, 0);
+        const p2 = project3D(boxSize, step, 0);
         ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
 
         const p3 = project3D(step, 0, 0);
-        const p4 = project3D(step, 32, 0);
+        const p4 = project3D(step, boxSize, 0);
         ctx.beginPath(); ctx.moveTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.stroke();
     }
 
-    // 2. Draw 12 Edges of the True Coordinate Cube [0, 32]^3
+    // 2. Draw 12 Edges of the True Coordinate Cube [0, boxSize]^3
     const corners = [
-        project3D(0, 0, 0), project3D(32, 0, 0), project3D(32, 32, 0), project3D(0, 32, 0),
-        project3D(0, 0, 32), project3D(32, 0, 32), project3D(32, 32, 32), project3D(0, 32, 32)
+        project3D(0, 0, 0), project3D(boxSize, 0, 0), project3D(boxSize, boxSize, 0), project3D(0, boxSize, 0),
+        project3D(0, 0, boxSize), project3D(boxSize, 0, boxSize), project3D(boxSize, boxSize, boxSize), project3D(0, boxSize, boxSize)
     ];
 
     const edges = [
@@ -333,17 +365,17 @@ function render3DCosmicWeb(ctx, points) {
         ctx.stroke();
     });
 
-    // 3. Draw Axis Labels (X, Y, Z) and Ticks (0, 32)
+    // 3. Draw Axis Labels (X, Y, Z) and Ticks (0, boxSize)
     ctx.font = '10px "JetBrains Mono", monospace';
     ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
 
-    const pX = project3D(34, 0, 0);
-    const pY = project3D(0, 34, 0);
-    const pZ = project3D(0, 0, 34);
+    const pX = project3D(boxSize * 1.06, 0, 0);
+    const pY = project3D(0, boxSize * 1.06, 0);
+    const pZ = project3D(0, 0, boxSize * 1.06);
 
-    ctx.fillText('X (32)', pX.x + 4, pX.y);
-    ctx.fillText('Y (32)', pY.x + 4, pY.y);
-    ctx.fillText('Z (32)', pZ.x, pZ.y - 4);
+    ctx.fillText(`X (${boxSize})`, pX.x + 4, pX.y);
+    ctx.fillText(`Y (${boxSize})`, pY.x + 4, pY.y);
+    ctx.fillText(`Z (${boxSize})`, pZ.x, pZ.y - 4);
 
     // 4. Render Cosmic Matter Filaments (Depth-Sorted Points)
     if (points && points.length > 0) {
@@ -355,15 +387,22 @@ function render3DCosmicWeb(ctx, points) {
         // Depth Sort: back to front
         projectedPoints.sort((a, b) => a.depth - b.depth);
 
+        let minRho = Infinity, maxRho = -Infinity;
+        points.forEach(p => {
+            if (p[3] < minRho) minRho = p[3];
+            if (p[3] > maxRho) maxRho = p[3];
+        });
+        const rhoRange = Math.max(0.05, maxRho - minRho);
+
         projectedPoints.forEach(pt => {
-            const norm = Math.min(1.0, pt.rho / 3.5);
+            const norm = Math.max(0, Math.min(1.0, (pt.rho - minRho) / rhoRange));
             const lutIdx = Math.floor(norm * 255) * 4;
             const r = MAGMA_LUT[lutIdx];
             const g = MAGMA_LUT[lutIdx + 1];
             const b = MAGMA_LUT[lutIdx + 2];
 
-            const radius = Math.max(1.8, (norm * 4.5) * zoom3D);
-            const alpha = 0.55 + 0.35 * norm;
+            const radius = Math.max(2.2, (2.0 + norm * 3.5) * zoom3D);
+            const alpha = 0.65 + 0.35 * norm;
 
             ctx.beginPath();
             ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
@@ -394,29 +433,46 @@ function updateDashboard(payload) {
     }
     lastKnownEon = t.eon;
 
-    // Header
-    const eonNumEl = document.getElementById('eonNum');
-    if (eonNumEl) eonNumEl.textContent = t.eon;
+    // Cosmological Era Badge
     const eraBadgeEl = document.getElementById('eraBadge');
     if (eraBadgeEl) eraBadgeEl.textContent = t.era;
 
-    // Sync speed slider with current server speed on initial connection
+    // Sync speed controls with current server speed on initial connection
     if (!window._speedSynced && t.steps_per_frame) {
-        document.getElementById('speedSlider').value = t.steps_per_frame;
-        document.getElementById('speedVal').textContent = t.steps_per_frame;
+        const curSpeed = t.steps_per_frame;
+        const speedInputEl = document.getElementById('speedInput');
+        const speedSelectEl = document.getElementById('speedSelect');
+        if (speedInputEl) speedInputEl.value = curSpeed;
+        if (speedSelectEl) {
+            const hasOpt = Array.from(speedSelectEl.options).some(o => o.value == curSpeed);
+            speedSelectEl.value = hasOpt ? curSpeed : 'custom';
+        }
         window._speedSynced = true;
+    }
+
+    // Telemetry Card Hardware tag
+    const telHardwareEl = document.getElementById('telHardware');
+    if (telHardwareEl) {
+        telHardwareEl.textContent = t.hardware ? t.hardware : (t.use_gpu ? 'GPU' : 'CPU');
     }
 
     // Telemetry Card
     document.getElementById('telEon').textContent = `N = ${t.eon}`;
     document.getElementById('telScale').textContent = `a = ${t.scale_factor.toFixed(3)} (z = ${t.redshift.toFixed(2)})`;
-    document.getElementById('telTemp').textContent = `${t.temp_norm.toFixed(1)} K (${Math.round(t.temp_astro)} K Astro)`;
-    document.getElementById('telMass').textContent = `${t.mass_fraction.toFixed(1)}% del total`;
-    document.getElementById('telAttractor').textContent = `(x=${t.attractor.x}, y=${t.attractor.y}, z=${t.attractor.z})`;
-    document.getElementById('telEntropy').textContent = `${Math.round(t.s_bh).toLocaleString()} k_B`;
-    document.getElementById('telBekenstein').textContent = `${Math.round(t.s_crit).toLocaleString()} k_B`;
-    document.getElementById('telOdometer').textContent = `${Math.round(t.fossil_odometer).toLocaleString()} s`;
-    document.getElementById('telSteps').textContent = t.total_steps.toLocaleString();
+    document.getElementById('telTemp').textContent = `${(t.temp_norm || 0).toFixed(1)} K (${Math.round(t.temp_astro || 0).toLocaleString()} K Astro)`;
+    document.getElementById('telMass').textContent = `${t.mass_fraction ? t.mass_fraction.toFixed(1) : '0.0'}% del total`;
+    const attrStr = t.attractor ? `(x=${t.attractor.x}, y=${t.attractor.y}, z=${t.attractor.z})` : '(x=16, y=16, z=16)';
+    document.getElementById('telAttractor').textContent = attrStr;
+    document.getElementById('telEntropy').textContent = `${Math.round(t.s_bh || 0).toLocaleString()} k_B`;
+    document.getElementById('telBekenstein').textContent = `${Math.round(t.s_crit || 0).toLocaleString()} k_B`;
+
+    const myrVal = t.time_myr || 0;
+    const timeCosmicStr = myrVal >= 1000 
+        ? `${(myrVal / 1000.0).toFixed(2)} Gyr`
+        : `${Math.round(myrVal)} Myr`;
+
+    document.getElementById('telOdometer').textContent = `${timeCosmicStr} (τ = ${Math.round(t.fossil_odometer || 0).toLocaleString()})`;
+    document.getElementById('telSteps').textContent = (t.total_steps || 0).toLocaleString();
 
     // Progress Bar
     const progVal = t.tunnel_progress;
@@ -445,8 +501,8 @@ function updateDashboard(payload) {
 
     document.getElementById('stateBanner').textContent = t.state_status;
 
-    // Slice Coordinate Tags
-    const zTag = `(z=${t.z_slice})`;
+    // Slice Coordinate Tags (Spatial Grid Plane Z_slice in 3D box)
+    const zTag = `(Plano Z = ${t.z_slice})`;
     document.getElementById('sliceRhoTag').textContent = `[a=${t.scale_factor.toFixed(2)}] ${zTag}`;
     document.getElementById('sliceRateTag').textContent = zTag;
     document.getElementById('sliceIndexTag').textContent = zTag;
@@ -454,15 +510,15 @@ function updateDashboard(payload) {
     document.getElementById('sliceLogTauTag').textContent = zTag;
     document.getElementById('sliceTempTag').textContent = zTag;
 
-    // Render Slices & Canvases
-    render3DCosmicWeb(ctx3D, payload.points_3d);
+    // Render Slices & Canvases with dynamic contrast autoscaling
+    render3DCosmicWeb(ctx3D, payload.points_3d, t.grid_size);
     renderCMBMap(ctxCMB, payload.cmb);
-    render2DSlice(ctxRho, payload.slice_rho, MAGMA_LUT, 0.0, 3.5);
-    render2DSlice(ctxRate, payload.slice_rate, PLASMA_LUT, 0.0, 0.6);
-    render2DSlice(ctxIndex, payload.slice_index, CIVIDIS_LUT, 0.0, 1.0);
+    render2DSlice(ctxRho, payload.slice_rho, MAGMA_LUT);
+    render2DSlice(ctxRate, payload.slice_rate, PLASMA_LUT);
+    render2DSlice(ctxIndex, payload.slice_index, CIVIDIS_LUT);
     render2DSlice(ctxTau, payload.slice_tau, VIRIDIS_LUT);
-    render2DSlice(ctxLogTau, payload.slice_log_tau, INFERNO_LUT, 0.0, 3.5);
-    render2DSlice(ctxTemp, payload.slice_temp, PLASMA_LUT, 2.73, 50.0);
+    render2DSlice(ctxLogTau, payload.slice_log_tau, INFERNO_LUT);
+    render2DSlice(ctxTemp, payload.slice_temp, THERMAL_LUT);
 }
 
 // =====================================================================
@@ -628,16 +684,40 @@ setInterval(refreshSnapshotList, 10000);
 // 6. CONTROLS & EVENT LISTENERS
 // =====================================================================
 
-const speedSlider = document.getElementById('speedSlider');
-const speedVal = document.getElementById('speedVal');
+const speedSelect = document.getElementById('speedSelect');
+const speedInput = document.getElementById('speedInput');
 
-speedSlider.addEventListener('input', (e) => {
-    const val = parseInt(e.target.value);
-    speedVal.textContent = val;
+function sendSpeedUpdate(rawVal) {
+    const val = Math.max(1, Math.min(100000, parseInt(rawVal) || 20));
+    if (speedInput) speedInput.value = val;
+    if (speedSelect) {
+        const hasOpt = Array.from(speedSelect.options).some(o => o.value == val);
+        speedSelect.value = hasOpt ? val : 'custom';
+    }
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'set_speed', value: val }));
     }
-});
+}
+
+if (speedSelect) {
+    speedSelect.addEventListener('change', (e) => {
+        if (e.target.value !== 'custom') {
+            sendSpeedUpdate(e.target.value);
+        }
+    });
+}
+
+if (speedInput) {
+    speedInput.addEventListener('change', (e) => {
+        sendSpeedUpdate(e.target.value);
+    });
+    speedInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            sendSpeedUpdate(e.target.value);
+            speedInput.blur();
+        }
+    });
+}
 
 const pauseBtn = document.getElementById('pauseBtn');
 const pauseIcon = document.getElementById('pauseIcon');
@@ -735,7 +815,7 @@ telegramBtn.addEventListener('click', async () => {
         if (res.ok) {
             const cfg = await res.json();
             tgEnabled.checked = cfg.enabled;
-            tgToken.value = cfg.bot_token || '';
+            tgToken.value = cfg.bot_token_masked || '';
             tgChatId.value = cfg.chat_id || '';
             tgInterval.value = cfg.interval_eons || 10;
         }

@@ -4,23 +4,24 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![NumPy](https://img.shields.io/badge/NumPy-2.0+-013243.svg?logo=numpy)](https://numpy.org/)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c.svg)](https://matplotlib.org/)
-[![Tests: 43/43 Passed](https://img.shields.io/badge/tests-43%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Tests: 54/54 Passed](https://img.shields.io/badge/tests-54%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Data: Manifest Verified](https://img.shields.io/badge/data-provenance%20verified-blue.svg)](data/PROVENANCE.md)
 
 An open-source computational physics simulation suite and in-silico laboratory formalizing the **Active Present Rheotransducer** (*Reotransductor del Presente Activo*) — connecting non-equilibrium thermodynamics (Onsager-Prigogine), general relativity, quantum cosmology, and Penrose Conformal Cyclic Cosmology (CCC) to model the emergence of **thermal proper time** ($\tau$) from irreversible dissipation.
 
 ---
 
-## Observational Falsification Matrix (100% Verified)
+## Observational Falsification Matrix (Empirical Benchmarks)
 
-The Reotransductor framework has been rigorously benchmarked against official astrophysical survey databases, resolving major cosmological and galactic anomalies from first principles without free tuning parameters:
+The Reotransductor framework is benchmarked against official astrophysical survey databases, evaluating cosmological and galactic observables against standard reference models:
 
 | # | Observational Domain | Official Survey / Dataset | Physical Mechanism | Empirical Benchmark Result | Status |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **0** | **Cosmic Microwave Background (CMB)** | **ESA Planck 2018 Legacy (PR4)** | Holographic Phase-Locking in Fourier space $\hat{\tau}(\mathbf{k})$ | Quadrupole-to-octopole power suppression $C_2/C_3 = 0.742 < 1.0$, matching Planck low-$\ell$ anomaly | ✅ **VERIFIED** |
-| **1** | **Baryon Acoustic Oscillations (BAO)** | **DESI 2024 DR1 & SDSS BOSS DR12** | Relativistic sound horizon preservation via 3D $\xi(r)$ | Monopole spatial correlation acoustic peak at $r_{\text{BAO}} = 102.5\ h^{-1}\text{Mpc}$ ($\pm 1\sigma$ DESI band) | ✅ **VERIFIED** |
-| **2** | **Dark Matter Halos (Cusp-Core)** | **SPARC 2020 Database (Lelli et al.)** | Spitzer-Jeans non-equilibrium core thermalization | Flat central density core $\gamma_0 = -0.138$ and flat rotation curves $V_c(r) = \text{const}$ (DDO 154 / NGC 2403) | ✅ **VERIFIED** |
-| **3** | **$5\sigma$ Hubble Tension ($H_0$)** | **Pantheon+ (2022) / SH0ES 1,701 SNe Ia** | Environmental proper time dilation $\Delta\tau$ in halos | $H_0^{\text{void}} = 67.36 \to H_0^{\text{cluster}} = 75.52\text{ km/s/Mpc}$, environmental gradient $+4.19\text{ km/s/Mpc/dex}$ | ✅ **VERIFIED** |
-| **4** | **Pulsar Timing Arrays (PTAs)** | **NANOGrav 15-Year Data Set (2023)** | Relativistic transverse-traceless antenna response | Quadrupolar Hellings-Downs cross-correlation ($\chi^2 = 4.86$, $A_{\text{GWB}} = 2.90 \times 10^{-15}$) | ✅ **VERIFIED** |
+| **0** | **Cosmic Microwave Background (CMB)** | **ESA Planck 2018 Legacy (PR3)** | Holographic Phase-Locking in Fourier space $\hat{\tau}(\mathbf{k})$ | Quadrupole-to-octopole power ratio $C_2/C_3 = 0.742 < 1.0$, compatible with Planck low-$\ell$ anomaly | ✅ **COMPATIBLE** |
+| **1** | **Baryon Acoustic Oscillations (BAO)** | **DESI 2024 DR1 & SDSS BOSS DR12** | Relativistic sound horizon preservation via 3D $\xi(r)$ | Monopole spatial correlation acoustic peak at $r_{\text{BAO}} = 102.5\ h^{-1}\text{Mpc}$ ($\pm 1\sigma$ DESI band) | ✅ **COMPATIBLE** |
+| **2** | **Dark Matter Halos (Cusp-Core)** | **SPARC 2020 Database (Lelli et al.)** | Spitzer-Jeans non-equilibrium core thermalization | Flat central density core $\gamma_0 = -0.138$ and flat rotation curves $V_c(r) = \text{const}$ (DDO 154 / NGC 2403) | ✅ **COMPATIBLE** |
+| **3** | **Hubble Tension ($H_0$)** | **Pantheon+ (2022) / SH0ES 1,701 SNe Ia** | Environmental proper time dilation $\Delta\tau$ in halos | $H_0^{\text{void}} = 67.36 \to H_0^{\text{cluster}} = 75.52\text{ km/s/Mpc}$, environmental gradient $+4.19\text{ km/s/Mpc/dex}$ | ✅ **COMPATIBLE** |
+| **4** | **Pulsar Timing Arrays (PTAs)** | **NANOGrav 15-Year Data Set (2023)** | Relativistic transverse-traceless antenna response | Quadrupolar Hellings-Downs cross-correlation ($\chi^2_{\text{sim}} \approx 4.8$, $A_{\text{eff}} \approx 2.4 - 3.5 \times 10^{-15}$) | ✅ **COMPATIBLE** |
 
 ---
 
@@ -59,15 +60,16 @@ The autonomous 3D cosmological engine (`server/engine.py`) continuously tracks c
 
 ## Theoretical Foundations
 
-For full mathematical derivations, see:
+For full mathematical derivations and data provenance, see:
+* **[Data Provenance Manifest](data/PROVENANCE.md)**
 * **[Salinas Theorem of Emergent Time & Conformal Memory](paper/SALINAS_THEOREM_OF_EMERGENT_TIME_AND_CONFORMAL_MEMORY.md)**
 * **[Comprehensive Theory and Mathematical Formulation](docs/THEORY_AND_MATHEMATICAL_FORMULATION.md)**
 * **[Theoretical Paradoxes & Resolutions](paper/THEORETICAL_PARADOXES_AND_RESOLUTIONS.md)**
 * **[Dimensionless Units & Grid Calibration](docs/DIMENSIONLESS_UNITS_AND_GRID_CALIBRATION.md)**
 
 ### 1. Fundamental Emergence Equation of Time
-$$\frac{d\tau}{dt} = 1 + \kappa_0 \cdot \sigma_{\text{total}}(\mathbf{x}, t)$$
-where the dimensional constant is derived purely from Planck and Boltzmann universal constants:
+$$\frac{d\tau_{\text{physical}}}{dt} = 1 + \kappa_0 \cdot \sigma_{\text{total}}(\mathbf{x}, t), \qquad \tau_{\text{physical}}(\mathbf{x}, t) = t + \Delta\tau(\mathbf{x}, t)$$
+where the dimensional microscopic coupling constant is derived from Planck and Boltzmann universal constants:
 $$\kappa_0 = \frac{\hbar^2 G^2}{c^7 k_B} \approx 6.03 \times 10^{-71}\ \mathrm{m}\cdot\mathrm{s}^3\cdot\mathrm{K}\cdot\mathrm{kg}^{-1}$$
 
 ### 2. Dual Eon Transition Mechanics
@@ -89,19 +91,32 @@ cd reotransductor
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[server,test]"
 ```
 
-### 2. Run Automated Unit Tests (43/43 Tests Passing 100%)
+### 2. Run Automated Unit Tests (54/54 Tests Passing 100%)
 ```bash
 python -m unittest discover tests -v
 ```
 
 ### 3. Run the 24/7 Cosmological Server & Web Dashboard
+
 ```bash
+# Standard Resolution (32x32x32) on CPU (Default)
 python run_server.py --port 8000
+
+# High-Definition (64x64x64) with NVIDIA GPU Acceleration
+python run_server.py --gpu --grid 64 --reset --speed 500 --port 8000
+
+# Ultra-HD Cosmic Web (128x128x128, 2.1 Million Voxels)
+python run_server.py --gpu --grid 128 --reset --speed 200 --port 8000
+
+# Maximum Resolution Continuum (256x256x256, 16.78 Million Voxels in < 1 GB VRAM)
+python run_server.py --gpu --grid 256 --reset --speed 100 --port 8000
 ```
 Open `http://localhost:8000` in your web browser. (For production deployment with `systemd` and `Nginx`, see [Server Deployment Guide](docs/SERVER_DEPLOYMENT.md)).
+
+All checkpoints and snapshots are automatically differentiated by grid resolution tag (`latest_g256.npz`, `cmb_eon_1_g256.npz`, `snapshot_eon_1_g256.json`), ensuring multi-resolution simulations never collide.
 
 ---
 

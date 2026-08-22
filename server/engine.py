@@ -18,9 +18,10 @@ class CosmologicalEngine:
     """
     Autonomous 3D Cosmological Physics Engine.
     Executes Navier-Stokes, Poisson Gravity, Onsager Emergent Time, and Bekenstein Quantum Bounce.
+    Supports unified CPU (NumPy) and GPU (CuPy / CUDA) hardware execution.
     """
 
-    def __init__(self, grid_size=32, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20):
+    def __init__(self, grid_size=32, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20, seed=42, use_gpu=False):
         self.grid_size = grid_size
         self.initial_speed = int(initial_speed)
         self.checkpoint_dir = checkpoint_dir
@@ -28,6 +29,25 @@ class CosmologicalEngine:
         os.makedirs(self.checkpoint_dir, exist_ok=True)
         os.makedirs(self.snapshots_dir, exist_ok=True)
         self.history_file = os.path.join(self.checkpoint_dir, "history.json")
+
+        # Hardware Backend Selection (Single Source of Truth: CPU / GPU)
+        self.use_gpu = bool(use_gpu)
+        if self.use_gpu:
+            try:
+                import cupy as cp
+                self.xp = cp
+                self.gpu_available = True
+            except Exception:
+                self.xp = np
+                self.use_gpu = False
+                self.gpu_available = False
+        else:
+            self.xp = np
+            self.gpu_available = False
+
+        # Centralized Seed & Reproducible Pseudo-Random Number Generator
+        self.seed = int(seed)
+        self.rng = np.random.default_rng(self.seed)
 
         # Telegram Notifier (loads from local gitignored telegram_config.json)
         self.notifier = TelegramNotifier()
@@ -53,27 +73,17 @@ class CosmologicalEngine:
         self.ZETA_BEKENSTEIN = self.units.ZETA_BEKENSTEIN
         self.MASS_THRESHOLD = self.units.MASS_THRESHOLD
         self.M0_CORE = self.units.M0_CORE
+        self.A_LOCAL_UNIVERSE = self.units.A_LOCAL_UNIVERSE
         self.A_MAX_CONFORMAL = self.units.A_MAX_CONFORMAL
 
-        # Spatial Coordinates & Fourier Mesh
-        self.X, self.Y, self.Z = np.meshgrid(
-            np.arange(self.grid_size),
-            np.arange(self.grid_size),
-            np.arange(self.grid_size),
-            indexing='ij'
-        )
-
+        # Spatial Fourier Mesh on active backend (CPU/GPU)
         kx = 2.0 * np.pi * np.fft.fftfreq(self.grid_size)[:, None, None].astype(np.float32)
         ky = 2.0 * np.pi * np.fft.fftfreq(self.grid_size)[None, :, None].astype(np.float32)
         kz = 2.0 * np.pi * np.fft.fftfreq(self.grid_size)[None, None, :].astype(np.float32)
-        self.k2 = kx**2 + ky**2 + kz**2
-        self.k2[0, 0, 0] = 1.0  # Regularize DC mode
-
-        self.p_k = 1.0 / (self.k2**0.75)
-        self.p_k[0, 0, 0] = 0.0
-
-        sigma_g = 2.2
-        self.gaussian_k_3d = np.exp(-0.5 * self.k2 * (sigma_g**2)).astype(np.float32)
+        k2_cpu = kx**2 + ky**2 + kz**2
+        k2_cpu[0, 0, 0] = 1.0  # Regularize DC mode
+        self.k2 = self.xp.asarray(k2_cpu)
+        del kx, ky, kz, k2_cpu
 
         # High-Definition Mollweide Celestial Sphere Grid (90x180 = 16,200 samples)
         self.n_lat, self.n_lon = 90, 180
@@ -98,6 +108,7 @@ class CosmologicalEngine:
         self.is_running = True
         self.steps_per_frame = self.initial_speed
         self.total_steps = 0
+        self.t_coord = 0.0
         self.eon = 1
         self.scale_factor = 1.0
         self.s_bh_val = 0.0
@@ -108,8 +119,13 @@ class CosmologicalEngine:
         self.eon_start_walltime = time.time()
         self.saved_epochs = set()
 
-        # Initialize or Resume
-        latest_checkpoint = os.path.join(self.checkpoint_dir, "latest.npz")
+        # Initialize or Resume with grid-resolution tagged checkpoints
+        latest_checkpoint = os.path.join(self.checkpoint_dir, f"latest_g{self.grid_size}.npz")
+        if not os.path.exists(latest_checkpoint) and self.grid_size == 32:
+            legacy_checkpoint = os.path.join(self.checkpoint_dir, "latest.npz")
+            if os.path.exists(legacy_checkpoint):
+                latest_checkpoint = legacy_checkpoint
+
         if force_reset:
             self.reset_simulation(archive_existing=True)
         elif auto_resume and os.path.exists(latest_checkpoint):
@@ -117,24 +133,94 @@ class CosmologicalEngine:
         else:
             self._init_primordial_state()
 
+    def to_cpu(self, arr):
+        """Converts an array from GPU/CuPy or CPU memory to standard host NumPy ndarray."""
+        if arr is None:
+            return None
+        if hasattr(arr, 'get'):
+            return arr.get()
+        return np.asarray(arr)
+
+    @property
+    def tau_physical(self) -> np.ndarray:
+        """
+        Physical emergent proper time along timelike trajectories:
+        tau_phys(x, t) = t_coord + Delta_tau(x, t)
+        Satisfies: d(tau_phys)/dt = 1 + kappa_0 * sigma_total(x, t).
+        """
+        return self.to_cpu(self.t_coord + self.tau).astype(np.float32)
+
+    @property
+    def tau_excess(self) -> np.ndarray:
+        """
+        Dissipative excess odometer tensor:
+        Delta_tau(x, t) = int_0^t kappa * sigma_total(x, t') dt'.
+        Vanishes in cosmic voids (sigma -> 0) and saturates inside virialized cores.
+        """
+        return self.to_cpu(self.tau).astype(np.float32)
+
+    @property
+    def d_tau_physical_dt(self) -> np.ndarray:
+        """Instantaneous emergence rate of physical proper time: d(tau_phys)/dt = 1 + kappa * sigma."""
+        return self.to_cpu(1.0 + self.d_tau_dt).astype(np.float32)
+
+    @property
+    def X(self) -> np.ndarray:
+        """On-demand 3D X coordinate grid (CPU/GPU backend)."""
+        return self.to_cpu(self.xp.arange(self.grid_size)[:, None, None] * self.xp.ones((1, self.grid_size, self.grid_size)))
+
+    @property
+    def Y(self) -> np.ndarray:
+        """On-demand 3D Y coordinate grid (CPU/GPU backend)."""
+        return self.to_cpu(self.xp.arange(self.grid_size)[None, :, None] * self.xp.ones((self.grid_size, 1, self.grid_size)))
+
+    @property
+    def Z(self) -> np.ndarray:
+        """On-demand 3D Z coordinate grid (CPU/GPU backend)."""
+        return self.to_cpu(self.xp.arange(self.grid_size)[None, None, :] * self.xp.ones((self.grid_size, self.grid_size, 1)))
+
+    @property
+    def p_k(self) -> np.ndarray:
+        """On-demand CDM power spectrum array."""
+        return self._compute_p_k()
+
+    def _compute_p_k(self):
+        """Computes Harrison-Zel'dovich + CDM turnover power spectrum P(k) on demand."""
+        k_mod = self.xp.sqrt(self.k2)
+        k_eq = 2.0 * np.pi * 3.5 / float(self.grid_size)
+        q = k_mod / k_eq
+        p_k = self.xp.zeros_like(self.k2)
+        mask_k = k_mod > 0.0
+        p_k[mask_k] = q[mask_k] / ((1.0 + (q[mask_k]**1.5))**2.0)
+        return p_k
+
     def _init_primordial_state(self):
-        """Initializes primordial cosmological fields identically to local 3D simulator."""
+        """Initializes primordial cosmological fields with seeded Gaussian Random Field."""
+        self.t_coord = 0.0
         # Primordial Gaussian Random Field (GRF) with scale-invariant Harrison-Zel'dovich power spectrum P(k)
-        noise_fft = np.fft.fftn(np.random.randn(self.grid_size, self.grid_size, self.grid_size).astype(np.float32))
-        fluct = np.real(np.fft.ifftn(noise_fft * np.sqrt(self.p_k)))
-        fluct = (fluct - np.mean(fluct)) / max(1e-4, np.std(fluct)) * 0.45
+        noise_raw = self.rng.standard_normal((self.grid_size, self.grid_size, self.grid_size)).astype(np.float32)
+        noise_fft = self.xp.fft.fftn(self.xp.asarray(noise_raw))
+        del noise_raw
+        p_k = self._compute_p_k()
+        fluct = self.xp.real(self.xp.fft.ifftn(noise_fft * self.xp.sqrt(p_k)))
+        del p_k, noise_fft
+        fluct_mean = float(self.to_cpu(self.xp.mean(fluct)))
+        fluct_std = float(self.to_cpu(self.xp.std(fluct)))
+        fluct = (fluct - fluct_mean) / max(1e-4, fluct_std) * 0.45
 
         # Organic primordial matter density field: rho_mean = 1.0 + delta_rho(k)
-        self.rho = np.maximum(0.05, 1.0 + fluct).astype(np.float32)
-        self.T = (12.0 * (self.rho**0.5) + 2.73).astype(np.float32)
-        self.I = np.clip((self.rho - 0.5) / 2.5, 0.0, 1.0).astype(np.float32)
-        self.tau = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
-        self.tau_eon_start = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
-        self.d_tau_dt = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
+        self.rho = self.xp.maximum(0.05, 1.0 + fluct).astype(self.xp.float32)
+        del fluct
+        self.T = (12.0 * (self.rho**0.5) + 2.73).astype(self.xp.float32)
+        self.I = self.xp.clip((self.rho - 0.5) / 2.5, 0.0, 1.0).astype(self.xp.float32)
+        # self.tau stores the dissipative excess Delta tau (odometer)
+        self.tau = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
+        self.tau_eon_start = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
+        self.d_tau_dt = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
 
-        self.v_x = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
-        self.v_y = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
-        self.v_z = np.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=np.float32)
+        self.v_x = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
+        self.v_y = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
+        self.v_z = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
 
     def reset_simulation(self, archive_existing=True):
         """
@@ -183,16 +269,20 @@ class CosmologicalEngine:
 
     def _sample_sphere_trilinear(self, arr, cx, cy, cz):
         """Continuous trilinear interpolation across periodic 3-torus boundary conditions."""
-        x0 = np.floor(cx).astype(int) % self.grid_size
+        cx_xp = self.xp.asarray(cx)
+        cy_xp = self.xp.asarray(cy)
+        cz_xp = self.xp.asarray(cz)
+
+        x0 = self.xp.floor(cx_xp).astype(int) % self.grid_size
         x1 = (x0 + 1) % self.grid_size
-        y0 = np.floor(cy).astype(int) % self.grid_size
+        y0 = self.xp.floor(cy_xp).astype(int) % self.grid_size
         y1 = (y0 + 1) % self.grid_size
-        z0 = np.floor(cz).astype(int) % self.grid_size
+        z0 = self.xp.floor(cz_xp).astype(int) % self.grid_size
         z1 = (z0 + 1) % self.grid_size
 
-        xd = (cx - np.floor(cx)).astype(np.float32)
-        yd = (cy - np.floor(cy)).astype(np.float32)
-        zd = (cz - np.floor(cz)).astype(np.float32)
+        xd = cx_xp - self.xp.floor(cx_xp)
+        yd = cy_xp - self.xp.floor(cy_xp)
+        zd = cz_xp - self.xp.floor(cz_xp)
 
         c00 = arr[x0, y0, z0] * (1.0 - xd) + arr[x1, y0, z0] * xd
         c01 = arr[x0, y0, z1] * (1.0 - xd) + arr[x1, y0, z1] * xd
@@ -209,65 +299,79 @@ class CosmologicalEngine:
         Generates primordial matter fluctuations via Holographic Phase-Locking in Fourier Space.
         Combines the phase angle of the multi-eon fossil tensor tau(x) with quantum vacuum fluctuations.
         """
-        # 1. Extract structural phase from fossil memory field
-        tau_fft = np.fft.fftn(tau.astype(np.float32))
-        theta_fossil = np.angle(tau_fft)
+        tau_xp = self.xp.asarray(tau, dtype=self.xp.float32)
+        tau_fft = self.xp.fft.fftn(tau_xp)
+        theta_fossil = self.xp.angle(tau_fft)
+        del tau_fft
 
-        # 2. Extract quantum vacuum phase from random Gaussian noise
-        noise_raw = np.random.randn(self.grid_size, self.grid_size, self.grid_size).astype(np.float32)
-        noise_fft = np.fft.fftn(noise_raw)
-        theta_quantum = np.angle(noise_fft)
+        noise_raw = self.rng.standard_normal((self.grid_size, self.grid_size, self.grid_size)).astype(np.float32)
+        noise_fft = self.xp.fft.fftn(self.xp.asarray(noise_raw))
+        del noise_raw
+        theta_quantum = self.xp.angle(noise_fft)
+        del noise_fft
 
-        # 3. Holographic Phase-Locking in complex plane
-        z_fossil = np.exp(1j * theta_fossil)
-        z_quantum = np.exp(1j * theta_quantum)
+        z_fossil = self.xp.exp(1j * theta_fossil)
+        del theta_fossil
+        z_quantum = self.xp.exp(1j * theta_quantum)
+        del theta_quantum
         z_bounce = alpha_mem * z_fossil + (1.0 - alpha_mem) * z_quantum
-        theta_bounce = np.angle(z_bounce)
+        del z_fossil, z_quantum
+        theta_bounce = self.xp.angle(z_bounce)
+        del z_bounce
 
-        # 4. Modulate Harrison-Zel'dovich power spectrum with synthesized phase
-        synthesized_fft = self.p_k * np.exp(1j * theta_bounce)
+        p_k = self._compute_p_k()
+        synthesized_fft = p_k * self.xp.exp(1j * theta_bounce)
+        del p_k, theta_bounce
         synthesized_fft[0, 0, 0] = 0.0 + 0.0j
 
-        # 5. Transform back to real spatial field with zero mean and normalized amplitude
-        fluct = np.real(np.fft.ifftn(synthesized_fft))
-        std_val = float(np.std(fluct))
+        fluct = self.xp.real(self.xp.fft.ifftn(synthesized_fft))
+        del synthesized_fft
+        std_val = float(self.to_cpu(self.xp.std(fluct)))
+        mean_val = float(self.to_cpu(self.xp.mean(fluct)))
         if std_val > 1e-6:
-            fluct = (fluct - float(np.mean(fluct))) / std_val * 0.35
+            fluct = (fluct - mean_val) / std_val * 0.35
 
-        return fluct.astype(np.float32)
+        return fluct.astype(self.xp.float32)
 
     def _trigger_white_hole_eon_3d(self):
         """Detonates a white hole quantum bounce and initializes the next eon using Holographic Phase-Locking."""
-        # Locate bounce singularity: matter core if formed, or fossil field attractor if asymptotic
-        if np.max(self.rho) > 1.2:
-            x0, y0, z0 = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        if float(self.to_cpu(self.xp.max(self.rho))) > 1.2:
+            flat_idx = int(self.to_cpu(self.xp.argmax(self.rho)))
         else:
-            x0, y0, z0 = np.unravel_index(np.argmax(self.tau), self.tau.shape)
+            flat_idx = int(self.to_cpu(self.xp.argmax(self.tau)))
 
-        dx = (self.X - x0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0
-        dy = (self.Y - y0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0
-        dz = (self.Z - z0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0
-        r = np.sqrt(dx**2 + dy**2 + dz**2)
-        r_safe = np.maximum(0.8, r)
+        x0, y0, z0 = np.unravel_index(flat_idx, (self.grid_size, self.grid_size, self.grid_size))
 
-        # Holographic Phase-Locked Primordial Fluctuations
+        dx = ((self.xp.arange(self.grid_size) - x0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0)[:, None, None]
+        dy = ((self.xp.arange(self.grid_size) - y0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0)[None, :, None]
+        dz = ((self.xp.arange(self.grid_size) - z0 + self.grid_size / 2.0) % self.grid_size - self.grid_size / 2.0)[None, None, :]
+        r = self.xp.sqrt(dx**2 + dy**2 + dz**2)
+        r_safe = self.xp.maximum(0.8, r)
+
         fluct_new = self._generate_phase_locked_fluctuations(self.tau, alpha_mem=0.35)
 
-        primordial_blast = 3.5 * np.exp(-r**2 / 16.0)
-        thermal_reheating = 85.0 * np.exp(-r**2 / 20.0) + 2.73
+        primordial_blast = 3.5 * self.xp.exp(-r**2 / 16.0)
+        thermal_reheating = 85.0 * self.xp.exp(-r**2 / 20.0) + 2.73
 
-        v_exp_mag = 2.4 * np.exp(-r**2 / 25.0) * (r / self.grid_size)
+        v_exp_mag = 2.4 * self.xp.exp(-r**2 / 25.0) * (r / self.grid_size)
         v_x_new = v_exp_mag * (dx / r_safe)
         v_y_new = v_exp_mag * (dy / r_safe)
         v_z_new = v_exp_mag * (dz / r_safe)
+        del dx, dy, dz, r, r_safe, v_exp_mag
 
-        rho_new = np.clip(1.0 + fluct_new + primordial_blast, 0.05, 12.0)
-        T_new = np.clip(thermal_reheating + 15.0 * np.abs(fluct_new), 2.73, 2000.0)
+        rho_new = self.xp.clip(1.0 + fluct_new + primordial_blast, 0.05, 12.0)
+        T_new = self.xp.clip(thermal_reheating + 15.0 * self.xp.abs(fluct_new), 2.73, 2000.0)
+        del fluct_new, primordial_blast, thermal_reheating
 
         return rho_new, v_x_new, v_y_new, v_z_new, T_new
 
+    def _grad_axis(self, arr, axis):
+        """Computes central spatial difference along a single axis without bulk intermediate tuples."""
+        return 0.5 * (self.xp.roll(arr, -1, axis=axis) - self.xp.roll(arr, 1, axis=axis))
+
     def step(self):
         """Executes a single Runge-Kutta / Eulerian cosmological differential step."""
+        self.t_coord += self.DT
         # 1. Cosmological Scale Factor Evolution
         if self.scale_factor < 1.05:
             H_eff = self.H_0 * (1.0 + self.INFLATION_BOOST * np.exp(-(self.scale_factor - 1.0) / 0.015))
@@ -276,99 +380,128 @@ class CosmologicalEngine:
 
         self.scale_factor += H_eff * self.DT
 
-        # 2. Gravitational Potential via 3D Poisson Equation (FFT)
-        delta_rho = self.rho - np.mean(self.rho)
-        delta_rho_fft = np.fft.fftn(delta_rho)
-        phi_fft = -4.0 * np.pi * self.G_CONST * delta_rho_fft / self.k2
+        # 2. Gravitational Potential via 3D Comoving Poisson Equation (FFT)
+        # In comoving coordinates, Poisson equation scales as nabla^2 Phi = 4*pi*G*delta_rho / a
+        delta_rho = self.rho - self.xp.mean(self.rho)
+        phi_fft = self.xp.fft.fftn(delta_rho)
+        del delta_rho
+        phi_fft *= (-4.0 * np.pi * self.G_CONST) / (self.k2 * max(1.0, self.scale_factor))
         phi_fft[0, 0, 0] = 0.0
-        phi = np.real(np.fft.ifftn(phi_fft))
+        self.phi = self.xp.real(self.xp.fft.ifftn(phi_fft))
+        del phi_fft
 
-        grad_phi_x, grad_phi_y, grad_phi_z = np.gradient(phi)
-
-        # 3. Dynamic Adiabatic Sound Speed & Navier-Stokes Acceleration
+        # 3. Dynamic Adiabatic Sound Speed & Navier-Stokes Acceleration with Hubble Drag
         cs2_field = self.units.compute_sound_speed_sq(self.T, base_cs2=self.CS2)
-        P = cs2_field * (self.rho**1.3)
-        grad_P_x, grad_P_y, grad_P_z = np.gradient(P)
+        hubble_damping = 1.0 - (2.0 * H_eff / max(1.0, float(self.scale_factor))) * self.DT
 
-        acc_x = -grad_phi_x - (grad_P_x / (self.rho + 0.2))
-        acc_y = -grad_phi_y - (grad_P_y / (self.rho + 0.2))
-        acc_z = -grad_phi_z - (grad_P_z / (self.rho + 0.2))
-
-        self.v_x = 0.92 * self.v_x + 0.08 * (0.06 * acc_x)
-        self.v_y = 0.92 * self.v_y + 0.08 * (0.06 * acc_y)
-        self.v_z = 0.92 * self.v_z + 0.08 * (0.06 * acc_z)
+        grad_phi_sq = self.xp.zeros_like(self.phi)
+        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
+            g_phi = self._grad_axis(self.phi, axis)
+            grad_phi_sq += g_phi**2
+            g_rho = self._grad_axis(self.rho, axis)
+            acc = -g_phi - cs2_field * (g_rho / (self.rho + 0.2))
+            del g_phi, g_rho
+            v *= hubble_damping
+            v += (0.015 * acc) * self.DT
+            del acc
+        del cs2_field, hubble_damping
 
         # Relativistic Causal Limit (v <= c)
-        v_mag = np.sqrt(self.v_x**2 + self.v_y**2 + self.v_z**2)
-        v_limit = np.maximum(1.0, v_mag / self.C_LIGHT)
+        v_mag = self.xp.sqrt(self.v_x**2 + self.v_y**2 + self.v_z**2)
+        v_limit = self.xp.maximum(1.0, v_mag / self.C_LIGHT)
         self.v_x /= v_limit
         self.v_y /= v_limit
         self.v_z /= v_limit
+        del v_mag, v_limit
 
-        # 4. Matter Continuity Equation
-        flux_x = self.rho * self.v_x
-        flux_y = self.rho * self.v_y
-        flux_z = self.rho * self.v_z
-        div_flux = np.gradient(flux_x, axis=0) + np.gradient(flux_y, axis=1) + np.gradient(flux_z, axis=2)
+        # 4. Conservative Matter Continuity (Lax-Friedrichs Advection to prevent Odd-Even Decoupling)
+        c_num = 0.04
+        div_flux = self.xp.zeros_like(self.rho)
+        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
+            flux = self.rho * v
+            roll_f_p = self.xp.roll(flux, -1, axis=axis)
+            roll_r_p = self.xp.roll(self.rho, -1, axis=axis)
+            f_p = 0.5 * (flux + roll_f_p) - (0.5 * c_num) * (roll_r_p - self.rho)
+            del roll_f_p, roll_r_p
 
-        laplacian_rho = (
-            np.roll(self.rho, 1, axis=0) + np.roll(self.rho, -1, axis=0) +
-            np.roll(self.rho, 1, axis=1) + np.roll(self.rho, -1, axis=1) +
-            np.roll(self.rho, 1, axis=2) + np.roll(self.rho, -1, axis=2) - 6.0 * self.rho
-        )
-        self.rho = np.clip(self.rho - div_flux * self.DT + 0.04 * laplacian_rho * self.DT, 0.02, 12.0)
+            roll_f_m = self.xp.roll(flux, 1, axis=axis)
+            roll_r_m = self.xp.roll(self.rho, 1, axis=axis)
+            f_m = 0.5 * (roll_f_m + flux) - (0.5 * c_num) * (self.rho - roll_r_m)
+            del roll_f_m, roll_r_m, flux
 
-        # 5. Thermal Field & Spitzer-Braginskii Plasma Conduction
+            div_flux += (f_p - f_m)
+            del f_p, f_m
+
+        self.rho = self.xp.clip(self.rho - div_flux * self.DT, 0.02, 12.0)
+
+        # 5. Thermal Field & Spitzer-Braginskii Plasma Conduction with Adiabatic Equation of State
         kappa_spitzer = self.units.compute_spitzer_conductivity(self.T, self.rho, base_k=self.DIFFUSION_COEFF)
         laplacian_T = (
-            np.roll(self.T, 1, axis=0) + np.roll(self.T, -1, axis=0) +
-            np.roll(self.T, 1, axis=1) + np.roll(self.T, -1, axis=1) +
-            np.roll(self.T, 1, axis=2) + np.roll(self.T, -1, axis=2) - 6.0 * self.T
+            self.xp.roll(self.T, 1, axis=0) + self.xp.roll(self.T, -1, axis=0) +
+            self.xp.roll(self.T, 1, axis=1) + self.xp.roll(self.T, -1, axis=1) +
+            self.xp.roll(self.T, 1, axis=2) + self.xp.roll(self.T, -1, axis=2) - 6.0 * self.T
         )
-        compression_heating = 6.0 * np.maximum(0.0, -div_flux)
-        hubble_cooling = H_eff * self.T
-        self.T = np.clip(self.T + (kappa_spitzer * laplacian_T + compression_heating - hubble_cooling) * self.DT, 2.73, 2000.0)
+        # Adiabatic thermodynamic temperature from ideal gas law: T_ad = T_0 * rho^(gamma - 1) (gamma = 5/3)
+        T_adiabatic = 2.73 + 12.0 * (self.rho ** 0.67) / max(1.0, float(self.scale_factor)**0.5)
+        compression_heating = 0.05 * self.xp.maximum(0.0, -div_flux) * self.T
+        del div_flux
+        hubble_cooling = (H_eff / max(1.0, float(self.scale_factor))) * (self.T - 2.73)
+        dT_dt = 0.25 * kappa_spitzer * laplacian_T + compression_heating - hubble_cooling + 0.1 * (T_adiabatic - self.T)
+        del laplacian_T, compression_heating, hubble_cooling, T_adiabatic
+        self.T = self.xp.clip(self.T + dT_dt * self.DT, 2.73, 250.0)
+        del dT_dt
 
         # 6. Onsager Irreversible Entropy Production & Reotransductor Time
         inv_T = 1.0 / self.T
-        grad_inv_T_x, grad_inv_T_y, grad_inv_T_z = np.gradient(inv_T)
-        grad_T_x, grad_T_y, grad_T_z = np.gradient(self.T)
+        sigma_thermal = self.xp.zeros_like(self.T)
+        for axis in range(3):
+            g_inv = self._grad_axis(inv_T, axis)
+            g_T = self._grad_axis(self.T, axis)
+            J_T = -kappa_spitzer * g_T
+            del g_T
+            sigma_thermal += (J_T * g_inv)
+            del g_inv, J_T
+        del inv_T, kappa_spitzer
+        sigma_thermal = self.xp.maximum(0.0, sigma_thermal)
 
-        J_T_x = -kappa_spitzer * grad_T_x
-        J_T_y = -kappa_spitzer * grad_T_y
-        J_T_z = -kappa_spitzer * grad_T_z
+        sigma_grav = (self.rho * grad_phi_sq) / (self.T * 50.0)
+        del grad_phi_sq
 
-        sigma_thermal = np.maximum(0.0, J_T_x * grad_inv_T_x + J_T_y * grad_inv_T_y + J_T_z * grad_inv_T_z)
-        sigma_grav = (self.rho * (grad_phi_x**2 + grad_phi_y**2 + grad_phi_z**2)) / (self.T * 50.0)
         sigma_total = sigma_thermal + sigma_grav
+        del sigma_thermal, sigma_grav
 
         self.d_tau_dt = self.KAPPA * sigma_total
         self.tau += self.d_tau_dt * self.DT
 
         # 7. Landauer Negentropy / Informational Field
-        flux_I_x = self.I * self.v_x
-        flux_I_y = self.I * self.v_y
-        flux_I_z = self.I * self.v_z
-        div_flux_I = np.gradient(flux_I_x, axis=0) + np.gradient(flux_I_y, axis=1) + np.gradient(flux_I_z, axis=2)
+        div_flux_I = self.xp.zeros_like(self.I)
+        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
+            flux_I = self.I * v
+            div_flux_I += self._grad_axis(flux_I, axis)
+            del flux_I
 
         laplacian_I = (
-            np.roll(self.I, 1, axis=0) + np.roll(self.I, -1, axis=0) +
-            np.roll(self.I, 1, axis=1) + np.roll(self.I, -1, axis=1) +
-            np.roll(self.I, 1, axis=2) + np.roll(self.I, -1, axis=2) - 6.0 * self.I
+            self.xp.roll(self.I, 1, axis=0) + self.xp.roll(self.I, -1, axis=0) +
+            self.xp.roll(self.I, 1, axis=1) + self.xp.roll(self.I, -1, axis=1) +
+            self.xp.roll(self.I, 1, axis=2) + self.xp.roll(self.I, -1, axis=2) - 6.0 * self.I
         )
-        sustenance = 0.6 * sigma_total * (self.rho / np.mean(self.rho))
+        sustenance = 0.6 * sigma_total * (self.rho / self.xp.mean(self.rho))
+        del sigma_total
         landauer_erasure = self.units.compute_landauer_decay(self.T, base_decay=self.LANDAUER_DECAY)
         dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - landauer_erasure * self.I)
-        self.I = np.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
+        del div_flux_I, laplacian_I, sustenance, landauer_erasure
+        self.I = self.xp.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
+        del dI_dt
 
         # 8. Bekenstein Quantum Saturation & Eon Bounce Trigger (Dual Physical Route)
         tau_current_eon = self.tau - self.tau_eon_start
-        total_mass = float(np.sum(self.rho))
-        core_mask = self.rho > 1.0
-        core_mass = float(np.sum(self.rho[core_mask]))
+        total_mass = float(self.to_cpu(self.xp.sum(self.rho)))
+        # Virialized compact core criterion (overdensity delta_rho / rho_bar >= 2.0 -> rho >= 3.0)
+        core_mask = self.rho > 3.0
+        core_mass = float(self.to_cpu(self.xp.sum(self.rho[core_mask])))
         self.mass_frac_val = core_mass / max(1.0, total_mass)
 
-        self.s_bh_val = float(np.max(tau_current_eon))
+        self.s_bh_val = float(self.to_cpu(self.xp.max(tau_current_eon)))
         self.s_crit = self.units.compute_bekenstein_entropy_limit(
             mass_core=core_mass,
             m0_ref=self.M0_CORE,
@@ -387,21 +520,32 @@ class CosmologicalEngine:
         self.total_steps += 1
 
         # Check and save scientific epoch checkpoints across cosmological history
+        g_tag = f"_g{self.grid_size}"
         if self.scale_factor >= 1.00 and "cmb" not in self.saved_epochs:
             self.saved_epochs.add("cmb")
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}.npz"))
-        elif self.scale_factor >= 1.50 and "dawn" not in self.saved_epochs:
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}{g_tag}.npz"))
+            if self.grid_size == 32:
+                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}.npz"))
+        if self.scale_factor >= 1.50 and "dawn" not in self.saved_epochs:
             self.saved_epochs.add("dawn")
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}.npz"))
-        elif self.scale_factor >= 2.00 and "bao" not in self.saved_epochs:
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}{g_tag}.npz"))
+            if self.grid_size == 32:
+                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}.npz"))
+        if self.scale_factor >= 2.00 and "bao" not in self.saved_epochs:
             self.saved_epochs.add("bao")
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}.npz"))
-        elif self.scale_factor >= 3.00 and "clusters" not in self.saved_epochs:
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}{g_tag}.npz"))
+            if self.grid_size == 32:
+                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}.npz"))
+        if self.scale_factor >= 3.00 and "clusters" not in self.saved_epochs:
             self.saved_epochs.add("clusters")
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}.npz"))
-        elif self.scale_factor >= 4.50 and "pantheon" not in self.saved_epochs:
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}{g_tag}.npz"))
+            if self.grid_size == 32:
+                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}.npz"))
+        if self.scale_factor >= 4.50 and "pantheon" not in self.saved_epochs:
             self.saved_epochs.add("pantheon")
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}.npz"))
+            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}{g_tag}.npz"))
+            if self.grid_size == 32:
+                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}.npz"))
 
         is_grav_bounce = (self.mass_frac_val >= self.MASS_THRESHOLD and self.s_bh_val >= self.s_crit)
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
@@ -418,18 +562,22 @@ class CosmologicalEngine:
         # Save Full Visual Snapshot of the Completed Eon at Bounce
         final_snapshot = self.get_visual_payload()
         final_snapshot["snapshot_meta"] = {
-            "id": f"eon_{self.eon}",
-            "label": f"📷 Fin Eón {self.eon} [{transition_type}]",
+            "id": f"eon_{self.eon}_g{self.grid_size}",
+            "label": f"📷 Fin Eón {self.eon} ({self.grid_size}³) [{transition_type}]",
             "type": "eon_bounce",
             "transition": transition_type,
             "eon": self.eon,
+            "grid_size": self.grid_size,
             "scale_factor": round(float(self.scale_factor), 3),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
-        snapshot_path = os.path.join(self.snapshots_dir, f"snapshot_eon_{self.eon}.json")
+        snapshot_path = os.path.join(self.snapshots_dir, f"snapshot_eon_{self.eon}_g{self.grid_size}.json")
         try:
             with open(snapshot_path, "w", encoding="utf-8") as f:
                 json.dump(final_snapshot, f)
+            if self.grid_size == 32:
+                with open(os.path.join(self.snapshots_dir, f"snapshot_eon_{self.eon}.json"), "w", encoding="utf-8") as f:
+                    json.dump(final_snapshot, f)
         except Exception:
             pass
 
@@ -501,7 +649,11 @@ class CosmologicalEngine:
 
     def get_telemetry(self):
         """Returns structured real-time telemetry dictionary."""
-        bx, by, bz = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        rho_cpu = self.to_cpu(self.rho)
+        tau_cpu = self.to_cpu(self.tau)
+        T_cpu = self.to_cpu(self.T)
+
+        bx, by, bz = np.unravel_index(np.argmax(rho_cpu), rho_cpu.shape)
         z_slice = int(np.clip(bz, 0, self.grid_size - 1))
 
         if self.scale_factor < 1.05:
@@ -515,8 +667,8 @@ class CosmologicalEngine:
         else:
             era_str = "Fase Asintótica Pre-Rebote 3D (Límite Conforme CCC)"
 
-        redshift = max(0.0, (1.0 / self.scale_factor) - 1.0)
-        temp_norm = float(np.percentile(self.T, 99))
+        redshift = max(0.0, (self.A_LOCAL_UNIVERSE / max(0.01, float(self.scale_factor))) - 1.0)
+        temp_norm = float(np.percentile(T_cpu, 99))
         temp_astro = temp_norm * 120.0
 
         if self.progress >= 0.95:
@@ -539,6 +691,9 @@ class CosmologicalEngine:
             prog_label = f"Túnel Cuántico Eón {self.eon}"
             active_route = "quantum_tunnel"
 
+        tau_phys_max = float(self.t_coord + np.max(tau_cpu))
+        time_myr = float(self.units.time_code_to_myr(tau_phys_max))
+
         return {
             "eon": self.eon,
             "era": era_str,
@@ -555,8 +710,10 @@ class CosmologicalEngine:
             "active_route": active_route,
             "p_grav": round(float(p_grav * 100.0), 1),
             "p_conformal": round(float(p_conformal * 100.0), 1),
-            "fossil_odometer": round(float(np.max(self.tau)), 0),
-            "time_myr": round(float(self.units.time_code_to_myr(np.max(self.tau))), 1),
+            "fossil_odometer": round(tau_phys_max, 1),
+            "time_myr": round(time_myr, 1),
+            "grid_size": self.grid_size,
+            "grid_voxels": self.grid_size ** 3,
             "box_size_mpc": self.units.box_size_mpc,
             "cell_size_mpc": round(self.units.cell_size_mpc, 3),
             "h0_kms_mpc": self.units.h0_kms_mpc,
@@ -566,54 +723,65 @@ class CosmologicalEngine:
             "total_steps": self.total_steps,
             "is_running": self.is_running,
             "steps_per_frame": self.steps_per_frame,
+            "use_gpu": self.use_gpu,
+            "hardware": "GPU (CuPy / CUDA)" if self.use_gpu else "CPU (NumPy / OpenBLAS)",
             "state_status": status_banner
         }
 
     def get_visual_payload(self):
         """Constructs data arrays for the 9-panel web dashboard."""
-        bx, by, bz = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        rho_cpu = self.to_cpu(self.rho)
+        tau_cpu = self.to_cpu(self.tau)
+        T_cpu = self.to_cpu(self.T)
+        d_tau_dt_cpu = self.to_cpu(self.d_tau_dt)
+        I_cpu = self.to_cpu(self.I)
+
+        bx, by, bz = np.unravel_index(np.argmax(rho_cpu), rho_cpu.shape)
         z_slice = int(np.clip(bz, 0, self.grid_size - 1))
 
-        # 1. 3D Cosmic Web point cloud (sparse points above threshold)
-        threshold_rho = max(1.2, float(np.percentile(self.rho, 88)))
-        xs, ys, zs = np.where(self.rho > threshold_rho)
+        # 1. 3D Cosmic Web point cloud (dense filaments and cluster nodes)
+        mean_r = float(np.mean(rho_cpu))
+        p90 = float(np.percentile(rho_cpu, 90))
+        threshold_rho = max(mean_r * 1.05, p90)
+        xs, ys, zs = np.where(rho_cpu >= threshold_rho)
         points_3d = []
         if len(xs) > 0:
-            step_stride = max(1, len(xs) // 300)
+            step_stride = max(1, len(xs) // 350)
             for i in range(0, len(xs), step_stride):
                 points_3d.append([
                     int(xs[i]), int(ys[i]), int(zs[i]),
-                    round(float(self.rho[xs[i], ys[i], zs[i]]), 2)
+                    round(float(rho_cpu[xs[i], ys[i], zs[i]]), 2)
                 ])
 
         # 2. HD Mollweide CMB (90x180) with Physical Sachs-Wolfe, Plasma Perturbations & Doppler Shift
-        tau_s = self._sample_sphere_trilinear(self.tau, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
-        T_s = self._sample_sphere_trilinear(self.T, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
-        rho_s = self._sample_sphere_trilinear(self.rho, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
-        vx_s = self._sample_sphere_trilinear(self.v_x, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
-        vy_s = self._sample_sphere_trilinear(self.v_y, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
-        vz_s = self._sample_sphere_trilinear(self.v_z, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z)
+        tau_s = self.to_cpu(self._sample_sphere_trilinear(self.tau, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
+        T_s = self.to_cpu(self._sample_sphere_trilinear(self.T, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
+        rho_s = self.to_cpu(self._sample_sphere_trilinear(self.rho, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
+        vx_s = self.to_cpu(self._sample_sphere_trilinear(self.v_x, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
+        vy_s = self.to_cpu(self._sample_sphere_trilinear(self.v_y, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
+        vz_s = self.to_cpu(self._sample_sphere_trilinear(self.v_z, self.coords_cmb_x, self.coords_cmb_y, self.coords_cmb_z))
 
         v_los = (vx_s * self.n_los_x + vy_s * self.n_los_y + vz_s * self.n_los_z) / self.C_LIGHT
-        mean_T = max(1e-4, float(np.mean(self.T)))
-        mean_rho = max(1e-4, float(np.mean(self.rho)))
-        mean_tau = max(1e-4, float(np.mean(self.tau)) + 1.0)
+        mean_T = max(1e-4, float(np.mean(T_cpu)))
+        mean_rho = max(1e-4, float(np.mean(rho_cpu)))
+        mean_tau = max(1e-4, float(np.mean(tau_cpu)) + 1.0)
 
         delta_T_int = (T_s - mean_T) / mean_T
         delta_rho = (rho_s - mean_rho) / mean_rho
-        delta_tau = (tau_s - float(np.mean(self.tau))) / mean_tau
+        delta_tau = (tau_s - float(np.mean(tau_cpu))) / mean_tau
 
         cmb_raw = delta_T_int + (1.0 / 3.0) * delta_rho + v_los + 0.35 * delta_tau
         cmb_std = max(1e-4, float(np.std(cmb_raw)))
         cmb_norm = np.clip((cmb_raw - float(np.mean(cmb_raw))) / cmb_std, -2.5, 2.5)
 
         # 3. 2D Cross Sections (32x32) at z_slice
-        slice_rho = np.round(self.rho[:, :, z_slice], 3).tolist()
-        slice_rate = np.round(self.d_tau_dt[:, :, z_slice], 3).tolist()
-        slice_index = np.round(self.I[:, :, z_slice], 3).tolist()
-        slice_tau = np.round(self.tau[:, :, z_slice], 1).tolist()
-        slice_log_tau = np.round(np.log10(1.0 + np.maximum(0.0, self.tau[:, :, z_slice])), 3).tolist()
-        slice_temp = np.round(self.T[:, :, z_slice], 2).tolist()
+        tau_phys_slice = tau_cpu[:, :, z_slice] + self.t_coord
+        slice_rho = np.round(rho_cpu[:, :, z_slice], 3).tolist()
+        slice_rate = np.round(d_tau_dt_cpu[:, :, z_slice], 3).tolist()
+        slice_index = np.round(I_cpu[:, :, z_slice], 3).tolist()
+        slice_tau = np.round(tau_phys_slice, 1).tolist()
+        slice_log_tau = np.round(np.log10(1.0 + np.maximum(0.0, tau_phys_slice)), 3).tolist()
+        slice_temp = np.round(T_cpu[:, :, z_slice], 2).tolist()
 
         return {
             "telemetry": self.get_telemetry(),
@@ -635,14 +803,15 @@ class CosmologicalEngine:
         # Save visual snapshot JSON with metadata
         timestamp_id = time.strftime("%Y%m%d_%H%M%S")
         time_display = time.strftime("%H:%M:%S")
-        snapshot_id = f"manual_{timestamp_id}"
+        snapshot_id = f"manual_{timestamp_id}_g{self.grid_size}"
         
         payload = self.get_visual_payload()
         payload["snapshot_meta"] = {
             "id": snapshot_id,
-            "label": f"💾 Guardado: Eón {self.eon} (a={self.scale_factor:.3f}, {time_display})",
+            "label": f"💾 Guardado: Eón {self.eon} (a={self.scale_factor:.3f}, {time_display}) [{self.grid_size}³]",
             "type": "manual",
             "eon": self.eon,
+            "grid_size": self.grid_size,
             "scale_factor": round(float(self.scale_factor), 3),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -651,6 +820,9 @@ class CosmologicalEngine:
         try:
             with open(snapshot_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f)
+            if self.grid_size == 32:
+                with open(os.path.join(self.snapshots_dir, f"snapshot_manual_{timestamp_id}.json"), "w", encoding="utf-8") as f:
+                    json.dump(payload, f)
         except Exception:
             pass
 
@@ -660,11 +832,14 @@ class CosmologicalEngine:
         """Retrieves an archived visual snapshot by ID or eon number."""
         str_id = str(snapshot_id).strip()
         
-        # Candidate file names
+        # Candidate file names (matching both generic, tagged, and grid-suffixed)
         candidates = [
             f"snapshot_{str_id}.json",
+            f"snapshot_{str_id}_g{self.grid_size}.json",
             f"snapshot_eon_{str_id}.json",
+            f"snapshot_eon_{str_id}_g{self.grid_size}.json",
             f"snapshot_manual_{str_id}.json",
+            f"snapshot_manual_{str_id}_g{self.grid_size}.json",
             f"{str_id}.json"
         ]
 
@@ -826,39 +1001,47 @@ class CosmologicalEngine:
 
     def save_checkpoint(self, filepath=None):
         """Saves current state to compressed .npz archive."""
+        g_tag = f"_g{self.grid_size}"
         if filepath is None:
-            eon_filepath = os.path.join(self.checkpoint_dir, f"eon_{self.eon}.npz")
-            latest_filepath = os.path.join(self.checkpoint_dir, "latest.npz")
+            eon_filepath = os.path.join(self.checkpoint_dir, f"eon_{self.eon}{g_tag}.npz")
+            latest_filepath = os.path.join(self.checkpoint_dir, f"latest{g_tag}.npz")
         else:
             eon_filepath = filepath
             latest_filepath = filepath
 
         # Compute Poisson Gravitational Potential Phi for complete halo & metric diagnostics
-        delta_rho = self.rho - np.mean(self.rho)
-        phi_fft = -4.0 * np.pi * self.G_CONST * np.fft.fftn(delta_rho) / self.k2
+        delta_rho = self.rho - self.xp.mean(self.rho)
+        phi_fft = -4.0 * np.pi * self.G_CONST * self.xp.fft.fftn(delta_rho) / self.k2
         phi_fft[0, 0, 0] = 0.0
-        phi = np.real(np.fft.ifftn(phi_fft)).astype(np.float32)
+        phi = self.to_cpu(self.xp.real(self.xp.fft.ifftn(phi_fft))).astype(np.float32)
 
         data = {
             "eon": self.eon,
+            "grid_size": self.grid_size,
             "scale_factor": self.scale_factor,
             "total_steps": self.total_steps,
-            "rho": self.rho,
+            "t_coord": self.t_coord,
+            "seed": self.seed,
+            "rho": self.to_cpu(self.rho).astype(np.float32),
             "phi": phi,
-            "T": self.T,
-            "I": self.I,
-            "tau": self.tau,
-            "tau_eon_start": self.tau_eon_start,
-            "v_x": self.v_x,
-            "v_y": self.v_y,
-            "v_z": self.v_z,
-            "d_tau_dt": self.d_tau_dt,
+            "T": self.to_cpu(self.T).astype(np.float32),
+            "I": self.to_cpu(self.I).astype(np.float32),
+            "tau": self.to_cpu(self.tau).astype(np.float32),
+            "tau_physical": self.tau_physical,
+            "tau_eon_start": self.to_cpu(self.tau_eon_start).astype(np.float32),
+            "v_x": self.to_cpu(self.v_x).astype(np.float32),
+            "v_y": self.to_cpu(self.v_y).astype(np.float32),
+            "v_z": self.to_cpu(self.v_z).astype(np.float32),
+            "d_tau_dt": self.to_cpu(self.d_tau_dt).astype(np.float32),
             "box_size_mpc": float(self.units.box_size_mpc),
             "h0_kms_mpc": float(self.units.h0_kms_mpc)
         }
         np.savez_compressed(eon_filepath, **data)
         if filepath is None:
             np.savez_compressed(latest_filepath, **data)
+            if self.grid_size == 32:
+                np.savez_compressed(os.path.join(self.checkpoint_dir, f"eon_{self.eon}.npz"), **data)
+                np.savez_compressed(os.path.join(self.checkpoint_dir, "latest.npz"), **data)
 
     def load_checkpoint(self, filepath):
         """Loads and restores simulation state from an .npz archive."""
@@ -866,18 +1049,24 @@ class CosmologicalEngine:
             return False
 
         data = np.load(filepath)
+        if "rho" in data and data["rho"].shape[0] != self.grid_size:
+            return False
         self.eon = int(data["eon"])
         self.scale_factor = float(data["scale_factor"])
         self.total_steps = int(data["total_steps"])
-        self.rho = data["rho"].astype(np.float32)
-        self.T = data["T"].astype(np.float32)
-        self.I = data["I"].astype(np.float32)
-        self.tau = data["tau"].astype(np.float32)
-        self.tau_eon_start = data["tau_eon_start"].astype(np.float32)
-        self.v_x = data["v_x"].astype(np.float32)
-        self.v_y = data["v_y"].astype(np.float32)
-        self.v_z = data["v_z"].astype(np.float32)
-        self.d_tau_dt = data["d_tau_dt"].astype(np.float32)
+        self.t_coord = float(data["t_coord"]) if "t_coord" in data else float(self.total_steps * self.DT)
+        if "seed" in data:
+            self.seed = int(data["seed"])
+            self.rng = np.random.default_rng(self.seed)
+        self.rho = self.xp.asarray(data["rho"].astype(np.float32))
+        self.T = self.xp.asarray(data["T"].astype(np.float32))
+        self.I = self.xp.asarray(data["I"].astype(np.float32))
+        self.tau = self.xp.asarray(data["tau"].astype(np.float32))
+        self.tau_eon_start = self.xp.asarray(data["tau_eon_start"].astype(np.float32))
+        self.v_x = self.xp.asarray(data["v_x"].astype(np.float32))
+        self.v_y = self.xp.asarray(data["v_y"].astype(np.float32))
+        self.v_z = self.xp.asarray(data["v_z"].astype(np.float32))
+        self.d_tau_dt = self.xp.asarray(data["d_tau_dt"].astype(np.float32))
         self.last_bounce_step = self.total_steps
         self.eon_start_walltime = time.time()
         return True

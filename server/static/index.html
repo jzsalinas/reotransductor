@@ -37,9 +37,22 @@
                     </select>
                 </div>
 
-                <div class="control-group">
-                    <label for="speedSlider">Aceleración: <span id="speedVal">20</span> p/f</label>
-                    <input type="range" id="speedSlider" min="1" max="500" value="20">
+                <div class="control-group speed-group">
+                    <label for="speedSelect">Aceleración:</label>
+                    <select id="speedSelect" title="Preajustes de velocidad de simulación">
+                        <option value="20">20 p/f (Normal)</option>
+                        <option value="50">50 p/f (Fluido)</option>
+                        <option value="100">100 p/f (Rápido)</option>
+                        <option value="500">500 p/f (Acelerado)</option>
+                        <option value="1000">1,000 p/f (Alta Velocidad)</option>
+                        <option value="5000">5,000 p/f (Súper Rápido)</option>
+                        <option value="10000">10,000 p/f (Ultra Cósmico)</option>
+                        <option value="50000">50,000 p/f (Mega Warp)</option>
+                        <option value="100000">100,000 p/f (Máximo)</option>
+                        <option value="custom">✏️ Manual...</option>
+                    </select>
+                    <input type="number" id="speedInput" min="1" max="100000" step="1" value="20" title="Pasos exactos por fotograma (1 a 100,000)">
+                    <span class="speed-unit-tag">p/f</span>
                 </div>
 
                 <button class="btn btn-secondary" id="pauseBtn" title="Pausar o Reanudar Simulación">
@@ -107,7 +120,7 @@
             <div class="card panel-telemetry">
                 <div class="card-header">
                     <span class="panel-num">3</span>
-                    <h3>TELEMETRÍA 3D [Servidor Dell R820]</h3>
+                    <h3>TELEMETRÍA 3D [<span id="telHardware">CPU</span>]</h3>
                 </div>
                 <div class="card-body telemetry-body">
                     <div class="telemetry-grid">
@@ -178,7 +191,7 @@
                     <h3>Densidad Materia (ρ) <span class="slice-tag" id="sliceRhoTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasRho" width="32" height="32"></canvas>
+                    <canvas id="canvasRho" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-magma"></div>
                         <div class="cbar-v-labels">
@@ -197,7 +210,7 @@
                     <h3>Velocidad Reotransductor (dτ/dt) <span class="slice-tag" id="sliceRateTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasRate" width="32" height="32"></canvas>
+                    <canvas id="canvasRate" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-plasma"></div>
                         <div class="cbar-v-labels">
@@ -216,7 +229,7 @@
                     <h3>Autoorganización I(r,t) <span class="slice-tag" id="sliceIndexTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasIndex" width="32" height="32"></canvas>
+                    <canvas id="canvasIndex" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-cividis"></div>
                         <div class="cbar-v-labels">
@@ -236,7 +249,7 @@
                     <h3>Tiempo Lineal (τ) <span class="slice-tag" id="sliceTauTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasTau" width="32" height="32"></canvas>
+                    <canvas id="canvasTau" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-viridis"></div>
                         <div class="cbar-v-labels">
@@ -255,7 +268,7 @@
                     <h3>Red Fósil log₁₀(1+τ) <span class="slice-tag" id="sliceLogTauTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasLogTau" width="32" height="32"></canvas>
+                    <canvas id="canvasLogTau" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-inferno"></div>
                         <div class="cbar-v-labels">
@@ -274,7 +287,7 @@
                     <h3>Temperatura Plasma T <span class="slice-tag" id="sliceTempTag">(z=16)</span></h3>
                 </div>
                 <div class="card-body slice-canvas-container">
-                    <canvas id="canvasTemp" width="32" height="32"></canvas>
+                    <canvas id="canvasTemp" width="256" height="256"></canvas>
                     <div class="cbar-vertical">
                         <div class="cbar-gradient cbar-thermal"></div>
                         <div class="cbar-v-labels">
@@ -397,7 +410,7 @@
         </div>
     </div>
 
-    <script src="static/app.js?v=2.8.0"></script>
+    <script src="static/app.js?v=2.9.0"></script>
 </body>
 
 </html>

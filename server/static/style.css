@@ -132,6 +132,33 @@ body {
     accent-color: var(--accent-cyan);
 }
 
+.control-group input[type="number"] {
+    background: #0f172a;
+    color: var(--accent-cyan);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.4rem;
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    width: 85px;
+    outline: none;
+    text-align: right;
+    transition: all 0.2s ease;
+}
+
+.control-group input[type="number"]:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+.speed-unit-tag {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+}
+
 .control-group select {
     background: #0f172a;
     color: var(--accent-cyan);
@@ -369,7 +396,7 @@ body {
 .slice-canvas-container canvas {
     width: 180px;
     height: 180px;
-    image-rendering: pixelated;
+    image-rendering: auto;
     border-radius: var(--radius-sm);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     background: #000;

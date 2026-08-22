@@ -26,6 +26,11 @@ class HaloRadialProfileAnalyzer:
 
     def locate_halo_center(self, rho_3d: np.ndarray, phi_3d: Optional[np.ndarray] = None) -> Tuple[int, int, int]:
         """Locates the primary halo center using potential minimum or density peak."""
+        if hasattr(rho_3d, 'get'):
+            rho_3d = rho_3d.get()
+        if phi_3d is not None and hasattr(phi_3d, 'get'):
+            phi_3d = phi_3d.get()
+
         if phi_3d is not None:
             # Gravitational potential well minimum
             min_idx = np.unravel_index(np.argmin(phi_3d), phi_3d.shape)
@@ -44,6 +49,8 @@ class HaloRadialProfileAnalyzer:
         Computes spherically averaged radial profile centered at specified halo coordinates.
         Returns (r_centers, radial_mean, counts_per_shell).
         """
+        if hasattr(field_3d, 'get'):
+            field_3d = field_3d.get()
         cx, cy, cz = center
         idx = np.arange(self.grid_size)
         dx_grid = (idx[:, None, None] - cx + self.grid_size // 2) % self.grid_size - self.grid_size // 2

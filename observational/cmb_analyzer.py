@@ -122,6 +122,19 @@ class CMBSphericalHarmonicsAnalyzer:
         Sachs-Wolfe gravitational potential, intrinsic plasma temperature perturbations,
         line-of-sight Doppler velocity, and holographic non-equilibrium fossil memory.
         """
+        if hasattr(tau_3d, 'get'):
+            tau_3d = tau_3d.get()
+        if T_3d is not None and hasattr(T_3d, 'get'):
+            T_3d = T_3d.get()
+        if rho_3d is not None and hasattr(rho_3d, 'get'):
+            rho_3d = rho_3d.get()
+        if v_x is not None and hasattr(v_x, 'get'):
+            v_x = v_x.get()
+        if v_y is not None and hasattr(v_y, 'get'):
+            v_y = v_y.get()
+        if v_z is not None and hasattr(v_z, 'get'):
+            v_z = v_z.get()
+
         grid_size = tau_3d.shape[0]
         center = grid_size / 2.0
         r_obs = grid_size / 2.2

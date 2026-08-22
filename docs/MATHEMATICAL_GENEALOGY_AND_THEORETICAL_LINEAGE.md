@@ -49,6 +49,14 @@ flowchart TD
         S4 --> S5["ESA Planck Legacy (2018)<br>D_ell Observational Data"]
         S5 --> S6["Reotransductor (2026)<br>S^2 Quadrupole/Octopole Pipeline"]
     end
+
+    subgraph Pillar6 ["Pillar VI: Cosmic Web & Multi-Probe Validation"]
+        W1["Wiener & Khinchin (1930-1934)<br>Autocorrelation Theorem"] --> W2["Peebles (1980)<br>Spatial xi(r) & BAO Acoustic Peak"]
+        W2 --> W3["DESI 2024 / BOSS DR12<br>Galactic Acoustic Standard Ruler"]
+        W4["Navarro, Frenk & White (1997)<br>Cusp Density Profile"] --> W5["Burkert (1995) & SPARC (2020)<br>Flat Isothermal Cores"]
+        W6["Hellings & Downs (1983)<br>Pulsar Timing Quadrupolar Curve"] --> W7["NANOGrav 15-Year (2023)<br>Stochastic GW Background"]
+        W8["Lax & Friedrichs (1954)<br>Shock-Capturing Conservation"] --> W9["Reotransductor (2026)<br>256^3 Multi-Resolution Continuum"]
+    end
 ```
 
 ---
@@ -97,6 +105,7 @@ $$\frac{\partial \mathbf{v}}{\partial t} + (\mathbf{v} \cdot \nabla)\mathbf{v} =
 | **Claude-Louis Navier & George Gabriel Stokes** | 1822-1845 | Viscous fluid transport and momentum diffusion equations. | $\rho \frac{D\mathbf{v}}{Dt} = -\nabla P + \mu \nabla^2 \mathbf{v} + \mathbf{f}$ | Mathematical framework for momentum diffusion in cosmic media. |
 | **Charles-Augustin de Coulomb** | 1785 | Electrostatic inverse-square law governing ionized particle scattering. | $F = \frac{1}{4\pi\varepsilon_0}\frac{q_1 q_2}{r^2}$ | Microscopic physics underlying Spitzer plasma collision cross-sections. |
 | **Lyman Spitzer Jr.** | 1953-1962 | Coulomb collision conductivity in fully ionized astrophysical plasmas. | $\kappa_{\text{Spitzer}} \propto T^{5/2} / \ln \Lambda$ | Implemented as non-linear thermal diffusion tensor in `server/physics_units.py`. |
+| **Peter Lax & Kurt Friedrichs** | 1954 | Conservative finite-difference flux schemes for hyperbolic transport. | $F_{i+1/2} = \frac{1}{2}(f_i + f_{i+1}) - \frac{\Delta x}{2\Delta t}(u_{i+1} - u_i)$ | Advection scheme in `server/engine.py` preventing numerical odd-even decoupling. |
 
 ---
 
@@ -116,7 +125,7 @@ $$S_{\text{BH}} = \frac{4\pi G k_B}{\hbar c} M^2, \quad \hat{\delta}(\mathbf{k})
 
 ---
 
-### 2.5. Pillar V: Spherical Harmonic Decomposition and Observational Astronomy
+### 2.5. Pillar V: Spherical Harmonic Decomposition and CMB Astronomy
 
 $$a_{\ell m} = \int_{S^2} \frac{\Delta T}{T} Y_{\ell m}^* \, d\Omega, \quad C_\ell = \frac{1}{2\ell + 1}\sum_{m=-\ell}^{\ell} |a_{\ell m}|^2, \quad D_\ell = \frac{\ell(\ell+1)}{2\pi} C_\ell$$
 
@@ -127,14 +136,31 @@ $$a_{\ell m} = \int_{S^2} \frac{\Delta T}{T} Y_{\ell m}^* \, d\Omega, \quad C_\e
 | **Olinde Rodrigues** | 1816 | Rodrigues formula for Associated Legendre Polynomials $P_\ell^m(x)$. | $P_\ell^m(x) = \frac{(-1)^m}{2^\ell \ell!} (1 - x^2)^{m/2} \frac{d^{\ell+m}}{dx^{\ell+m}}(x^2 - 1)^\ell$ | Stable recurrence relation in `observational/cmb_analyzer.py`. |
 | **John William Strutt (Lord Rayleigh)** | 1877 | Parseval-Rayleigh theorem on angular power spectrum energy conservation. | $\int_{S^2} |f(\Omega)|^2 d\Omega = \sum_{\ell=0}^\infty (2\ell+1) C_\ell$ | Guarantees power conservation across multipoles. |
 | **Jim Peebles** | 1968 | Statistical CMB angular power spectrum $C_\ell$ formalism. | $C_\ell = \langle |a_{\ell m}|^2 \rangle$ | Standard astrophysical metric used to compare simulation against Planck 2018 data. |
+| **Rainer K. Sachs & Arthur M. Wolfe** | 1967 | Relativistic gravitational redshift perturbation on photon geodesics. | $\frac{\Delta T}{T} = \frac{1}{3}\frac{\delta\rho}{\rho} + \frac{\mathbf{v}\cdot\mathbf{n}}{c} + \Delta\Phi$ | Sachs-Wolfe bridge implemented on the last scattering surface in `server/engine.py`. |
 | **ESA Planck Scientific Team** | 2018 | Full-sky CMB temperature and polarization legacy archive (PR3/PR4). | $D_\ell = \frac{\ell(\ell+1)}{2\pi} C_\ell \; [\mu\text{K}^2]$ | Empirical observational dataset ingested by `observational/planck_data.py`. |
+
+---
+
+### 2.6. Pillar VI: Large-Scale Structure, Galactic Halos, and Multi-Probe Verification
+
+$$\xi(r) = \frac{1}{2\pi^2}\int k^2 P(k) \frac{\sin(kr)}{kr} dk, \quad \Gamma(\theta) = \frac{1}{2} - \frac{1}{4}\left(\frac{1 - \cos\theta}{2}\right) + \frac{3}{2}\left(\frac{1 - \cos\theta}{2}\right)\ln\left(\frac{1 - \cos\theta}{2}\right)$$
+
+| Ancestor / Pioneer | Year | Foundational Contribution | Mathematical Formulation | Direct Link to Reotransductor |
+| :--- | :--- | :--- | :--- | :--- |
+| **Norbert Wiener & Aleksandr Khinchin** | 1930-1934 | Spectral representation of autocorrelation functions. | $\xi(\mathbf{r}) = \mathcal{F}^{-1}\{|\hat{\delta}(\mathbf{k})|^2\}$ | Powers 3D spatial correlation function in `observational/bao_analyzer.py`. |
+| **DESI & SDSS BOSS Teams** | 2016-2024 | Baryon Acoustic Oscillation peak measurement at $r_{\text{drag}} \approx 100\ h^{-1}\text{Mpc}$. | $\xi(r_{\text{peak}}) > 0$ | Calibrates cosmological cosmic web sound horizon at $a = 2.00$. |
+| **Julio Navarro, Carlos Frenk & Simon White** | 1997 | Universal Cold Dark Matter halo density profile (NFW). | $\rho_{\text{NFW}}(r) = \frac{\rho_0}{(r/r_s)(1 + r/r_s)^2}$ | Standard cusp benchmark ($\gamma \to -1.0$) compared in `observational/halo_analyzer.py`. |
+| **Andreas Burkert & SPARC 2020** | 1995-2020 | Cored dark matter halo profiles and empirical rotation curve catalog. | $\rho_{\text{Burkert}}(r) = \frac{\rho_0}{(1 + r/r_0)(1 + (r/r_0)^2)}$ | Validates Reotransductor cored halo profile ($\gamma_0 \to 0.0$) against 175 galaxies. |
+| **Ronald Hellings & George Downs** | 1983 | Quadrupolar spatial correlation of pulsar timing residual delays under isotropic GW background. | $\Gamma_{ab}(\theta) = \text{HD}(\theta)$ | Validates galactic proper time micro-delays in `observational/pulsar_analyzer.py`. |
+| **NANOGrav Collaboration** | 2023 | 15-Year pulsar timing array evidence for stochastic gravitational background. | $\chi^2_{\text{HD}} < \chi^2_{\text{uncorr}}$ | Official pulsar dataset ingested by `observational/nanograv_data.py`. |
 
 ---
 
 ## 3. Epistemological Summary
 
 Every component in the Reotransductor codebase is mathematically connected to a 2,200-year chain of physical discovery:
-* **Space and Geometry:** $\text{Archimedes} \to \text{Newton} \to \text{Laplace} \to \text{Poisson} \to \text{Cooley-Tukey FFT}$.
-* **Time and Irreversibility:** $\text{Clausius} \to \text{Boltzmann} \to \text{Onsager} \to \text{Prigogine} \to \text{Landauer} \to \text{Salinas (Reotransductor)}$.
+* **Space, Geometry & Mesh:** $\text{Archimedes} \to \text{Newton} \to \text{Laplace} \to \text{Poisson} \to \text{Lax-Friedrichs} \to \text{Cooley-Tukey FFT}$.
+* **Time & Irreversibility:** $\text{Clausius} \to \text{Boltzmann} \to \text{Onsager} \to \text{Prigogine} \to \text{Landauer} \to \text{Salinas (Reotransductor)}$.
+* **Plasma Kinetics:** $\text{Euler} \to \text{Coulomb} \to \text{Navier-Stokes} \to \text{Spitzer-Braginskii}$.
 * **Quantum Horizons:** $\text{Einstein} \to \text{Schwarzschild} \to \text{Bekenstein} \to \text{Hawking} \to \text{Rovelli} \to \text{Penrose}$.
-* **Celestial Observation:** $\text{Legendre} \to \text{Rodrigues} \to \text{Rayleigh} \to \text{Peebles} \to \text{ESA Planck 2018}$.
+* **Cosmic Observations:** $\text{Legendre} \to \text{Rayleigh} \to \text{Peebles} \to \text{Wiener-Khinchin} \to \text{Hellings-Downs} \to \text{Planck/DESI/SPARC/Pantheon/NANOGrav}$.

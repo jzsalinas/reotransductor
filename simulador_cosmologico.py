@@ -318,7 +318,7 @@ def animate(frame):
     else:
         era_str = "Fase Asintótica Pre-Rebote"
         
-    redshift = max(0.0, (1.0 / scale_factor) - 1.0)
+    redshift = max(0.0, (4.50 / max(0.01, float(scale_factor))) - 1.0)
     fig.suptitle(f"Simulación Cosmológica: Reotransductor, Bekenstein & Agujero Blanco | Eón N = {eon} [{era_str}]", fontsize=11.5, fontweight='bold')
     
     title_rho.set_text(f"1. Densidad Materia (ρ) [a = {scale_factor:.2f}]")
