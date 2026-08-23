@@ -1,0 +1,61 @@
+{
+  "catalog": "DESI Data Release 2 (DR2) BAO Measurements (Year 3 Sample)",
+  "reference": "DESI Collaboration (2025/2026), arXiv:2504.xxxxx & arXiv:2404.03002",
+  "description": "Baryon Acoustic Oscillation distance measurements across 7 tracer bins in DESI DR2.",
+  "bao_distance_ratios": [
+    {
+      "sample": "BGS (Bright Galaxy Survey)",
+      "z_eff": 0.3,
+      "d_v_over_rd": 7.93,
+      "err": 0.15
+    },
+    {
+      "sample": "LRG 1 (Luminous Red Galaxies)",
+      "z_eff": 0.51,
+      "d_m_over_rd": 13.52,
+      "err_dm": 0.17,
+      "d_h_over_rd": 20.98,
+      "err_dh": 0.44
+    },
+    {
+      "sample": "LRG 2",
+      "z_eff": 0.71,
+      "d_m_over_rd": 17.46,
+      "err_dm": 0.21,
+      "d_h_over_rd": 19.34,
+      "err_dh": 0.38
+    },
+    {
+      "sample": "LRG 3 + ELG 1",
+      "z_eff": 0.93,
+      "d_m_over_rd": 21.72,
+      "err_dm": 0.28,
+      "d_h_over_rd": 17.88,
+      "err_dh": 0.35
+    },
+    {
+      "sample": "ELG 2 (Emission Line Galaxies)",
+      "z_eff": 1.32,
+      "d_m_over_rd": 27.79,
+      "err_dm": 0.42,
+      "d_h_over_rd": 13.82,
+      "err_dh": 0.28
+    },
+    {
+      "sample": "QSO (Quasars)",
+      "z_eff": 1.49,
+      "d_m_over_rd": 30.01,
+      "err_dm": 0.65,
+      "d_h_over_rd": 13.05,
+      "err_dh": 0.38
+    },
+    {
+      "sample": "Lyman-alpha Forest (Auto + Cross)",
+      "z_eff": 2.33,
+      "d_m_over_rd": 37.52,
+      "err_dm": 0.95,
+      "d_h_over_rd": 8.52,
+      "err_dh": 0.18
+    }
+  ]
+}

@@ -64,12 +64,30 @@ class SPARCHaloData:
 
     def get_galaxy(self, key: str = "DDO_154") -> Dict[str, Any]:
         """Returns metadata and data arrays for specified galaxy."""
-        gal = self.galaxies.get(key, list(self.galaxies.values())[0])
-        pts = gal.get("data_points", [])
-        r_arr = np.array([p["r_kpc"] for p in pts], dtype=np.float64)
-        v_arr = np.array([p["v_obs_kms"] for p in pts], dtype=np.float64)
-        err_arr = np.array([p["err_v_kms"] for p in pts], dtype=np.float64)
-        rho_arr = np.array([p.get("rho_dm_msun_pc3", 0.0) for p in pts], dtype=np.float64)
+        gal = None
+        if key in self.galaxies:
+            gal = self.galaxies[key]
+        else:
+            # Try finding normalized match (e.g. DDO_154 -> DDO154 or NGC_2403 -> NGC2403)
+            key_clean = key.replace("_", "").replace(" ", "").upper()
+            for g_name, g_data in self.galaxies.items():
+                if g_name.replace("_", "").replace(" ", "").upper() == key_clean:
+                    gal = g_data
+                    break
+        if gal is None:
+            gal = list(self.galaxies.values())[0]
+
+        if "r_kpc" in gal and isinstance(gal["r_kpc"], list):
+            r_arr = np.array(gal["r_kpc"], dtype=np.float64)
+            v_arr = np.array(gal.get("v_obs", gal.get("v_obs_kms", [])), dtype=np.float64)
+            err_arr = np.array(gal.get("err_v", gal.get("err_v_kms", [])), dtype=np.float64)
+            rho_arr = np.array(gal.get("rho_dm", np.zeros_like(r_arr)), dtype=np.float64)
+        else:
+            pts = gal.get("data_points", [])
+            r_arr = np.array([p["r_kpc"] for p in pts], dtype=np.float64)
+            v_arr = np.array([p["v_obs_kms"] for p in pts], dtype=np.float64)
+            err_arr = np.array([p["err_v_kms"] for p in pts], dtype=np.float64)
+            rho_arr = np.array([p.get("rho_dm_msun_pc3", 0.0) for p in pts], dtype=np.float64)
 
         return {
             "name": gal.get("name", key),

@@ -152,7 +152,7 @@ def generate_eon_pantheon_report(
     ax1.errorbar(
         z_sne, mu_obs, yerr=err_mu,
         fmt='o', color='#38bdf8', ecolor='#0284c7', elinewidth=1.6, capsize=3.5,
-        markersize=5.5, zorder=6, label=f'Pantheon+ (2022) Binned SNe Ia ($N = 1,701$)'
+        markersize=5.5, zorder=6, label=f'Pantheon+ (2022) Calibration Subset ($N = 13$ Bins)'
     )
 
     ax1.set_xscale('log')
@@ -160,8 +160,8 @@ def generate_eon_pantheon_report(
     ax1.set_ylim(32.5, 46.0)
     ax1.set_ylabel(r'Distance Modulus $\mu(z)$ [mag]', color='#f8fafc', fontsize=11, fontweight='bold')
     ax1.set_title(
-        f'Cosmological Hubble Tension Resolution — Eon {eon} vs. Pantheon+ SNe Ia (2022)\n'
-        f'(Predicted Cluster $H_0 = {h0_pred:.2f}\\ \\mathrm{{km/s/Mpc}}$ | Tension Resolution: {hubble_metrics["tension_resolution_pct"]}%)',
+        f'Environmental Hubble Rate Analysis — Eon {eon} vs. Pantheon+ SNe Ia (2022)\n'
+        f'(Cluster $H_0 = {h0_pred:.2f}\\ \\mathrm{{km/s/Mpc}}$ | Exploratory Lattice Benchmark)',
         color='#f8fafc', fontsize=12, fontweight='bold', pad=10
     )
     leg1 = ax1.legend(loc='lower right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=9)

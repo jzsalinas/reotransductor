@@ -103,10 +103,10 @@ class HubbleTensionAnalyzer:
         group_mask = (delta_rho >= 1.0) & (delta_rho < 3.0)
         cluster_mask = delta_rho >= 3.0
 
-        h0_void = float(np.mean(h0_field_3d[void_mask])) if np.any(void_mask) else self.h0_bg
-        h0_filament = float(np.mean(h0_field_3d[filament_mask])) if np.any(filament_mask) else self.h0_bg * 1.03
-        h0_group = float(np.mean(h0_field_3d[group_mask])) if np.any(group_mask) else self.h0_bg * 1.06
-        h0_cluster = float(np.mean(h0_field_3d[cluster_mask])) if np.any(cluster_mask) else self.h0_local_obs
+        h0_void = float(np.mean(h0_field_3d[void_mask])) if np.any(void_mask) else float(np.min(h0_field_3d))
+        h0_filament = float(np.mean(h0_field_3d[filament_mask])) if np.any(filament_mask) else float(np.median(h0_field_3d))
+        h0_group = float(np.mean(h0_field_3d[group_mask])) if np.any(group_mask) else float(np.percentile(h0_field_3d, 75))
+        h0_cluster = float(np.mean(h0_field_3d[cluster_mask])) if np.any(cluster_mask) else float(np.max(h0_field_3d))
 
         # Environmental gradient analysis: H_0 vs log10(rho / rho_bar)
         log_overdensity = np.log10(np.maximum(1e-2, rho_safe / rho_bar)).ravel()
@@ -152,8 +152,10 @@ class HubbleTensionAnalyzer:
         """
         Evaluates the Hubble tension prediction from an active CosmologicalEngine instance.
         """
-        tau_field = engine.tau - engine.tau_eon_start
-        rho_field = engine.rho
+        tau_raw = engine.tau - engine.tau_eon_start
+        tau_field = engine.to_cpu(tau_raw) if hasattr(engine, 'to_cpu') else np.asarray(tau_raw)
+        rho_field = engine.to_cpu(engine.rho) if hasattr(engine, 'to_cpu') else np.asarray(engine.rho)
+        tau_start = engine.to_cpu(engine.tau_eon_start) if hasattr(engine, 'to_cpu') else np.asarray(getattr(engine, 'tau_eon_start', None))
 
         # Separate cluster regions (rho > 1.2) from void regions (rho < 0.5)
         cluster_mask = rho_field > 1.2
@@ -167,9 +169,9 @@ class HubbleTensionAnalyzer:
 
         # Append continuous 3D field diagnostics
         env_field = self.compute_3d_environmental_h0_field(
-            rho_3d=engine.rho,
-            tau_3d=engine.tau,
-            tau_start_3d=getattr(engine, 'tau_eon_start', None),
+            rho_3d=rho_field,
+            tau_3d=engine.to_cpu(engine.tau) if hasattr(engine, 'to_cpu') else np.asarray(engine.tau),
+            tau_start_3d=tau_start,
             scale_factor=float(engine.scale_factor),
             h0_engine=float(engine.H_0)
         )

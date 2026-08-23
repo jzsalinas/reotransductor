@@ -7,21 +7,21 @@
 [![Tests: 54/54 Passed](https://img.shields.io/badge/tests-54%20passed%20(100%25)-brightgreen.svg)](tests/)
 [![Data: Manifest Verified](https://img.shields.io/badge/data-provenance%20verified-blue.svg)](data/PROVENANCE.md)
 
-An open-source computational physics simulation suite and in-silico laboratory formalizing the **Active Present Rheotransducer** (*Reotransductor del Presente Activo*) — connecting non-equilibrium thermodynamics (Onsager-Prigogine), general relativity, quantum cosmology, and Penrose Conformal Cyclic Cosmology (CCC) to model the emergence of **thermal proper time** ($\tau$) from irreversible dissipation.
+An open-source effective numerical framework and in-silico simulation laboratory exploring the **Dissipative Emergent Proper Time Hypothesis** — connecting non-equilibrium thermodynamics (Onsager-Prigogine), general relativity, and cyclic cosmology to model the emergence of physical proper time ($\tau$) from irreversible dissipation.
 
 ---
 
-## Observational Falsification Matrix (Empirical Benchmarks)
+## Observational Exploratory Benchmark Matrix
 
-The Reotransductor framework is benchmarked against official astrophysical survey databases, evaluating cosmological and galactic observables against standard reference models:
+The Reotransductor framework implements exploratory comparison pipelines against official astrophysical datasets, evaluating effective lattice observables against standard reference models:
 
-| # | Observational Domain | Official Survey / Dataset | Physical Mechanism | Empirical Benchmark Result | Status |
-| :---: | :--- | :--- | :--- | :--- | :---: |
-| **0** | **Cosmic Microwave Background (CMB)** | **ESA Planck 2018 Legacy (PR3)** | Holographic Phase-Locking in Fourier space $\hat{\tau}(\mathbf{k})$ | Quadrupole-to-octopole power ratio $C_2/C_3 = 0.742 < 1.0$, compatible with Planck low-$\ell$ anomaly | ✅ **COMPATIBLE** |
-| **1** | **Baryon Acoustic Oscillations (BAO)** | **DESI 2024 DR1 & SDSS BOSS DR12** | Relativistic sound horizon preservation via 3D $\xi(r)$ | Monopole spatial correlation acoustic peak at $r_{\text{BAO}} = 102.5\ h^{-1}\text{Mpc}$ ($\pm 1\sigma$ DESI band) | ✅ **COMPATIBLE** |
-| **2** | **Dark Matter Halos (Cusp-Core)** | **SPARC 2020 Database (Lelli et al.)** | Spitzer-Jeans non-equilibrium core thermalization | Flat central density core $\gamma_0 = -0.138$ and flat rotation curves $V_c(r) = \text{const}$ (DDO 154 / NGC 2403) | ✅ **COMPATIBLE** |
-| **3** | **Hubble Tension ($H_0$)** | **Pantheon+ (2022) / SH0ES 1,701 SNe Ia** | Environmental proper time dilation $\Delta\tau$ in halos | $H_0^{\text{void}} = 67.36 \to H_0^{\text{cluster}} = 75.52\text{ km/s/Mpc}$, environmental gradient $+4.19\text{ km/s/Mpc/dex}$ | ✅ **COMPATIBLE** |
-| **4** | **Pulsar Timing Arrays (PTAs)** | **NANOGrav 15-Year Data Set (2023)** | Relativistic transverse-traceless antenna response | Quadrupolar Hellings-Downs cross-correlation ($\chi^2_{\text{sim}} \approx 4.8$, $A_{\text{eff}} \approx 2.4 - 3.5 \times 10^{-15}$) | ✅ **COMPATIBLE** |
+| # | Observational Domain | Survey / Dataset | Lattice Physical Mechanism | Category | Exploratory Benchmark Result |
+| :---: | :--- | :--- | :--- | :---: | :--- |
+| **0** | **Cosmic Microwave Background (CMB)** | **ESA Planck 2018 Legacy (PR3)** | Holographic Phase-Locking $\hat{\tau}(\mathbf{k})$ | Exploratory Comparison | Low-$\ell$ quadrupole suppression ($C_2/C_3 < 1.0$) observed in cyclic realizations |
+| **1** | **Baryon Acoustic Oscillations (BAO)** | **DESI 2024 DR1 & SDSS BOSS DR12** | Sound horizon propagation via 3D $\xi(r)$ | Toy Model Benchmark | Spatial correlation structure within the $100\ h^{-1}\mathrm{Mpc}$ box comoving frame |
+| **2** | **Dark Matter Halos (Cusp-Core)** | **SPARC 2020 Database (Lelli et al.)** | Thermalized non-equilibrium core pressure | Qualitative Comparison | Flat central density core ($\gamma_0 \approx 0$) preventing singular cusps |
+| **3** | **Hubble Tension ($H_0$)** | **Pantheon+ (2022) / SH0ES 13-Bin Subset** | Environmental proper time dilation $\Delta\tau$ | Calibration / Probe | Environmental gradient $dH_0/d\log\rho > 0$ shifting from background voids toward dense clusters |
+| **4** | **Pulsar Timing Arrays (PTAs)** | **NANOGrav 15-Year Data Set (2023)** | Relativistic transverse-traceless response | Geometric Network Test | Quadrupolar Hellings-Downs correlation curve recovered on synthetic pulsar networks |
 
 ---
 

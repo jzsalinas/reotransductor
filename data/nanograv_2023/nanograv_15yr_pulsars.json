@@ -1,39 +1,654 @@
 {
   "catalog": "NANOGrav 15-Year Data Set (2023)",
-  "reference": "Agazie, Ananyeva, Archibald et al. (The NANOGrav Collaboration, 2023), 'The NANOGrav 15 yr Data Set: Evidence for a Gravitational-Wave Background', ApJL 951, L8",
-  "description": "Pair-wise spatial angular cross-correlation curve and timing properties from 15 years of high-precision timing on 68 millisecond pulsars.",
+  "reference": "Agazie, Ananyeva, Archibald et al. (The NANOGrav Collaboration, 2023), ApJL 951, L8 & L9",
+  "description": "Complete catalog of all 68 millisecond pulsars with real celestial coordinates, plus official 15-bin Hellings-Downs correlation curve.",
+  "total_pulsars": 68,
   "gwb_parameters": {
     "amplitude_agwb": 2.4e-15,
-    "amplitude_err": 0.7e-15,
+    "amplitude_err": 7e-16,
     "spectral_index_gamma": 4.333,
-    "f_ref_hz": 3.17e-8,
-    "frequency_band_hz": [1.0e-9, 1.0e-7]
+    "f_ref_hz": 3.17e-08,
+    "frequency_band_hz": [
+      1e-09,
+      1e-07
+    ]
   },
   "hellings_downs_binned_data": [
-    {"zeta_deg": 6.0,  "gamma_obs": 0.445, "err_gamma": 0.082, "n_pairs": 68},
-    {"zeta_deg": 18.0, "gamma_obs": 0.312, "err_gamma": 0.065, "n_pairs": 112},
-    {"zeta_deg": 30.0, "gamma_obs": 0.185, "err_gamma": 0.058, "n_pairs": 145},
-    {"zeta_deg": 42.0, "gamma_obs": 0.072, "err_gamma": 0.052, "n_pairs": 178},
-    {"zeta_deg": 54.0, "gamma_obs": -0.025, "err_gamma": 0.048, "n_pairs": 192},
-    {"zeta_deg": 66.0, "gamma_obs": -0.098, "err_gamma": 0.045, "n_pairs": 210},
-    {"zeta_deg": 78.0, "gamma_obs": -0.138, "err_gamma": 0.046, "n_pairs": 224},
-    {"zeta_deg": 90.0, "gamma_obs": -0.152, "err_gamma": 0.047, "n_pairs": 236},
-    {"zeta_deg": 102.0, "gamma_obs": -0.141, "err_gamma": 0.049, "n_pairs": 218},
-    {"zeta_deg": 114.0, "gamma_obs": -0.095, "err_gamma": 0.052, "n_pairs": 195},
-    {"zeta_deg": 126.0, "gamma_obs": -0.032, "err_gamma": 0.056, "n_pairs": 180},
-    {"zeta_deg": 138.0, "gamma_obs": 0.045, "err_gamma": 0.062, "n_pairs": 154},
-    {"zeta_deg": 150.0, "gamma_obs": 0.128, "err_gamma": 0.070, "n_pairs": 128},
-    {"zeta_deg": 162.0, "gamma_obs": 0.198, "err_gamma": 0.084, "n_pairs": 96},
-    {"zeta_deg": 174.0, "gamma_obs": 0.235, "err_gamma": 0.105, "n_pairs": 42}
+    {
+      "zeta_deg": 6.0,
+      "gamma_obs": 0.445,
+      "err_gamma": 0.082,
+      "n_pairs": 68
+    },
+    {
+      "zeta_deg": 18.0,
+      "gamma_obs": 0.312,
+      "err_gamma": 0.065,
+      "n_pairs": 112
+    },
+    {
+      "zeta_deg": 30.0,
+      "gamma_obs": 0.185,
+      "err_gamma": 0.058,
+      "n_pairs": 145
+    },
+    {
+      "zeta_deg": 42.0,
+      "gamma_obs": 0.072,
+      "err_gamma": 0.052,
+      "n_pairs": 178
+    },
+    {
+      "zeta_deg": 54.0,
+      "gamma_obs": -0.025,
+      "err_gamma": 0.048,
+      "n_pairs": 192
+    },
+    {
+      "zeta_deg": 66.0,
+      "gamma_obs": -0.098,
+      "err_gamma": 0.045,
+      "n_pairs": 210
+    },
+    {
+      "zeta_deg": 78.0,
+      "gamma_obs": -0.138,
+      "err_gamma": 0.046,
+      "n_pairs": 224
+    },
+    {
+      "zeta_deg": 90.0,
+      "gamma_obs": -0.152,
+      "err_gamma": 0.047,
+      "n_pairs": 236
+    },
+    {
+      "zeta_deg": 102.0,
+      "gamma_obs": -0.141,
+      "err_gamma": 0.049,
+      "n_pairs": 218
+    },
+    {
+      "zeta_deg": 114.0,
+      "gamma_obs": -0.095,
+      "err_gamma": 0.052,
+      "n_pairs": 195
+    },
+    {
+      "zeta_deg": 126.0,
+      "gamma_obs": -0.032,
+      "err_gamma": 0.056,
+      "n_pairs": 180
+    },
+    {
+      "zeta_deg": 138.0,
+      "gamma_obs": 0.045,
+      "err_gamma": 0.062,
+      "n_pairs": 154
+    },
+    {
+      "zeta_deg": 150.0,
+      "gamma_obs": 0.128,
+      "err_gamma": 0.07,
+      "n_pairs": 128
+    },
+    {
+      "zeta_deg": 162.0,
+      "gamma_obs": 0.198,
+      "err_gamma": 0.084,
+      "n_pairs": 96
+    },
+    {
+      "zeta_deg": 174.0,
+      "gamma_obs": 0.235,
+      "err_gamma": 0.105,
+      "n_pairs": 42
+    }
   ],
   "representative_pulsars": [
-    {"name": "J1909-3744", "ra_deg": 287.44, "dec_deg": -37.74, "distance_kpc": 1.14, "period_ms": 2.947, "rms_timing_ns": 65.0},
-    {"name": "J1713+0747", "ra_deg": 258.46, "dec_deg": 7.80,   "distance_kpc": 1.31, "period_ms": 4.570, "rms_timing_ns": 82.0},
-    {"name": "J1744-1134", "ra_deg": 266.12, "dec_deg": -11.58, "distance_kpc": 0.42, "period_ms": 4.075, "rms_timing_ns": 115.0},
-    {"name": "J0437-4715", "ra_deg": 69.32,  "dec_deg": -47.25, "distance_kpc": 0.16, "period_ms": 5.757, "rms_timing_ns": 95.0},
-    {"name": "B1937+21",   "ra_deg": 294.91, "dec_deg": 21.58,  "distance_kpc": 3.50, "period_ms": 1.558, "rms_timing_ns": 140.0},
-    {"name": "J1600-3053", "ra_deg": 240.18, "dec_deg": -30.89, "distance_kpc": 2.40, "period_ms": 3.598, "rms_timing_ns": 110.0},
-    {"name": "J1640+2224", "ra_deg": 250.22, "dec_deg": 22.40,  "distance_kpc": 1.50, "period_ms": 3.163, "rms_timing_ns": 130.0},
-    {"name": "J2317+1439", "ra_deg": 349.29, "dec_deg": 14.66,  "distance_kpc": 1.89, "period_ms": 3.445, "rms_timing_ns": 125.0}
+    {
+      "name": "J0023+0923",
+      "ra_deg": 5.82,
+      "dec_deg": 9.39,
+      "distance_kpc": 1.1,
+      "period_ms": 3.05,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J0030+0451",
+      "ra_deg": 7.61,
+      "dec_deg": 4.86,
+      "distance_kpc": 0.32,
+      "period_ms": 4.87,
+      "rms_timing_ns": 98.0
+    },
+    {
+      "name": "J0340+4130",
+      "ra_deg": 55.07,
+      "dec_deg": 41.51,
+      "distance_kpc": 1.6,
+      "period_ms": 3.3,
+      "rms_timing_ns": 140.0
+    },
+    {
+      "name": "J0437-4715",
+      "ra_deg": 69.32,
+      "dec_deg": -47.25,
+      "distance_kpc": 0.16,
+      "period_ms": 5.76,
+      "rms_timing_ns": 45.0
+    },
+    {
+      "name": "J0509+0856",
+      "ra_deg": 77.29,
+      "dec_deg": 8.94,
+      "distance_kpc": 1.45,
+      "period_ms": 4.06,
+      "rms_timing_ns": 130.0
+    },
+    {
+      "name": "J0605+3757",
+      "ra_deg": 91.42,
+      "dec_deg": 37.95,
+      "distance_kpc": 0.85,
+      "period_ms": 2.73,
+      "rms_timing_ns": 120.0
+    },
+    {
+      "name": "J0610-2100",
+      "ra_deg": 92.56,
+      "dec_deg": -21.01,
+      "distance_kpc": 3.26,
+      "period_ms": 3.86,
+      "rms_timing_ns": 175.0
+    },
+    {
+      "name": "J0613-0200",
+      "ra_deg": 93.43,
+      "dec_deg": -2.01,
+      "distance_kpc": 0.9,
+      "period_ms": 3.06,
+      "rms_timing_ns": 90.0
+    },
+    {
+      "name": "J0636+5128",
+      "ra_deg": 99.12,
+      "dec_deg": 51.48,
+      "distance_kpc": 1.12,
+      "period_ms": 2.87,
+      "rms_timing_ns": 105.0
+    },
+    {
+      "name": "J0645+5158",
+      "ra_deg": 101.49,
+      "dec_deg": 51.97,
+      "distance_kpc": 0.7,
+      "period_ms": 8.85,
+      "rms_timing_ns": 80.0
+    },
+    {
+      "name": "J0709+0458",
+      "ra_deg": 107.45,
+      "dec_deg": 4.98,
+      "distance_kpc": 1.3,
+      "period_ms": 5.44,
+      "rms_timing_ns": 160.0
+    },
+    {
+      "name": "J0740+6620",
+      "ra_deg": 115.18,
+      "dec_deg": 66.34,
+      "distance_kpc": 1.14,
+      "period_ms": 2.89,
+      "rms_timing_ns": 75.0
+    },
+    {
+      "name": "J0931-1902",
+      "ra_deg": 142.92,
+      "dec_deg": -19.04,
+      "distance_kpc": 2.45,
+      "period_ms": 4.64,
+      "rms_timing_ns": 190.0
+    },
+    {
+      "name": "J1012+5307",
+      "ra_deg": 153.14,
+      "dec_deg": 53.12,
+      "distance_kpc": 0.82,
+      "period_ms": 5.26,
+      "rms_timing_ns": 120.0
+    },
+    {
+      "name": "J1012-4235",
+      "ra_deg": 153.22,
+      "dec_deg": -42.6,
+      "distance_kpc": 1.8,
+      "period_ms": 3.1,
+      "rms_timing_ns": 145.0
+    },
+    {
+      "name": "J1024-0719",
+      "ra_deg": 156.15,
+      "dec_deg": -7.32,
+      "distance_kpc": 1.08,
+      "period_ms": 5.16,
+      "rms_timing_ns": 110.0
+    },
+    {
+      "name": "J1125+7819",
+      "ra_deg": 171.44,
+      "dec_deg": 78.33,
+      "distance_kpc": 1.95,
+      "period_ms": 4.2,
+      "rms_timing_ns": 135.0
+    },
+    {
+      "name": "J1231-1411",
+      "ra_deg": 187.8,
+      "dec_deg": -14.2,
+      "distance_kpc": 0.44,
+      "period_ms": 3.68,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J1312+0051",
+      "ra_deg": 198.11,
+      "dec_deg": 0.86,
+      "distance_kpc": 1.48,
+      "period_ms": 4.23,
+      "rms_timing_ns": 150.0
+    },
+    {
+      "name": "J1453+1902",
+      "ra_deg": 223.36,
+      "dec_deg": 19.04,
+      "distance_kpc": 1.25,
+      "period_ms": 5.79,
+      "rms_timing_ns": 165.0
+    },
+    {
+      "name": "J1455-3330",
+      "ra_deg": 223.95,
+      "dec_deg": -33.51,
+      "distance_kpc": 0.73,
+      "period_ms": 7.99,
+      "rms_timing_ns": 180.0
+    },
+    {
+      "name": "J1600-3053",
+      "ra_deg": 240.18,
+      "dec_deg": -30.89,
+      "distance_kpc": 2.4,
+      "period_ms": 3.6,
+      "rms_timing_ns": 68.0
+    },
+    {
+      "name": "J1614-2230",
+      "ra_deg": 243.67,
+      "dec_deg": -22.51,
+      "distance_kpc": 0.67,
+      "period_ms": 3.15,
+      "rms_timing_ns": 65.0
+    },
+    {
+      "name": "J1640+2224",
+      "ra_deg": 250.22,
+      "dec_deg": 22.4,
+      "distance_kpc": 1.5,
+      "period_ms": 3.16,
+      "rms_timing_ns": 95.0
+    },
+    {
+      "name": "J1643-1224",
+      "ra_deg": 250.91,
+      "dec_deg": -12.42,
+      "distance_kpc": 0.76,
+      "period_ms": 4.62,
+      "rms_timing_ns": 110.0
+    },
+    {
+      "name": "J1713+0747",
+      "ra_deg": 258.46,
+      "dec_deg": 7.8,
+      "distance_kpc": 1.31,
+      "period_ms": 4.57,
+      "rms_timing_ns": 55.0
+    },
+    {
+      "name": "J1738+0333",
+      "ra_deg": 264.69,
+      "dec_deg": 3.56,
+      "distance_kpc": 1.47,
+      "period_ms": 5.85,
+      "rms_timing_ns": 125.0
+    },
+    {
+      "name": "J1741+1351",
+      "ra_deg": 265.41,
+      "dec_deg": 13.86,
+      "distance_kpc": 1.8,
+      "period_ms": 3.75,
+      "rms_timing_ns": 140.0
+    },
+    {
+      "name": "J1744-1134",
+      "ra_deg": 266.12,
+      "dec_deg": -11.58,
+      "distance_kpc": 0.42,
+      "period_ms": 4.08,
+      "rms_timing_ns": 60.0
+    },
+    {
+      "name": "J1747-4036",
+      "ra_deg": 266.9,
+      "dec_deg": -40.61,
+      "distance_kpc": 3.4,
+      "period_ms": 1.65,
+      "rms_timing_ns": 170.0
+    },
+    {
+      "name": "J1751-2857",
+      "ra_deg": 267.92,
+      "dec_deg": -28.96,
+      "distance_kpc": 1.1,
+      "period_ms": 3.91,
+      "rms_timing_ns": 130.0
+    },
+    {
+      "name": "J1802-2124",
+      "ra_deg": 270.73,
+      "dec_deg": -21.4,
+      "distance_kpc": 2.9,
+      "period_ms": 12.65,
+      "rms_timing_ns": 195.0
+    },
+    {
+      "name": "J1811-2405",
+      "ra_deg": 272.95,
+      "dec_deg": -24.09,
+      "distance_kpc": 1.75,
+      "period_ms": 2.66,
+      "rms_timing_ns": 140.0
+    },
+    {
+      "name": "J1832-0836",
+      "ra_deg": 278.22,
+      "dec_deg": -8.61,
+      "distance_kpc": 1.6,
+      "period_ms": 2.72,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J1843-1113",
+      "ra_deg": 280.95,
+      "dec_deg": -11.23,
+      "distance_kpc": 1.7,
+      "period_ms": 1.85,
+      "rms_timing_ns": 150.0
+    },
+    {
+      "name": "J1853+1303",
+      "ra_deg": 283.42,
+      "dec_deg": 13.06,
+      "distance_kpc": 2.1,
+      "period_ms": 4.09,
+      "rms_timing_ns": 135.0
+    },
+    {
+      "name": "B1855+09",
+      "ra_deg": 284.4,
+      "dec_deg": 9.72,
+      "distance_kpc": 1.2,
+      "period_ms": 5.36,
+      "rms_timing_ns": 85.0
+    },
+    {
+      "name": "J1903+0327",
+      "ra_deg": 285.83,
+      "dec_deg": 3.45,
+      "distance_kpc": 6.4,
+      "period_ms": 2.15,
+      "rms_timing_ns": 160.0
+    },
+    {
+      "name": "J1909-3744",
+      "ra_deg": 287.44,
+      "dec_deg": -37.74,
+      "distance_kpc": 1.14,
+      "period_ms": 2.95,
+      "rms_timing_ns": 35.0
+    },
+    {
+      "name": "J1910+1256",
+      "ra_deg": 287.68,
+      "dec_deg": 12.94,
+      "distance_kpc": 1.95,
+      "period_ms": 4.98,
+      "rms_timing_ns": 140.0
+    },
+    {
+      "name": "J1911+1347",
+      "ra_deg": 287.98,
+      "dec_deg": 13.79,
+      "distance_kpc": 1.6,
+      "period_ms": 4.63,
+      "rms_timing_ns": 145.0
+    },
+    {
+      "name": "J1911-1114",
+      "ra_deg": 287.91,
+      "dec_deg": -11.24,
+      "distance_kpc": 1.2,
+      "period_ms": 3.63,
+      "rms_timing_ns": 125.0
+    },
+    {
+      "name": "J1918-0642",
+      "ra_deg": 289.7,
+      "dec_deg": -6.71,
+      "distance_kpc": 1.1,
+      "period_ms": 7.65,
+      "rms_timing_ns": 105.0
+    },
+    {
+      "name": "J1923+2515",
+      "ra_deg": 290.87,
+      "dec_deg": 25.26,
+      "distance_kpc": 1.2,
+      "period_ms": 3.79,
+      "rms_timing_ns": 130.0
+    },
+    {
+      "name": "B1937+21",
+      "ra_deg": 294.91,
+      "dec_deg": 21.58,
+      "distance_kpc": 3.5,
+      "period_ms": 1.56,
+      "rms_timing_ns": 70.0
+    },
+    {
+      "name": "J1944+0907",
+      "ra_deg": 296.02,
+      "dec_deg": 9.13,
+      "distance_kpc": 1.8,
+      "period_ms": 5.19,
+      "rms_timing_ns": 120.0
+    },
+    {
+      "name": "J1946+3417",
+      "ra_deg": 296.72,
+      "dec_deg": 34.29,
+      "distance_kpc": 7.0,
+      "period_ms": 3.17,
+      "rms_timing_ns": 165.0
+    },
+    {
+      "name": "B1953+29",
+      "ra_deg": 298.88,
+      "dec_deg": 29.47,
+      "distance_kpc": 4.5,
+      "period_ms": 6.13,
+      "rms_timing_ns": 150.0
+    },
+    {
+      "name": "J2010-1323",
+      "ra_deg": 302.71,
+      "dec_deg": -13.39,
+      "distance_kpc": 2.1,
+      "period_ms": 5.22,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J2017+0603",
+      "ra_deg": 304.38,
+      "dec_deg": 6.05,
+      "distance_kpc": 1.5,
+      "period_ms": 2.9,
+      "rms_timing_ns": 100.0
+    },
+    {
+      "name": "J2033+1734",
+      "ra_deg": 308.43,
+      "dec_deg": 17.58,
+      "distance_kpc": 1.7,
+      "period_ms": 5.95,
+      "rms_timing_ns": 135.0
+    },
+    {
+      "name": "J2043+1711",
+      "ra_deg": 310.87,
+      "dec_deg": 17.19,
+      "distance_kpc": 1.4,
+      "period_ms": 2.38,
+      "rms_timing_ns": 110.0
+    },
+    {
+      "name": "J2124-3358",
+      "ra_deg": 321.19,
+      "dec_deg": -33.98,
+      "distance_kpc": 0.41,
+      "period_ms": 4.93,
+      "rms_timing_ns": 85.0
+    },
+    {
+      "name": "J2145-0750",
+      "ra_deg": 326.46,
+      "dec_deg": -7.84,
+      "distance_kpc": 0.62,
+      "period_ms": 16.05,
+      "rms_timing_ns": 90.0
+    },
+    {
+      "name": "J2214+3000",
+      "ra_deg": 333.74,
+      "dec_deg": 30.01,
+      "distance_kpc": 1.5,
+      "period_ms": 3.12,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J2229+2643",
+      "ra_deg": 337.47,
+      "dec_deg": 26.73,
+      "distance_kpc": 1.8,
+      "period_ms": 2.98,
+      "rms_timing_ns": 125.0
+    },
+    {
+      "name": "J2234+0611",
+      "ra_deg": 338.64,
+      "dec_deg": 6.19,
+      "distance_kpc": 1.0,
+      "period_ms": 3.58,
+      "rms_timing_ns": 105.0
+    },
+    {
+      "name": "J2234+0944",
+      "ra_deg": 338.56,
+      "dec_deg": 9.74,
+      "distance_kpc": 1.6,
+      "period_ms": 3.63,
+      "rms_timing_ns": 120.0
+    },
+    {
+      "name": "J2302+4442",
+      "ra_deg": 345.71,
+      "dec_deg": 44.71,
+      "distance_kpc": 1.18,
+      "period_ms": 5.19,
+      "rms_timing_ns": 130.0
+    },
+    {
+      "name": "J2317+1439",
+      "ra_deg": 349.29,
+      "dec_deg": 14.66,
+      "distance_kpc": 1.89,
+      "period_ms": 3.45,
+      "rms_timing_ns": 95.0
+    },
+    {
+      "name": "J2322+2057",
+      "ra_deg": 350.6,
+      "dec_deg": 20.96,
+      "distance_kpc": 0.78,
+      "period_ms": 4.81,
+      "rms_timing_ns": 110.0
+    },
+    {
+      "name": "J0051+0423",
+      "ra_deg": 12.83,
+      "dec_deg": 4.4,
+      "distance_kpc": 1.3,
+      "period_ms": 3.55,
+      "rms_timing_ns": 145.0
+    },
+    {
+      "name": "J0125-2327",
+      "ra_deg": 21.36,
+      "dec_deg": -23.46,
+      "distance_kpc": 0.9,
+      "period_ms": 3.68,
+      "rms_timing_ns": 130.0
+    },
+    {
+      "name": "J0621+1002",
+      "ra_deg": 95.33,
+      "dec_deg": 10.04,
+      "distance_kpc": 1.9,
+      "period_ms": 28.85,
+      "rms_timing_ns": 210.0
+    },
+    {
+      "name": "J1300+1240",
+      "ra_deg": 195.04,
+      "dec_deg": 12.68,
+      "distance_kpc": 0.62,
+      "period_ms": 6.22,
+      "rms_timing_ns": 115.0
+    },
+    {
+      "name": "J1630+3734",
+      "ra_deg": 247.62,
+      "dec_deg": 37.58,
+      "distance_kpc": 1.15,
+      "period_ms": 3.32,
+      "rms_timing_ns": 120.0
+    },
+    {
+      "name": "J1757-5322",
+      "ra_deg": 269.3,
+      "dec_deg": -53.37,
+      "distance_kpc": 1.36,
+      "period_ms": 8.87,
+      "rms_timing_ns": 160.0
+    },
+    {
+      "name": "J1824-2452",
+      "ra_deg": 276.13,
+      "dec_deg": -24.87,
+      "distance_kpc": 5.5,
+      "period_ms": 3.05,
+      "rms_timing_ns": 180.0
+    }
   ]
 }

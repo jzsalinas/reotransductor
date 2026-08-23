@@ -1,28 +1,106 @@
 {
-  "catalog": "Pantheon+ Type Ia Supernovae Analysis (2022)",
-  "reference": "Scolnic, Brout, Carr et al. (2022), 'The Pantheon+ Analysis: The Full Data Set and Light-Curve Models', ApJ 938, 113",
-  "description": "Binned distance modulus mu(z) measurements from 1,701 Type Ia Supernovae light curves spanning z in [0.001, 2.26].",
+  "catalog": "Pantheon+ (2022) / SH0ES Supernovae Catalog",
+  "reference": "Brout, Scolnic, Scolnic et al. (2022), ApJ 938, 110",
+  "description": "Official Pantheon+ full sample (1,701 SNe) and representative binned calibration set.",
+  "total_supernovae_raw": 1701,
   "cosmological_benchmarks": {
     "h0_planck_2018_kms_mpc": 67.36,
-    "h0_planck_err": 0.54,
     "h0_shoes_2022_kms_mpc": 73.04,
-    "h0_shoes_err": 1.04,
     "omega_m_fiducial": 0.315,
     "omega_lambda_fiducial": 0.685
   },
   "binned_supernovae": [
-    {"z_cmb": 0.0125, "mu_obs": 33.72, "err_mu": 0.082, "n_sne": 84, "env_class": "Dense Cluster / Local Halo"},
-    {"z_cmb": 0.0245, "mu_obs": 35.18, "err_mu": 0.065, "n_sne": 126, "env_class": "Dense Cluster / Local Group"},
-    {"z_cmb": 0.0380, "mu_obs": 36.14, "err_mu": 0.058, "n_sne": 142, "env_class": "Cluster / Rich Group"},
-    {"z_cmb": 0.0550, "mu_obs": 36.98, "err_mu": 0.052, "n_sne": 158, "env_class": "Group / Filament"},
-    {"z_cmb": 0.0820, "mu_obs": 37.92, "err_mu": 0.048, "n_sne": 165, "env_class": "Filament / Wall"},
-    {"z_cmb": 0.1250, "mu_obs": 38.91, "err_mu": 0.045, "n_sne": 182, "env_class": "Filament"},
-    {"z_cmb": 0.1800, "mu_obs": 39.78, "err_mu": 0.046, "n_sne": 174, "env_class": "Filament / Intermediate Void"},
-    {"z_cmb": 0.2500, "mu_obs": 40.58, "err_mu": 0.049, "n_sne": 156, "env_class": "Intermediate Void"},
-    {"z_cmb": 0.3500, "mu_obs": 41.42, "err_mu": 0.054, "n_sne": 138, "env_class": "Cosmic Void / Underdense"},
-    {"z_cmb": 0.4800, "mu_obs": 42.26, "err_mu": 0.062, "n_sne": 112, "env_class": "Cosmic Void"},
-    {"z_cmb": 0.6500, "mu_obs": 43.08, "err_mu": 0.075, "n_sne": 95, "env_class": "Deep Void"},
-    {"z_cmb": 0.8500, "mu_obs": 43.78, "err_mu": 0.092, "n_sne": 68, "env_class": "Deep Void / Early Universe"},
-    {"z_cmb": 1.1500, "mu_obs": 44.52, "err_mu": 0.125, "n_sne": 42, "env_class": "Primordial Hubble Flow"}
-  ]
+    {
+      "z_cmb": 0.0126,
+      "mu_obs": 33.6341,
+      "err_mu": 0.0373,
+      "n_supernovae": 59,
+      "env_class": "Dense Cluster"
+    },
+    {
+      "z_cmb": 0.0177,
+      "mu_obs": 34.393,
+      "err_mu": 0.0222,
+      "n_supernovae": 129,
+      "env_class": "Dense Cluster"
+    },
+    {
+      "z_cmb": 0.0262,
+      "mu_obs": 35.2088,
+      "err_mu": 0.0148,
+      "n_supernovae": 202,
+      "env_class": "Filament"
+    },
+    {
+      "z_cmb": 0.0373,
+      "mu_obs": 36.0303,
+      "err_mu": 0.0172,
+      "n_supernovae": 125,
+      "env_class": "Filament"
+    },
+    {
+      "z_cmb": 0.055,
+      "mu_obs": 36.8278,
+      "err_mu": 0.022,
+      "n_supernovae": 67,
+      "env_class": "Filament"
+    },
+    {
+      "z_cmb": 0.0779,
+      "mu_obs": 37.6494,
+      "err_mu": 0.029,
+      "n_supernovae": 46,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.1276,
+      "mu_obs": 38.7827,
+      "err_mu": 0.0198,
+      "n_supernovae": 83,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.186,
+      "mu_obs": 39.6293,
+      "err_mu": 0.0139,
+      "n_supernovae": 170,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.2674,
+      "mu_obs": 40.5456,
+      "err_mu": 0.0121,
+      "n_supernovae": 266,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.3841,
+      "mu_obs": 41.4262,
+      "err_mu": 0.0132,
+      "n_supernovae": 217,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.5715,
+      "mu_obs": 42.407,
+      "err_mu": 0.0188,
+      "n_supernovae": 143,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 0.7626,
+      "mu_obs": 43.2034,
+      "err_mu": 0.032,
+      "n_supernovae": 58,
+      "env_class": "Cosmic Void"
+    },
+    {
+      "z_cmb": 1.2558,
+      "mu_obs": 44.7,
+      "err_mu": 0.0802,
+      "n_supernovae": 16,
+      "env_class": "Cosmic Void"
+    }
+  ],
+  "full_sample_file": "pantheon_plus_full_1701.json"
 }

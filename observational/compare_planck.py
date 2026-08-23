@@ -68,12 +68,12 @@ def generate_eon_observational_report(engine, output_dir: str = "checkpoints/sna
     # 2. Extract Celestial Sphere and Spherical Harmonics Decomposition
     analyzer = CMBSphericalHarmonicsAnalyzer(n_theta=48, n_phi=96, ell_max=24)
     celestial_map = analyzer.extract_celestial_sphere_from_grid(
-        tau_3d=engine.tau,
-        T_3d=engine.T,
-        rho_3d=engine.rho,
-        v_x=engine.v_x,
-        v_y=engine.v_y,
-        v_z=engine.v_z,
+        tau_3d=engine.to_cpu(engine.tau) if hasattr(engine, 'to_cpu') else np.asarray(engine.tau),
+        T_3d=engine.to_cpu(engine.T) if hasattr(engine, 'to_cpu') else np.asarray(engine.T),
+        rho_3d=engine.to_cpu(engine.rho) if hasattr(engine, 'to_cpu') else np.asarray(engine.rho),
+        v_x=engine.to_cpu(engine.v_x) if hasattr(engine, 'to_cpu') else np.asarray(engine.v_x),
+        v_y=engine.to_cpu(engine.v_y) if hasattr(engine, 'to_cpu') else np.asarray(engine.v_y),
+        v_z=engine.to_cpu(engine.v_z) if hasattr(engine, 'to_cpu') else np.asarray(engine.v_z),
         c_light=engine.C_LIGHT
     )
 

@@ -21,8 +21,10 @@ class CosmologicalEngine:
     Supports unified CPU (NumPy) and GPU (CuPy / CUDA) hardware execution.
     """
 
-    def __init__(self, grid_size=32, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20, seed=42, use_gpu=False):
+    def __init__(self, grid_size=32, box_size_mpc=None, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20, seed=42, use_gpu=False):
         self.grid_size = grid_size
+        env_box = float(os.getenv("REOTRANSDUCTOR_BOX_SIZE_MPC", "100.0"))
+        self.box_size_mpc = float(box_size_mpc) if box_size_mpc is not None else env_box
         self.initial_speed = int(initial_speed)
         self.checkpoint_dir = checkpoint_dir
         self.snapshots_dir = os.path.join(self.checkpoint_dir, "snapshots")
@@ -54,7 +56,7 @@ class CosmologicalEngine:
 
         # Cosmological Physical Units & Dimensional Scaling (100 Mpc, 32^3 grid, H0 = 70 km/s/Mpc)
         self.units = CosmologicalUnits(
-            box_size_mpc=100.0,
+            box_size_mpc=self.box_size_mpc,
             grid_resolution=self.grid_size,
             c_code=2.5,
             h0_km_s_mpc=70.0
@@ -334,7 +336,10 @@ class CosmologicalEngine:
         return fluct.astype(self.xp.float32)
 
     def _trigger_white_hole_eon_3d(self):
-        """Detonates a white hole quantum bounce and initializes the next eon using Holographic Phase-Locking."""
+        """
+        Detonates a localized white hole quantum bounce (Carlo Rovelli / Planck Star metric inversion)
+        when a singular gravitational core exceeds the critical mass fraction threshold (Route A).
+        """
         if float(self.to_cpu(self.xp.max(self.rho))) > 1.2:
             flat_idx = int(self.to_cpu(self.xp.argmax(self.rho)))
         else:
@@ -364,6 +369,38 @@ class CosmologicalEngine:
         del fluct_new, primordial_blast, thermal_reheating
 
         return rho_new, v_x_new, v_y_new, v_z_new, T_new
+
+    def _trigger_conformal_eon_3d(self):
+        """
+        Executes Roger Penrose's Conformal Cyclic Cosmology (CCC) transition across the spacelike hypersurface I+.
+        Resets the universe globally and homogeneously across the entire 3D lattice, imprinting the fossil
+        holographic memory of the prior eon's proper time tensor tau into primordial multi-scale perturbations.
+        """
+        # 1. Synthesize global scale-invariant density fluctuations with holographic phase-locking
+        fluct_new = self._generate_phase_locked_fluctuations(self.tau, alpha_mem=0.35)
+
+        # 2. Global homogeneous matter density field (centered at mean rho = 1.0)
+        rho_new = self.xp.clip(1.0 + fluct_new, 0.05, 5.0)
+
+        # 3. Global isotropic CMB reheating temperature (base 2.73 K + Sachs-Wolfe plasma fluctuations)
+        T_new = self.xp.clip(2.73 + 12.0 * self.xp.abs(fluct_new), 2.73, 500.0)
+
+        # 4. Primordial velocity fields via Zel'dovich gravitational perturbation equation: v = -grad(Phi_primordial) * dt
+        delta_rho = rho_new - self.xp.mean(rho_new)
+        phi_prim_fft = self.xp.fft.fftn(delta_rho)
+        del delta_rho
+        phi_prim_fft *= (-4.0 * np.pi * self.G_CONST) / (self.k2 * 1.0)
+        phi_prim_fft[0, 0, 0] = 0.0
+        phi_prim = self.xp.real(self.xp.fft.ifftn(phi_prim_fft))
+        del phi_prim_fft
+
+        # Zel'dovich velocity: v = -grad(Phi) * t_primordial
+        v_x_new = -0.35 * self._grad_axis(phi_prim, 0)
+        v_y_new = -0.35 * self._grad_axis(phi_prim, 1)
+        v_z_new = -0.35 * self._grad_axis(phi_prim, 2)
+        del phi_prim, fluct_new
+
+        return rho_new.astype(self.xp.float32), v_x_new.astype(self.xp.float32), v_y_new.astype(self.xp.float32), v_z_new.astype(self.xp.float32), T_new.astype(self.xp.float32)
 
     def _grad_axis(self, arr, axis):
         """Computes central spatial difference along a single axis without bulk intermediate tuples."""
@@ -493,7 +530,7 @@ class CosmologicalEngine:
         self.I = self.xp.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
         del dI_dt
 
-        # 8. Bekenstein Quantum Saturation & Eon Bounce Trigger (Dual Physical Route)
+        # 8. Bekenstein Quantum Saturation & Virialized Structure Diagnostics
         tau_current_eon = self.tau - self.tau_eon_start
         total_mass = float(self.to_cpu(self.xp.sum(self.rho)))
         # Virialized compact core criterion (overdensity delta_rho / rho_bar >= 2.0 -> rho >= 3.0)
@@ -508,15 +545,8 @@ class CosmologicalEngine:
             zeta_base=self.ZETA_BEKENSTEIN
         )
 
-        # Route A: Gravitational Singularity / Black Hole Core Condensation
-        p_mass = min(1.0, self.mass_frac_val / self.MASS_THRESHOLD)
-        p_entropy = min(1.0, self.s_bh_val / max(1.0, self.s_crit))
-        p_grav = min(p_mass, p_entropy)
-
-        # Route B: Penrose Conformal Boundary Transition (Heat-Death Dilution a -> 7.0)
-        p_conformal = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
-
-        self.progress = min(1.0, max(p_grav, p_conformal))
+        # Global Conformal Boundary Progress: Normalized expansion towards Penrose asymptotic heat death (a -> 7.0)
+        self.progress = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
         self.total_steps += 1
 
         # Check and save scientific epoch checkpoints across cosmological history
@@ -524,37 +554,26 @@ class CosmologicalEngine:
         if self.scale_factor >= 1.00 and "cmb" not in self.saved_epochs:
             self.saved_epochs.add("cmb")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}{g_tag}.npz"))
-            if self.grid_size == 32:
-                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"cmb_eon_{self.eon}.npz"))
         if self.scale_factor >= 1.50 and "dawn" not in self.saved_epochs:
             self.saved_epochs.add("dawn")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}{g_tag}.npz"))
-            if self.grid_size == 32:
-                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"dawn_eon_{self.eon}.npz"))
         if self.scale_factor >= 2.00 and "bao" not in self.saved_epochs:
             self.saved_epochs.add("bao")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}{g_tag}.npz"))
-            if self.grid_size == 32:
-                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"bao_eon_{self.eon}.npz"))
         if self.scale_factor >= 3.00 and "clusters" not in self.saved_epochs:
             self.saved_epochs.add("clusters")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}{g_tag}.npz"))
-            if self.grid_size == 32:
-                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"clusters_eon_{self.eon}.npz"))
         if self.scale_factor >= 4.50 and "pantheon" not in self.saved_epochs:
             self.saved_epochs.add("pantheon")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}{g_tag}.npz"))
-            if self.grid_size == 32:
-                self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}.npz"))
 
-        is_grav_bounce = (self.mass_frac_val >= self.MASS_THRESHOLD and self.s_bh_val >= self.s_crit)
+        # Global Cosmological Eon Transition: Governed by the global conformal boundary of Roger Penrose (CCC)
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
-        if is_grav_bounce or is_conformal_bounce:
-            transition_type = "Rebote Gravitatorio (Túnel Cuántico)" if is_grav_bounce else "CCC (Muerte Térmica)"
-            self._handle_bounce(transition_type=transition_type)
+        if is_conformal_bounce:
+            self._handle_bounce(transition_type="CCC (Muerte Térmica)")
 
-    def _handle_bounce(self, transition_type="Rebote Cuántico"):
+    def _handle_bounce(self, transition_type="CCC (Muerte Térmica)"):
         """Processes transition to next eon, logs history, archives full snapshot, and notifies Telegram."""
         eon_duration_wall = time.time() - self.eon_start_walltime
         eon_steps = self.total_steps - self.last_bounce_step
@@ -575,9 +594,6 @@ class CosmologicalEngine:
         try:
             with open(snapshot_path, "w", encoding="utf-8") as f:
                 json.dump(final_snapshot, f)
-            if self.grid_size == 32:
-                with open(os.path.join(self.snapshots_dir, f"snapshot_eon_{self.eon}.json"), "w", encoding="utf-8") as f:
-                    json.dump(final_snapshot, f)
         except Exception:
             pass
 
@@ -630,16 +646,17 @@ class CosmologicalEngine:
         # Save Completed Eon Final Archive (Epoch 6)
         g_tag = f"_g{self.grid_size}"
         self.save_checkpoint(os.path.join(self.checkpoint_dir, f"eon_{self.eon}{g_tag}.npz"))
-        if self.grid_size == 32:
-            self.save_checkpoint(os.path.join(self.checkpoint_dir, f"eon_{self.eon}.npz"))
 
         # Increment Eon
         self.eon += 1
         self.scale_factor = 1.0
         self.saved_epochs = set()
         self.tau_eon_start = self.tau.copy()
-        self.rho, self.v_x, self.v_y, self.v_z, self.T = self._trigger_white_hole_eon_3d()
-        self.I = np.clip((self.rho - 0.5) / 2.5, 0.0, 1.0)
+        if transition_type == "Rebote Gravitatorio (Túnel Cuántico)":
+            self.rho, self.v_x, self.v_y, self.v_z, self.T = self._trigger_white_hole_eon_3d()
+        else:
+            self.rho, self.v_x, self.v_y, self.v_z, self.T = self._trigger_conformal_eon_3d()
+        self.I = self.xp.clip((self.rho - 0.5) / 2.5, 0.0, 1.0)
         self.progress = 0.0
         self.last_bounce_step = self.total_steps
         self.eon_start_walltime = time.time()
@@ -666,10 +683,10 @@ class CosmologicalEngine:
             era_str = "Fase de Inflación Cuántica Primordial"
         elif self.scale_factor < 2.5:
             era_str = "Era de Filamentos y Panqueques 3D"
-        elif self.scale_factor < 5.5:
-            era_str = "Era de Fusiones y Acreción 3D"
-        elif self.mass_frac_val >= self.MASS_THRESHOLD:
-            era_str = "Era del Agujero Negro Virializado 3D"
+        elif self.scale_factor < 4.5:
+            era_str = "Era de Cúmulos Virializados y Galaxias 3D"
+        elif self.scale_factor < 6.0:
+            era_str = "Era de Expansión Acelerada y Desacople"
         else:
             era_str = "Fase Asintótica Pre-Rebote 3D (Límite Conforme CCC)"
 
@@ -678,24 +695,14 @@ class CosmologicalEngine:
         temp_astro = temp_norm * 120.0
 
         if self.progress >= 0.95:
-            status_banner = "Agujero Blanco 3D / Transición Conforme Inminente"
+            status_banner = "Transición Conforme CCC Inminente (Nuevo Eón)"
         elif self.scale_factor >= 5.5:
             status_banner = "Dilución Asintótica (Fase Conforme de Penrose)"
         else:
             status_banner = "Evolución Hidrodinámica 3D"
 
-        # Determine active driver route for UI display
-        p_mass = min(1.0, self.mass_frac_val / self.MASS_THRESHOLD)
-        p_entropy = min(1.0, self.s_bh_val / max(1.0, self.s_crit))
-        p_grav = min(p_mass, p_entropy)
-        p_conformal = max(0.0, min(1.0, (self.scale_factor - 1.0) / (self.A_MAX_CONFORMAL - 1.0)))
-
-        if p_conformal > p_grav:
-            prog_label = f"Frontera Conforme CCC Eón {self.eon}"
-            active_route = "conformal"
-        else:
-            prog_label = f"Túnel Cuántico Eón {self.eon}"
-            active_route = "quantum_tunnel"
+        prog_label = f"Frontera Conforme CCC Eón {self.eon}"
+        active_route = "conformal"
 
         tau_phys_max = float(self.t_coord + np.max(tau_cpu))
         time_myr = float(self.units.time_code_to_myr(tau_phys_max))
@@ -826,9 +833,6 @@ class CosmologicalEngine:
         try:
             with open(snapshot_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f)
-            if self.grid_size == 32:
-                with open(os.path.join(self.snapshots_dir, f"snapshot_manual_{timestamp_id}.json"), "w", encoding="utf-8") as f:
-                    json.dump(payload, f)
         except Exception:
             pass
 
@@ -870,11 +874,14 @@ class CosmologicalEngine:
         return "Rebote Gravitatorio (Túnel Cuántico)"
 
     def get_available_snapshots(self):
-        """Returns list of all available snapshots with normalized transition labels."""
+        """Returns list of all available snapshots with strictly 1 entry per eon and normalized transition labels."""
         if not os.path.exists(self.snapshots_dir):
             return []
         files = os.listdir(self.snapshots_dir)
         snapshots = []
+        seen_eons = set()
+        seen_manual_ids = set()
+
         for f in files:
             if f.startswith("snapshot_") and f.endswith(".json"):
                 path = os.path.join(self.snapshots_dir, f)
@@ -883,15 +890,19 @@ class CosmologicalEngine:
                         data = json.load(sfile)
                         meta = data.get("snapshot_meta", {})
                         snap_id = meta.get("id") or f.replace("snapshot_", "").replace(".json", "")
-                        snap_type = meta.get("type", "manual" if "manual" in snap_id else "eon_bounce")
+                        snap_type = meta.get("type", "manual" if "manual" in str(snap_id) else "eon_bounce")
                         
                         if snap_type == "eon_bounce" or str(snap_id).startswith("eon_"):
                             eon_val = meta.get("eon")
                             if eon_val is None:
                                 match_e = re.search(r'eon_(\d+)', str(snap_id))
                                 eon_val = int(match_e.group(1)) if match_e else "?"
+
+                            # Strictly 1 entry per eon to prevent visual clutter in UI combobox
+                            if eon_val in seen_eons:
+                                continue
+                            seen_eons.add(eon_val)
                             
-                            # Accurately classify transition from physical scale factor (A_MAX_CONFORMAL = 7.0)
                             sf_val = meta.get("scale_factor")
                             if sf_val is not None:
                                 try:
@@ -917,6 +928,9 @@ class CosmologicalEngine:
                                 "timestamp": meta.get("timestamp", "")
                             })
                         else:
+                            if snap_id in seen_manual_ids:
+                                continue
+                            seen_manual_ids.add(snap_id)
                             label = meta.get("label") or f"💾 Guardado: {snap_id}"
                             snapshots.append({
                                 "id": str(snap_id),

@@ -19,8 +19,8 @@ class TestHaloPipeline(unittest.TestCase):
     def test_sparc_dataset_loading(self):
         """Verify that SPARC galaxy database loads correctly with positive radii and velocities."""
         gals = self.sparc.list_galaxies()
-        self.assertIn("DDO_154", gals)
-        ddo = self.sparc.get_galaxy("DDO_154")
+        self.assertTrue("DDO154" in gals or "DDO_154" in gals)
+        ddo = self.sparc.get_galaxy("DDO154")
         self.assertGreater(len(ddo["r_kpc"]), 5)
         self.assertTrue((ddo["r_kpc"] > 0.0).all())
         self.assertTrue((ddo["v_obs_kms"] > 0.0).all())

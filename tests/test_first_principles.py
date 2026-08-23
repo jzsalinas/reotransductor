@@ -82,6 +82,24 @@ class TestFirstPrinciplesPhysics(unittest.TestCase):
         self.assertTrue((self.engine.I >= 0.0).all())
         self.assertTrue((self.engine.I <= 1.0).all())
 
+    def test_route_a_white_hole_vs_route_b_conformal_reset(self):
+        """Verify that Route A (Planck Star) produces a local blast and Route B (CCC) produces a global homogeneous field."""
+        # Route A: Localized White Hole Bounce
+        rho_a, vx_a, vy_a, vz_a, T_a = self.engine._trigger_white_hole_eon_3d()
+        self.assertTrue(np.all(np.isfinite(rho_a)))
+        self.assertTrue(np.all(np.isfinite(T_a)))
+        self.assertGreater(float(np.max(rho_a)), 2.0)  # Peak central blast
+
+        # Route B: Global Conformal Transition (Penrose CCC)
+        rho_b, vx_b, vy_b, vz_b, T_b = self.engine._trigger_conformal_eon_3d()
+        self.assertTrue(np.all(np.isfinite(rho_b)))
+        self.assertTrue(np.all(np.isfinite(T_b)))
+        # Mean density should be close to background 1.0
+        self.assertAlmostEqual(float(np.mean(rho_b)), 1.0, delta=0.15)
+        # Background temperature should be in the primordial CMB reheating regime (2.73 K to 15.0 K)
+        self.assertGreaterEqual(float(np.min(T_b)), 2.73)
+        self.assertLess(float(np.median(T_b)), 15.0)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,69 +1,52 @@
-# Reotransductor Observational Datasets Provenance & Manifest
-# Cryptographic SHA-256 verification and primary academic attribution
-
+manifest_version: 2.0.0
+description: Cryptographic SHA-256 provenance manifest for official cosmological and
+  astrophysical observational databases.
 datasets:
   planck_2018_tt:
-    name: "ESA Planck 2018 Legacy (PR3) Binned TT Power Spectrum"
-    path: "data/planck_2018/planck_2018_tt_binned.json"
-    sha256: "ab8b4296b2a119a1456505b8e77ec71b29e3d037cdf32bc368323a6bff858531"
-    release: "PR3 (2018 Legacy Release)"
-    mission: "European Space Agency (ESA) Planck Collaboration"
-    archive_url: "https://pla.esac.esa.int/"
-    primary_paper: "Planck 2018 results. VI. Cosmological parameters (A&A 641, A6, 2020)"
-    doi: "10.1051/0004-6361/201833910"
-    license: "ESA Open Access (academic citation required)"
-
+    name: ESA Planck 2018 Legacy (PR3) Binned TT Power Spectrum
+    path: data/planck_2018/planck_2018_tt_binned.json
+    sha256: 9ab1f16feb80bcc7dcf955497f842e716c89c4183c879066c916e92e95504b68
+    size_bytes: 17122
+    status: VALID
   desi_2024_dr1:
-    name: "DESI 2024 DR1 Baryon Acoustic Oscillations (BAO)"
-    path: "data/desi_2024/desi_2024_dr1_bao.json"
-    sha256: "cb59f4a52a3367ca5b108d82cbdd4a87e3ee820a8cd51bd00a982a2aef1b8e90"
-    release: "DESI DR1 (2024)"
-    mission: "Dark Energy Spectroscopic Instrument Collaboration"
-    archive_url: "https://data.desi.lbl.gov/"
-    primary_paper: "DESI 2024 VI: Cosmological Constraints from BAO (arXiv:2404.03002)"
-    doi: "10.48550/arXiv.2404.03002"
-    license: "Open Data Release"
-
+    name: DESI 2024 DR1 Baryon Acoustic Oscillations (BAO)
+    path: data/desi_2024/desi_2024_dr1_bao.json
+    sha256: cb59f4a52a3367ca5b108d82cbdd4a87e3ee820a8cd51bd00a982a2aef1b8e90
+    size_bytes: 1584
+    status: VALID
+  desi_dr2:
+    name: DESI Data Release 2 (DR2) BAO Measurements (Year 3 Sample)
+    path: data/desi_2024/desi_dr2_bao.json
+    sha256: 142da38df3b5636bdc8d254bbad98ecbebe556c43994cbb281a1057074065ada
+    size_bytes: 1462
+    status: VALID
   sdss_boss_dr12:
-    name: "SDSS BOSS DR12 Consensus BAO Measurements"
-    path: "data/desi_2024/sdss_boss_dr12_bao.json"
-    sha256: "387ee4b85e07543d8c0f2c727ec892770ba74b52bca154e32cbeb0b6b8c118cb"
-    release: "DR12 (SDSS-III BOSS Consensus)"
-    mission: "Sloan Digital Sky Survey III"
-    archive_url: "https://www.sdss3.org/science/boss_publications.php"
-    primary_paper: "The clustering of galaxies in the completed SDSS-III BOSS (MNRAS 470, 2017)"
-    doi: "10.1093/mnras/stx721"
-    license: "SDSS Open Data Policy"
-
+    name: SDSS BOSS DR12 Consensus BAO Measurements
+    path: data/desi_2024/sdss_boss_dr12_bao.json
+    sha256: 387ee4b85e07543d8c0f2c727ec892770ba74b52bca154e32cbeb0b6b8c118cb
+    size_bytes: 1272
+    status: VALID
   sparc_2020:
-    name: "SPARC Galactic Rotation Curves & Mass Models (Representative Benchmark Sample)"
-    path: "data/sparc_2020/sparc_rotation_curves.json"
-    sha256: "91302d6be323811df4e2e3983863319eb3142bcf6c9e35c3877640243c5b339d"
-    release: "SPARC 2020 Database (Lelli, McGaugh, Schombert)"
-    mission: "Spitzer Photometry & Accurate Rotation Curves"
-    archive_url: "http://astroweb.cwru.edu/SPARC/"
-    primary_paper: "SPARC: Mass Models for 175 Disk Galaxies (AJ 152, 157, 2016)"
-    doi: "10.3847/0004-6256/152/6/157"
-    license: "Academic Use with Master Paper Citation"
-
+    name: SPARC Galactic Rotation Curves & Mass Models (Complete 175 Galaxies)
+    path: data/sparc_2020/sparc_rotation_curves.json
+    sha256: 7bd3708603aeed6bb75d9522b232353c13aacdd10b592307dfd1c9f50a05ca75
+    size_bytes: 362282
+    status: VALID
   pantheon_plus_2022:
-    name: "Pantheon+ (2022) / SH0ES Type Ia Supernovae Catalog"
-    path: "data/pantheon_2022/pantheon_plus_supernovae.json"
-    sha256: "ff9387b0fa53a15a4c95134afe0c6925e3c3560fb728427165fc65583118e758"
-    release: "Pantheon+ 2022 Data Release"
-    mission: "Pantheon+ and SH0ES Collaborations"
-    archive_url: "https://github.com/PantheonPlusSH0ES/DataRelease"
-    primary_paper: "The Pantheon+ Analysis: Cosmological Constraints (ApJ 938, 110, 2022)"
-    doi: "10.3847/1538-4357/ac8e04"
-    license: "Open Data Release"
-
+    name: Pantheon+ (2022) / SH0ES Type Ia Supernovae Catalog
+    path: data/pantheon_2022/pantheon_plus_supernovae.json
+    sha256: 9a7b6ed782baf622d0c514e29c5f8df71b227a92f14ed53fb0ea6ba24c5e0616
+    size_bytes: 2392
+    status: VALID
+  pantheon_plus_full:
+    name: Pantheon+ (2022) Full 1,701 Supernovae Ia Catalog
+    path: data/pantheon_2022/pantheon_plus_full_1701.json
+    sha256: 89898ed4f344fdcdcb24131c3c96cba47af30f9906a3aa2db472e37925c310da
+    size_bytes: 363350
+    status: VALID
   nanograv_15yr:
-    name: "NANOGrav 15-Year Pulsar Timing & Spatial Correlation"
-    path: "data/nanograv_2023/nanograv_15yr_pulsars.json"
-    sha256: "2e7ee39cef62b8b902bca1054e406f8d144f6a5b1b8d210de87ae25c7bee8cd2"
-    release: "NANOGrav 15-Year Data Release (2023)"
-    mission: "North American Nanohertz Observatory for Gravitational Waves"
-    archive_url: "https://data.nanograv.org/"
-    primary_paper: "The NANOGrav 15-year Data Set: Evidence for a GWB (ApJL 951, L8, 2023)"
-    doi: "10.3847/2041-8213/acdac6"
-    license: "NANOGrav Open Data Policy"
+    name: NANOGrav 15-Year Pulsar Timing & Spatial Correlation (All 68 MSPs)
+    path: data/nanograv_2023/nanograv_15yr_pulsars.json
+    sha256: 3bd9b69b9df6a44a69831b20e59a3cbf05650616e34310106b7387b4f4d5073f
+    size_bytes: 13821
+    status: VALID

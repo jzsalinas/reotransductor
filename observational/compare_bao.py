@@ -68,7 +68,7 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
     # 2. Compute 3D Spatial Correlation from Simulation Grid
     analyzer = BAOSpatialCorrelationAnalyzer(
         grid_size=engine.grid_size,
-        box_size_mpc=100.0,
+        box_size_mpc=getattr(engine, 'box_size_mpc', 100.0),
         n_bins=32
     )
     sim_metrics = analyzer.evaluate_cosmological_fields(
@@ -80,16 +80,12 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
     r_sim = np.array(sim_metrics["r_comoving_mpc"])
     xi_sim = np.array(sim_metrics["xi_rho"])
 
-    # Scale simulation curve for physical overlay with standard galaxy bias b ~ 1.8
-    bias_factor = 0.08
-    xi_sim_scaled = xi_sim * bias_factor
+    # True comoving separation distance within the simulation box (0 to L_box / 2)
+    r_sim_plot = r_sim
+    xi_sim_plot = xi_sim
 
-    # Normalize radial scale for overlay (40 to 150 Mpc/h)
-    scale_r = 150.0 / np.max(r_sim)
-    r_sim_plot = r_sim * scale_r
-
-    # 3. Compute Chi^2 Goodness of Fit
-    chi2_stats = desi_data.compute_chi2(r_sim_plot, xi_sim_scaled)
+    # 3. Compute Chi^2 Goodness of Fit against DESI dataset overlapping bins
+    chi2_stats = desi_data.compute_chi2(r_sim_plot, xi_sim_plot)
 
     # 4. Render Publication Figure
     fig, (ax1, ax2) = plt.subplots(
@@ -132,19 +128,18 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
     )
 
     # Reotransductor Simulation Curve
-    r2_xi_sim = (r_sim_plot**2) * xi_sim_scaled
+    r2_xi_sim = (r_sim_plot**2) * xi_sim_plot
     ax1.plot(
         r_sim_plot, r2_xi_sim,
         color='#f59e0b', marker='s', markersize=4.5, linewidth=2.4,
-        label=f'Reotransductor Eon {eon} Prediction (3D FFT)'
+        label=f'Reotransductor Eon {eon} Simulation ($L_{{\\mathrm{{box}}}} = 100\\ h^{{-1}}\\mathrm{{Mpc}}$)'
     )
 
-    ax1.set_xlim(35.0, 155.0)
-    ax1.set_ylim(-25.0, 180.0)
+    ax1.set_xlim(0.0, 155.0)
     ax1.set_ylabel(r'$r^2 \, \xi(r)\ \ [h^{-2}\mathrm{Mpc}^2]$', color='#f8fafc', fontsize=12, fontweight='bold')
     ax1.set_title(
         f'Baryon Acoustic Oscillations (BAO) Spatial Correlation — Eon {eon} vs. DESI 2024 DR1\n'
-        f'(Scale Factor a = {scale_factor:.3f} | Goodness-of-Fit $\\chi^2 / \\mathrm{{dof}} = {chi2_stats["reduced_chi2"]}$)',
+        f'(Scale Factor a = {scale_factor:.3f} | Exploratory Lattice Benchmark)',
         color='#f8fafc', fontsize=12, fontweight='bold', pad=12
     )
     legend = ax1.legend(loc='upper right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=9.5)
@@ -152,27 +147,20 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
         text.set_color('#e2e8f0')
 
     # -------------------------------------------------------------------------
-    # Panel 2: Residual Fractional Deviations Delta xi / sigma_DESI
+    # Panel 2: Simulation Matter Correlation xi_sim(r)
     # -------------------------------------------------------------------------
-    xi_interp = np.interp(r_desi, r_sim_plot, xi_sim_scaled)
-    residuals_sigma = (xi_interp - xi_desi) / err_desi
-
-    ax2.axhline(0.0, color='#94a3b8', linestyle='--', linewidth=1.2)
-    ax2.axhspan(-1.0, 1.0, color='#06b6d4', alpha=0.12, label=r'$\pm 1\sigma$ Observational Concordance')
-    ax2.axhspan(-2.0, 2.0, color='#06b6d4', alpha=0.06)
-
     ax2.plot(
-        r_desi, residuals_sigma,
-        color='#f59e0b', marker='o', markersize=5, linewidth=1.8,
-        label='Simulation Residual $(\\xi_{\\mathrm{sim}} - \\xi_{\\mathrm{obs}}) / \\sigma$'
+        r_sim_plot, xi_sim_plot,
+        color='#f59e0b', marker='o', markersize=4, linewidth=1.8,
+        label=r'Simulation $\xi_{\rho}(r)$ (Unscaled Comoving Frame)'
     )
+    ax2.axhline(0.0, color='#94a3b8', linestyle='--', linewidth=1.2)
 
-    ax2.set_xlim(35.0, 155.0)
-    ax2.set_ylim(-3.5, 3.5)
+    ax2.set_xlim(0.0, 155.0)
     ax2.set_xlabel(r'Comoving Separation $r\ \ [h^{-1}\mathrm{Mpc}]$', color='#f8fafc', fontsize=11, fontweight='bold')
-    ax2.set_ylabel(r'Residuals $[\sigma]$', color='#f8fafc', fontsize=10, fontweight='bold')
+    ax2.set_ylabel(r'$\xi(r)$', color='#f8fafc', fontsize=10, fontweight='bold')
 
-    leg2 = ax2.legend(loc='lower left', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=8.5)
+    leg2 = ax2.legend(loc='upper right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=8.5)
     for text in leg2.get_texts():
         text.set_color('#e2e8f0')
 

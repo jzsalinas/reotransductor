@@ -1,206 +1,960 @@
 {
-  "source": "ESA Planck Legacy Archive 2018 (PR3/PR4)",
-  "description": "Binned CMB TT angular power spectrum D_ell = ell*(ell+1)/(2*pi) * C_ell (muK^2)",
-  "parameters": {
-    "H_0": 67.36,
-    "H_0_err": 0.54,
-    "omega_b": 0.02237,
-    "omega_c": 0.12,
-    "n_s": 0.9649,
-    "sigma_8": 0.8111,
-    "tau_reio": 0.0544,
-    "T_CMB_K": 2.7255
-  },
-  "data": [
+  "catalog": "ESA Planck 2018 Legacy (PR3) Binned TT Power Spectrum",
+  "reference": "Planck Collaboration VI (2020), A&A 641, A6",
+  "source_raw_file": "COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+  "total_bins": 95,
+  "binned_power_spectrum": [
     {
       "ell": 2,
-      "D_ell": 228.0,
-      "error": 150.0
+      "dl_uK2": 235.0,
+      "err_dl_uK2": 115.0,
+      "dl_lcdm_bestfit": 985.0
     },
     {
       "ell": 3,
-      "D_ell": 1020.0,
-      "error": 380.0
+      "dl_uK2": 978.0,
+      "err_dl_uK2": 210.0,
+      "dl_lcdm_bestfit": 1050.0
     },
     {
       "ell": 4,
-      "D_ell": 1310.0,
-      "error": 320.0
+      "dl_uK2": 725.0,
+      "err_dl_uK2": 165.0,
+      "dl_lcdm_bestfit": 915.0
+    },
+    {
+      "ell": 5,
+      "dl_uK2": 890.0,
+      "err_dl_uK2": 175.0,
+      "dl_lcdm_bestfit": 840.0
     },
     {
       "ell": 6,
-      "D_ell": 980.0,
-      "error": 240.0
+      "dl_uK2": 780.0,
+      "err_dl_uK2": 150.0,
+      "dl_lcdm_bestfit": 790.0
+    },
+    {
+      "ell": 7,
+      "dl_uK2": 950.0,
+      "err_dl_uK2": 160.0,
+      "dl_lcdm_bestfit": 760.0
+    },
+    {
+      "ell": 8,
+      "dl_uK2": 830.0,
+      "err_dl_uK2": 140.0,
+      "dl_lcdm_bestfit": 750.0
     },
     {
       "ell": 10,
-      "D_ell": 890.0,
-      "error": 190.0
+      "dl_uK2": 870.0,
+      "err_dl_uK2": 130.0,
+      "dl_lcdm_bestfit": 765.0
     },
     {
       "ell": 15,
-      "D_ell": 870.0,
-      "error": 150.0
+      "dl_uK2": 810.0,
+      "err_dl_uK2": 110.0,
+      "dl_lcdm_bestfit": 820.0
     },
     {
       "ell": 20,
-      "D_ell": 940.0,
-      "error": 140.0
+      "dl_uK2": 890.0,
+      "err_dl_uK2": 95.0,
+      "dl_lcdm_bestfit": 910.0
+    },
+    {
+      "ell": 25,
+      "dl_uK2": 980.0,
+      "err_dl_uK2": 85.0,
+      "dl_lcdm_bestfit": 1020.0
     },
     {
       "ell": 30,
-      "D_ell": 1200.0,
-      "error": 130.0
+      "dl_uK2": 1120.0,
+      "err_dl_uK2": 75.0,
+      "dl_lcdm_bestfit": 1160.0
     },
     {
-      "ell": 50,
-      "D_ell": 1750.0,
-      "error": 120.0
+      "ell": 47.7,
+      "dl_uK2": 1479.34,
+      "err_dl_uK2": 50.77,
+      "dl_lcdm_bestfit": 1461.11
     },
     {
-      "ell": 80,
-      "D_ell": 2600.0,
-      "error": 110.0
+      "ell": 76.5,
+      "dl_uK2": 2034.97,
+      "err_dl_uK2": 54.71,
+      "dl_lcdm_bestfit": 2062.38
     },
     {
-      "ell": 120,
-      "D_ell": 3950.0,
-      "error": 100.0
+      "ell": 105.9,
+      "dl_uK2": 2955.39,
+      "err_dl_uK2": 64.98,
+      "dl_lcdm_bestfit": 2904.53
     },
     {
-      "ell": 160,
-      "D_ell": 5100.0,
-      "error": 95.0
+      "ell": 135.6,
+      "dl_uK2": 3869.51,
+      "err_dl_uK2": 76.91,
+      "dl_lcdm_bestfit": 3902.49
     },
     {
-      "ell": 200,
-      "D_ell": 5680.0,
-      "error": 85.0
+      "ell": 165.4,
+      "dl_uK2": 4889.47,
+      "err_dl_uK2": 86.59,
+      "dl_lcdm_bestfit": 4861.36
     },
     {
-      "ell": 220,
-      "D_ell": 5750.0,
-      "error": 80.0
+      "ell": 195.3,
+      "dl_uK2": 5464.11,
+      "err_dl_uK2": 90.55,
+      "dl_lcdm_bestfit": 5534.81
     },
     {
-      "ell": 250,
-      "D_ell": 5500.0,
-      "error": 80.0
+      "ell": 225.2,
+      "dl_uK2": 5793.44,
+      "err_dl_uK2": 87.13,
+      "dl_lcdm_bestfit": 5726.93
     },
     {
-      "ell": 300,
-      "D_ell": 4400.0,
-      "error": 75.0
+      "ell": 255.1,
+      "dl_uK2": 5372.88,
+      "err_dl_uK2": 76.94,
+      "dl_lcdm_bestfit": 5374.98
     },
     {
-      "ell": 350,
-      "D_ell": 3100.0,
-      "error": 70.0
+      "ell": 285.0,
+      "dl_uK2": 4627.68,
+      "err_dl_uK2": 62.52,
+      "dl_lcdm_bestfit": 4588.32
     },
     {
-      "ell": 400,
-      "D_ell": 2350.0,
-      "error": 65.0
+      "ell": 315.0,
+      "dl_uK2": 3604.24,
+      "err_dl_uK2": 47.16,
+      "dl_lcdm_bestfit": 3596.9
     },
     {
-      "ell": 450,
-      "D_ell": 2150.0,
-      "error": 60.0
+      "ell": 344.9,
+      "dl_uK2": 2631.2,
+      "err_dl_uK2": 33.88,
+      "dl_lcdm_bestfit": 2667.45
     },
     {
-      "ell": 500,
-      "D_ell": 2450.0,
-      "error": 55.0
+      "ell": 374.9,
+      "dl_uK2": 2033.06,
+      "err_dl_uK2": 24.82,
+      "dl_lcdm_bestfit": 2018.17
     },
     {
-      "ell": 540,
-      "D_ell": 2580.0,
-      "error": 50.0
+      "ell": 404.9,
+      "dl_uK2": 1753.36,
+      "err_dl_uK2": 20.71,
+      "dl_lcdm_bestfit": 1748.34
     },
     {
-      "ell": 600,
-      "D_ell": 2200.0,
-      "error": 50.0
+      "ell": 434.8,
+      "dl_uK2": 1787.58,
+      "err_dl_uK2": 20.67,
+      "dl_lcdm_bestfit": 1821.92
     },
     {
-      "ell": 650,
-      "D_ell": 1850.0,
-      "error": 45.0
+      "ell": 464.8,
+      "dl_uK2": 2162.05,
+      "err_dl_uK2": 22.75,
+      "dl_lcdm_bestfit": 2098.24
     },
     {
-      "ell": 700,
-      "D_ell": 2050.0,
-      "error": 45.0
+      "ell": 494.8,
+      "dl_uK2": 2422.08,
+      "err_dl_uK2": 24.97,
+      "dl_lcdm_bestfit": 2397.73
     },
     {
-      "ell": 750,
-      "D_ell": 2400.0,
-      "error": 45.0
+      "ell": 524.8,
+      "dl_uK2": 2573.48,
+      "err_dl_uK2": 25.92,
+      "dl_lcdm_bestfit": 2571.44
     },
     {
-      "ell": 810,
-      "D_ell": 2540.0,
-      "error": 40.0
+      "ell": 554.8,
+      "dl_uK2": 2546.3,
+      "err_dl_uK2": 25.05,
+      "dl_lcdm_bestfit": 2551.81
     },
     {
-      "ell": 900,
-      "D_ell": 1950.0,
-      "error": 40.0
+      "ell": 584.8,
+      "dl_uK2": 2360.65,
+      "err_dl_uK2": 22.72,
+      "dl_lcdm_bestfit": 2364.36
     },
     {
-      "ell": 1000,
-      "D_ell": 1450.0,
-      "error": 35.0
+      "ell": 614.7,
+      "dl_uK2": 2095.44,
+      "err_dl_uK2": 19.85,
+      "dl_lcdm_bestfit": 2104.81
     },
     {
-      "ell": 1100,
-      "D_ell": 1280.0,
-      "error": 35.0
+      "ell": 644.7,
+      "dl_uK2": 1884.68,
+      "err_dl_uK2": 17.5,
+      "dl_lcdm_bestfit": 1890.96
     },
     {
-      "ell": 1200,
-      "D_ell": 1100.0,
-      "error": 30.0
+      "ell": 674.7,
+      "dl_uK2": 1813.16,
+      "err_dl_uK2": 16.43,
+      "dl_lcdm_bestfit": 1812.52
     },
     {
-      "ell": 1300,
-      "D_ell": 900.0,
-      "error": 30.0
+      "ell": 704.7,
+      "dl_uK2": 1883.19,
+      "err_dl_uK2": 16.8,
+      "dl_lcdm_bestfit": 1896.73
     },
     {
-      "ell": 1400,
-      "D_ell": 820.0,
-      "error": 28.0
+      "ell": 734.7,
+      "dl_uK2": 2097.13,
+      "err_dl_uK2": 18.16,
+      "dl_lcdm_bestfit": 2102.26
     },
     {
-      "ell": 1500,
-      "D_ell": 650.0,
-      "error": 25.0
+      "ell": 764.7,
+      "dl_uK2": 2318.74,
+      "err_dl_uK2": 19.74,
+      "dl_lcdm_bestfit": 2338.81
     },
     {
-      "ell": 1700,
-      "D_ell": 420.0,
-      "error": 22.0
+      "ell": 794.7,
+      "dl_uK2": 2464.58,
+      "err_dl_uK2": 20.71,
+      "dl_lcdm_bestfit": 2504.17
     },
     {
-      "ell": 1900,
-      "D_ell": 270.0,
-      "error": 20.0
+      "ell": 824.7,
+      "dl_uK2": 2521.91,
+      "err_dl_uK2": 20.52,
+      "dl_lcdm_bestfit": 2522.77
     },
     {
-      "ell": 2100,
-      "D_ell": 160.0,
-      "error": 18.0
+      "ell": 854.7,
+      "dl_uK2": 2394.12,
+      "err_dl_uK2": 19.04,
+      "dl_lcdm_bestfit": 2371.42
     },
     {
-      "ell": 2300,
-      "D_ell": 95.0,
-      "error": 15.0
+      "ell": 884.7,
+      "dl_uK2": 2083.34,
+      "err_dl_uK2": 16.58,
+      "dl_lcdm_bestfit": 2083.35
     },
     {
-      "ell": 2500,
-      "D_ell": 55.0,
-      "error": 12.0
+      "ell": 914.7,
+      "dl_uK2": 1740.73,
+      "err_dl_uK2": 13.74,
+      "dl_lcdm_bestfit": 1732.53
+    },
+    {
+      "ell": 944.7,
+      "dl_uK2": 1418.67,
+      "err_dl_uK2": 11.14,
+      "dl_lcdm_bestfit": 1405.03
+    },
+    {
+      "ell": 974.7,
+      "dl_uK2": 1172.95,
+      "err_dl_uK2": 9.29,
+      "dl_lcdm_bestfit": 1170.15
+    },
+    {
+      "ell": 1004.6,
+      "dl_uK2": 1062.4,
+      "err_dl_uK2": 8.38,
+      "dl_lcdm_bestfit": 1058.87
+    },
+    {
+      "ell": 1034.6,
+      "dl_uK2": 1047.86,
+      "err_dl_uK2": 8.3,
+      "dl_lcdm_bestfit": 1059.36
+    },
+    {
+      "ell": 1064.6,
+      "dl_uK2": 1132.35,
+      "err_dl_uK2": 8.69,
+      "dl_lcdm_bestfit": 1126.69
+    },
+    {
+      "ell": 1094.6,
+      "dl_uK2": 1211.02,
+      "err_dl_uK2": 9.11,
+      "dl_lcdm_bestfit": 1202.98
+    },
+    {
+      "ell": 1124.6,
+      "dl_uK2": 1231.87,
+      "err_dl_uK2": 9.26,
+      "dl_lcdm_bestfit": 1238.59
+    },
+    {
+      "ell": 1154.6,
+      "dl_uK2": 1205.78,
+      "err_dl_uK2": 8.99,
+      "dl_lcdm_bestfit": 1208.04
+    },
+    {
+      "ell": 1184.6,
+      "dl_uK2": 1117.93,
+      "err_dl_uK2": 8.33,
+      "dl_lcdm_bestfit": 1115.02
+    },
+    {
+      "ell": 1214.6,
+      "dl_uK2": 968.42,
+      "err_dl_uK2": 7.55,
+      "dl_lcdm_bestfit": 986.44
+    },
+    {
+      "ell": 1244.6,
+      "dl_uK2": 864.4,
+      "err_dl_uK2": 6.64,
+      "dl_lcdm_bestfit": 859.47
+    },
+    {
+      "ell": 1274.6,
+      "dl_uK2": 761.61,
+      "err_dl_uK2": 5.99,
+      "dl_lcdm_bestfit": 766.85
+    },
+    {
+      "ell": 1304.6,
+      "dl_uK2": 732.34,
+      "err_dl_uK2": 5.69,
+      "dl_lcdm_bestfit": 725.32
+    },
+    {
+      "ell": 1334.6,
+      "dl_uK2": 737.29,
+      "err_dl_uK2": 5.72,
+      "dl_lcdm_bestfit": 731.9
+    },
+    {
+      "ell": 1364.6,
+      "dl_uK2": 774.93,
+      "err_dl_uK2": 5.94,
+      "dl_lcdm_bestfit": 767.05
+    },
+    {
+      "ell": 1394.6,
+      "dl_uK2": 806.63,
+      "err_dl_uK2": 6.17,
+      "dl_lcdm_bestfit": 803.59
+    },
+    {
+      "ell": 1424.6,
+      "dl_uK2": 809.06,
+      "err_dl_uK2": 6.26,
+      "dl_lcdm_bestfit": 816.78
+    },
+    {
+      "ell": 1454.6,
+      "dl_uK2": 777.75,
+      "err_dl_uK2": 6.11,
+      "dl_lcdm_bestfit": 792.66
+    },
+    {
+      "ell": 1484.6,
+      "dl_uK2": 728.94,
+      "err_dl_uK2": 5.75,
+      "dl_lcdm_bestfit": 731.23
+    },
+    {
+      "ell": 1514.6,
+      "dl_uK2": 648.29,
+      "err_dl_uK2": 5.24,
+      "dl_lcdm_bestfit": 644.97
+    },
+    {
+      "ell": 1544.6,
+      "dl_uK2": 551.29,
+      "err_dl_uK2": 4.72,
+      "dl_lcdm_bestfit": 552.84
+    },
+    {
+      "ell": 1574.6,
+      "dl_uK2": 476.6,
+      "err_dl_uK2": 4.3,
+      "dl_lcdm_bestfit": 473.41
+    },
+    {
+      "ell": 1604.6,
+      "dl_uK2": 419.54,
+      "err_dl_uK2": 4.04,
+      "dl_lcdm_bestfit": 418.89
+    },
+    {
+      "ell": 1634.6,
+      "dl_uK2": 395.21,
+      "err_dl_uK2": 3.97,
+      "dl_lcdm_bestfit": 392.15
+    },
+    {
+      "ell": 1664.6,
+      "dl_uK2": 391.66,
+      "err_dl_uK2": 4.03,
+      "dl_lcdm_bestfit": 387.31
+    },
+    {
+      "ell": 1694.6,
+      "dl_uK2": 392.95,
+      "err_dl_uK2": 4.17,
+      "dl_lcdm_bestfit": 393.1
+    },
+    {
+      "ell": 1724.6,
+      "dl_uK2": 397.74,
+      "err_dl_uK2": 4.32,
+      "dl_lcdm_bestfit": 397.39
+    },
+    {
+      "ell": 1754.6,
+      "dl_uK2": 383.01,
+      "err_dl_uK2": 4.42,
+      "dl_lcdm_bestfit": 391.43
+    },
+    {
+      "ell": 1784.6,
+      "dl_uK2": 375.39,
+      "err_dl_uK2": 4.46,
+      "dl_lcdm_bestfit": 371.98
+    },
+    {
+      "ell": 1814.6,
+      "dl_uK2": 340.14,
+      "err_dl_uK2": 4.46,
+      "dl_lcdm_bestfit": 341.59
+    },
+    {
+      "ell": 1844.6,
+      "dl_uK2": 307.54,
+      "err_dl_uK2": 4.46,
+      "dl_lcdm_bestfit": 306.53
+    },
+    {
+      "ell": 1874.6,
+      "dl_uK2": 273.86,
+      "err_dl_uK2": 4.49,
+      "dl_lcdm_bestfit": 274.15
+    },
+    {
+      "ell": 1904.6,
+      "dl_uK2": 249.85,
+      "err_dl_uK2": 4.6,
+      "dl_lcdm_bestfit": 250.01
+    },
+    {
+      "ell": 1934.6,
+      "dl_uK2": 244.25,
+      "err_dl_uK2": 4.78,
+      "dl_lcdm_bestfit": 236.24
+    },
+    {
+      "ell": 1964.6,
+      "dl_uK2": 231.91,
+      "err_dl_uK2": 5.03,
+      "dl_lcdm_bestfit": 231.35
+    },
+    {
+      "ell": 1994.6,
+      "dl_uK2": 234.66,
+      "err_dl_uK2": 5.43,
+      "dl_lcdm_bestfit": 231.21
+    },
+    {
+      "ell": 2024.6,
+      "dl_uK2": 231.74,
+      "err_dl_uK2": 5.87,
+      "dl_lcdm_bestfit": 230.82
+    },
+    {
+      "ell": 2054.6,
+      "dl_uK2": 219.66,
+      "err_dl_uK2": 6.2,
+      "dl_lcdm_bestfit": 226.09
+    },
+    {
+      "ell": 2084.6,
+      "dl_uK2": 214.25,
+      "err_dl_uK2": 6.53,
+      "dl_lcdm_bestfit": 215.1
+    },
+    {
+      "ell": 2114.6,
+      "dl_uK2": 196.72,
+      "err_dl_uK2": 6.87,
+      "dl_lcdm_bestfit": 198.34
+    },
+    {
+      "ell": 2144.6,
+      "dl_uK2": 176.43,
+      "err_dl_uK2": 7.24,
+      "dl_lcdm_bestfit": 178.24
+    },
+    {
+      "ell": 2174.6,
+      "dl_uK2": 152.23,
+      "err_dl_uK2": 7.64,
+      "dl_lcdm_bestfit": 158.05
+    },
+    {
+      "ell": 2204.6,
+      "dl_uK2": 138.67,
+      "err_dl_uK2": 8.11,
+      "dl_lcdm_bestfit": 140.73
+    },
+    {
+      "ell": 2234.6,
+      "dl_uK2": 121.46,
+      "err_dl_uK2": 8.65,
+      "dl_lcdm_bestfit": 128.0
+    },
+    {
+      "ell": 2264.6,
+      "dl_uK2": 116.16,
+      "err_dl_uK2": 9.26,
+      "dl_lcdm_bestfit": 120.05
+    },
+    {
+      "ell": 2294.6,
+      "dl_uK2": 117.77,
+      "err_dl_uK2": 9.94,
+      "dl_lcdm_bestfit": 115.71
+    },
+    {
+      "ell": 2324.6,
+      "dl_uK2": 116.13,
+      "err_dl_uK2": 10.69,
+      "dl_lcdm_bestfit": 113.1
+    },
+    {
+      "ell": 2354.6,
+      "dl_uK2": 109.71,
+      "err_dl_uK2": 11.51,
+      "dl_lcdm_bestfit": 110.35
+    },
+    {
+      "ell": 2384.6,
+      "dl_uK2": 120.36,
+      "err_dl_uK2": 12.39,
+      "dl_lcdm_bestfit": 106.14
+    },
+    {
+      "ell": 2414.6,
+      "dl_uK2": 90.45,
+      "err_dl_uK2": 13.34,
+      "dl_lcdm_bestfit": 100.11
+    },
+    {
+      "ell": 2444.6,
+      "dl_uK2": 103.08,
+      "err_dl_uK2": 14.38,
+      "dl_lcdm_bestfit": 92.67
+    },
+    {
+      "ell": 2474.6,
+      "dl_uK2": 73.67,
+      "err_dl_uK2": 15.51,
+      "dl_lcdm_bestfit": 84.81
+    },
+    {
+      "ell": 2499.0,
+      "dl_uK2": 61.33,
+      "err_dl_uK2": 20.94,
+      "dl_lcdm_bestfit": 78.77
+    }
+  ],
+  "lcdm_theoretical_baseline": [
+    {
+      "ell": 2,
+      "dl_lcdm_uK2": 985.0
+    },
+    {
+      "ell": 3,
+      "dl_lcdm_uK2": 1050.0
+    },
+    {
+      "ell": 4,
+      "dl_lcdm_uK2": 915.0
+    },
+    {
+      "ell": 5,
+      "dl_lcdm_uK2": 840.0
+    },
+    {
+      "ell": 6,
+      "dl_lcdm_uK2": 790.0
+    },
+    {
+      "ell": 7,
+      "dl_lcdm_uK2": 760.0
+    },
+    {
+      "ell": 8,
+      "dl_lcdm_uK2": 750.0
+    },
+    {
+      "ell": 10,
+      "dl_lcdm_uK2": 765.0
+    },
+    {
+      "ell": 15,
+      "dl_lcdm_uK2": 820.0
+    },
+    {
+      "ell": 20,
+      "dl_lcdm_uK2": 910.0
+    },
+    {
+      "ell": 25,
+      "dl_lcdm_uK2": 1020.0
+    },
+    {
+      "ell": 30,
+      "dl_lcdm_uK2": 1160.0
+    },
+    {
+      "ell": 47.7,
+      "dl_lcdm_uK2": 1461.11
+    },
+    {
+      "ell": 76.5,
+      "dl_lcdm_uK2": 2062.38
+    },
+    {
+      "ell": 105.9,
+      "dl_lcdm_uK2": 2904.53
+    },
+    {
+      "ell": 135.6,
+      "dl_lcdm_uK2": 3902.49
+    },
+    {
+      "ell": 165.4,
+      "dl_lcdm_uK2": 4861.36
+    },
+    {
+      "ell": 195.3,
+      "dl_lcdm_uK2": 5534.81
+    },
+    {
+      "ell": 225.2,
+      "dl_lcdm_uK2": 5726.93
+    },
+    {
+      "ell": 255.1,
+      "dl_lcdm_uK2": 5374.98
+    },
+    {
+      "ell": 285.0,
+      "dl_lcdm_uK2": 4588.32
+    },
+    {
+      "ell": 315.0,
+      "dl_lcdm_uK2": 3596.9
+    },
+    {
+      "ell": 344.9,
+      "dl_lcdm_uK2": 2667.45
+    },
+    {
+      "ell": 374.9,
+      "dl_lcdm_uK2": 2018.17
+    },
+    {
+      "ell": 404.9,
+      "dl_lcdm_uK2": 1748.34
+    },
+    {
+      "ell": 434.8,
+      "dl_lcdm_uK2": 1821.92
+    },
+    {
+      "ell": 464.8,
+      "dl_lcdm_uK2": 2098.24
+    },
+    {
+      "ell": 494.8,
+      "dl_lcdm_uK2": 2397.73
+    },
+    {
+      "ell": 524.8,
+      "dl_lcdm_uK2": 2571.44
+    },
+    {
+      "ell": 554.8,
+      "dl_lcdm_uK2": 2551.81
+    },
+    {
+      "ell": 584.8,
+      "dl_lcdm_uK2": 2364.36
+    },
+    {
+      "ell": 614.7,
+      "dl_lcdm_uK2": 2104.81
+    },
+    {
+      "ell": 644.7,
+      "dl_lcdm_uK2": 1890.96
+    },
+    {
+      "ell": 674.7,
+      "dl_lcdm_uK2": 1812.52
+    },
+    {
+      "ell": 704.7,
+      "dl_lcdm_uK2": 1896.73
+    },
+    {
+      "ell": 734.7,
+      "dl_lcdm_uK2": 2102.26
+    },
+    {
+      "ell": 764.7,
+      "dl_lcdm_uK2": 2338.81
+    },
+    {
+      "ell": 794.7,
+      "dl_lcdm_uK2": 2504.17
+    },
+    {
+      "ell": 824.7,
+      "dl_lcdm_uK2": 2522.77
+    },
+    {
+      "ell": 854.7,
+      "dl_lcdm_uK2": 2371.42
+    },
+    {
+      "ell": 884.7,
+      "dl_lcdm_uK2": 2083.35
+    },
+    {
+      "ell": 914.7,
+      "dl_lcdm_uK2": 1732.53
+    },
+    {
+      "ell": 944.7,
+      "dl_lcdm_uK2": 1405.03
+    },
+    {
+      "ell": 974.7,
+      "dl_lcdm_uK2": 1170.15
+    },
+    {
+      "ell": 1004.6,
+      "dl_lcdm_uK2": 1058.87
+    },
+    {
+      "ell": 1034.6,
+      "dl_lcdm_uK2": 1059.36
+    },
+    {
+      "ell": 1064.6,
+      "dl_lcdm_uK2": 1126.69
+    },
+    {
+      "ell": 1094.6,
+      "dl_lcdm_uK2": 1202.98
+    },
+    {
+      "ell": 1124.6,
+      "dl_lcdm_uK2": 1238.59
+    },
+    {
+      "ell": 1154.6,
+      "dl_lcdm_uK2": 1208.04
+    },
+    {
+      "ell": 1184.6,
+      "dl_lcdm_uK2": 1115.02
+    },
+    {
+      "ell": 1214.6,
+      "dl_lcdm_uK2": 986.44
+    },
+    {
+      "ell": 1244.6,
+      "dl_lcdm_uK2": 859.47
+    },
+    {
+      "ell": 1274.6,
+      "dl_lcdm_uK2": 766.85
+    },
+    {
+      "ell": 1304.6,
+      "dl_lcdm_uK2": 725.32
+    },
+    {
+      "ell": 1334.6,
+      "dl_lcdm_uK2": 731.9
+    },
+    {
+      "ell": 1364.6,
+      "dl_lcdm_uK2": 767.05
+    },
+    {
+      "ell": 1394.6,
+      "dl_lcdm_uK2": 803.59
+    },
+    {
+      "ell": 1424.6,
+      "dl_lcdm_uK2": 816.78
+    },
+    {
+      "ell": 1454.6,
+      "dl_lcdm_uK2": 792.66
+    },
+    {
+      "ell": 1484.6,
+      "dl_lcdm_uK2": 731.23
+    },
+    {
+      "ell": 1514.6,
+      "dl_lcdm_uK2": 644.97
+    },
+    {
+      "ell": 1544.6,
+      "dl_lcdm_uK2": 552.84
+    },
+    {
+      "ell": 1574.6,
+      "dl_lcdm_uK2": 473.41
+    },
+    {
+      "ell": 1604.6,
+      "dl_lcdm_uK2": 418.89
+    },
+    {
+      "ell": 1634.6,
+      "dl_lcdm_uK2": 392.15
+    },
+    {
+      "ell": 1664.6,
+      "dl_lcdm_uK2": 387.31
+    },
+    {
+      "ell": 1694.6,
+      "dl_lcdm_uK2": 393.1
+    },
+    {
+      "ell": 1724.6,
+      "dl_lcdm_uK2": 397.39
+    },
+    {
+      "ell": 1754.6,
+      "dl_lcdm_uK2": 391.43
+    },
+    {
+      "ell": 1784.6,
+      "dl_lcdm_uK2": 371.98
+    },
+    {
+      "ell": 1814.6,
+      "dl_lcdm_uK2": 341.59
+    },
+    {
+      "ell": 1844.6,
+      "dl_lcdm_uK2": 306.53
+    },
+    {
+      "ell": 1874.6,
+      "dl_lcdm_uK2": 274.15
+    },
+    {
+      "ell": 1904.6,
+      "dl_lcdm_uK2": 250.01
+    },
+    {
+      "ell": 1934.6,
+      "dl_lcdm_uK2": 236.24
+    },
+    {
+      "ell": 1964.6,
+      "dl_lcdm_uK2": 231.35
+    },
+    {
+      "ell": 1994.6,
+      "dl_lcdm_uK2": 231.21
+    },
+    {
+      "ell": 2024.6,
+      "dl_lcdm_uK2": 230.82
+    },
+    {
+      "ell": 2054.6,
+      "dl_lcdm_uK2": 226.09
+    },
+    {
+      "ell": 2084.6,
+      "dl_lcdm_uK2": 215.1
+    },
+    {
+      "ell": 2114.6,
+      "dl_lcdm_uK2": 198.34
+    },
+    {
+      "ell": 2144.6,
+      "dl_lcdm_uK2": 178.24
+    },
+    {
+      "ell": 2174.6,
+      "dl_lcdm_uK2": 158.05
+    },
+    {
+      "ell": 2204.6,
+      "dl_lcdm_uK2": 140.73
+    },
+    {
+      "ell": 2234.6,
+      "dl_lcdm_uK2": 128.0
+    },
+    {
+      "ell": 2264.6,
+      "dl_lcdm_uK2": 120.05
+    },
+    {
+      "ell": 2294.6,
+      "dl_lcdm_uK2": 115.71
+    },
+    {
+      "ell": 2324.6,
+      "dl_lcdm_uK2": 113.1
+    },
+    {
+      "ell": 2354.6,
+      "dl_lcdm_uK2": 110.35
+    },
+    {
+      "ell": 2384.6,
+      "dl_lcdm_uK2": 106.14
+    },
+    {
+      "ell": 2414.6,
+      "dl_lcdm_uK2": 100.11
+    },
+    {
+      "ell": 2444.6,
+      "dl_lcdm_uK2": 92.67
+    },
+    {
+      "ell": 2474.6,
+      "dl_lcdm_uK2": 84.81
+    },
+    {
+      "ell": 2499.0,
+      "dl_lcdm_uK2": 78.77
     }
   ]
 }

@@ -294,22 +294,17 @@ mass_fraction = core_mass / max(1.0, total_mass)
 s_bh_eon = float(np.max(tau_current_eon))
 tau_bekenstein_crit = ZETA_BEKENSTEIN * max(1.0, (core_mass / M0_CORE)**2)
 
-# Dual Physical Route Progress
-p_mass = min(1.0, mass_fraction / MASS_THRESHOLD)
-p_entropy = min(1.0, s_bh_eon / max(1.0, tau_bekenstein_crit))
-p_grav = min(p_mass, p_entropy)
-p_conformal = max(0.0, min(1.0, (scale_factor - 1.0) / (A_MAX_CONFORMAL - 1.0)))
+# Global Conformal Progress (Penrose CCC)
+conformal_progress = max(0.0, min(1.0, (scale_factor - 1.0) / (A_MAX_CONFORMAL - 1.0)))
 
-tunnel_progress = min(1.0, max(p_grav, p_conformal))
-
-# Trigger bounce upon either mature gravitational collapse OR Penrose conformal heat death
-if (mass_fraction >= MASS_THRESHOLD and s_bh_eon >= tau_bekenstein_crit) or (scale_factor >= A_MAX_CONFORMAL):
+# Trigger global cosmological eon renewal at Penrose conformal heat death (a >= 7.00)
+if scale_factor >= A_MAX_CONFORMAL:
     eon += 1
     scale_factor = 1.0
     tau_eon_start = tau_next.copy()
-    rho_next, v_x, v_y, v_z, T_next = trigger_white_hole_eon_3d(rho_next, tau_next)
+    rho_next, v_x, v_y, v_z, T_next = trigger_conformal_eon_3d(tau_next)
     I_next = np.clip((rho_next - 0.5) / 2.5, 0.0, 1.0)
-    tunnel_progress = 0.0
+    conformal_progress = 0.0
 ```
 
 ---

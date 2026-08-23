@@ -122,3 +122,14 @@ class DESI2024BAOData:
             "xi_obs": np.round(self.xi_desi_raw, 5).tolist(),
             "err_obs": np.round(self.err_desi, 5).tolist()
         }
+
+    def get_desi_dr2_measurements(self) -> Dict[str, Any]:
+        """Returns official DESI Data Release 2 (DR2) BAO distance ratio measurements."""
+        dr2_path = os.path.join(self.data_dir, "desi_dr2_bao.json")
+        if os.path.exists(dr2_path):
+            try:
+                with open(dr2_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}

@@ -15,6 +15,7 @@ def main():
     parser.add_argument("--host", type=str, default=default_host, help=f"Host address to bind (default: {default_host})")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
     parser.add_argument("--grid", type=int, default=32, choices=[16, 32, 64, 128, 256], help="Spatial lattice grid resolution N (default: 32 for 32x32x32)")
+    parser.add_argument("--box", type=float, default=100.0, help="Comoving cosmological box size in Mpc (default: 100.0, use 300.0 or 500.0 for BAO acoustic horizon sampling)")
     parser.add_argument("--speed", type=int, default=20, help="Initial steps per frame (default: 20)")
     parser.add_argument("--gpu", action="store_true", help="Enable NVIDIA CUDA GPU acceleration with CuPy")
     parser.add_argument("--cpu", action="store_true", help="Force CPU multi-core execution with NumPy / OpenBLAS (default)")
@@ -43,6 +44,7 @@ def main():
     use_gpu = gpu_requested and gpu_available
     os.environ["REOTRANSDUCTOR_USE_GPU"] = "1" if use_gpu else "0"
     os.environ["REOTRANSDUCTOR_GRID_SIZE"] = str(args.grid)
+    os.environ["REOTRANSDUCTOR_BOX_SIZE_MPC"] = str(args.box)
 
     if args.reset:
         os.environ["REOTRANSDUCTOR_FORCE_RESET"] = "1"
@@ -54,6 +56,7 @@ def main():
     print("=" * 70)
     print(f"• Host Binding:       http://{args.host}:{args.port}")
     print(f"• Grid Resolution:    {args.grid}³ ({args.grid**3:,} voxels)")
+    print(f"• Comoving Box Size:  {args.box:.1f} Mpc (dx = {args.box/args.grid:.2f} Mpc/cell)")
     print(f"• Initial Speed:      {args.speed} steps/frame")
     print(f"• Compute Hardware:   {'🟢 GPU: ' + gpu_name + ' (CuPy / CUDA)' if use_gpu else '🔵 CPU: Multi-Core (NumPy / OpenBLAS)'}")
     print(f"• Mode:               {'🔴 CLEAN RESET (Eon 1 Primordial)' if args.reset else '🟢 AUTO-RESUME (Continuous)'}")

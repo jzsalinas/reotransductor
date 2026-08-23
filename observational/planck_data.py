@@ -106,6 +106,19 @@ class Planck2018Data:
             D_ell (array): Power spectrum D_ell in muK^2
             errors (array): Measurement uncertainties (1-sigma)
         """
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, "r", encoding="utf-8") as f:
+                    data_json = json.load(f)
+                binned = data_json.get("binned_power_spectrum", [])
+                if binned:
+                    ell = np.array([p["ell"] for p in binned], dtype=np.float64)
+                    dl = np.array([p["dl_uK2"] for p in binned], dtype=np.float64)
+                    err = np.array([p["err_dl_uK2"] for p in binned], dtype=np.float64)
+                    return ell, dl, err
+            except Exception:
+                pass
+
         data = np.array(self.PLANCK_2018_BINNED_TT, dtype=np.float64)
         ell = data[:, 0]
         D_ell = data[:, 1]
@@ -114,11 +127,23 @@ class Planck2018Data:
 
     def get_theoretical_lcdm_spectrum(self, ell_max: int = 100) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Generates standard Lambda-CDM theoretical D_ell curve interpolated across low/medium ell.
+        Returns the official Planck 2018 best-fit Lambda-CDM CAMB theoretical curve.
         """
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, "r", encoding="utf-8") as f:
+                    data_json = json.load(f)
+                theory = data_json.get("lcdm_theoretical_baseline", [])
+                if theory:
+                    ell_t = np.array([p["ell"] for p in theory], dtype=np.float64)
+                    dl_t = np.array([p["dl_lcdm_uK2"] for p in theory], dtype=np.float64)
+                    mask = ell_t <= ell_max
+                    return ell_t[mask], dl_t[mask]
+            except Exception:
+                pass
+
         ell_obs, D_obs, _ = self.get_binned_spectrum()
         ell_fine = np.arange(2, ell_max + 1, dtype=np.float64)
-        # Log-linear spline approximation of the Planck 2018 theoretical continuum
         D_fine = np.interp(ell_fine, ell_obs, D_obs)
         return ell_fine, D_fine
 

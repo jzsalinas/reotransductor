@@ -127,12 +127,12 @@ self.A_MAX_CONFORMAL = 7.0
 
 ---
 
-### 2.9. `self.MASS_THRESHOLD = 0.18` (Core Virialization Mass Fraction)
-* **Physical Basis:** **Three-Dimensional Jeans Virial Collapse Criterion.**
-* **Mathematical Derivation:** In a 3D periodic mesh of $32^3 = 32,768$ cells with total mass $M_{\text{total}} \approx 32,768$, matter is initially distributed uniformly ($\rho \approx 1.0$).
-  When gravitational clustering concentrates $\mu = 18\%$ of the total universe mass ($M_{\text{core}} \approx 5,900\text{ mass units}$) into a localized central volume ($\rho > 1.0$), self-gravitational binding energy exceeds total thermal kinetic energy:
-  $$|U_{\text{grav}}| > 2 K_{\text{thermal}}$$
-  triggering relativistic collapse.
+### 2.9. `self.mass_frac_val` (Virialized Halo Core Mass Fraction Diagnostic)
+* **Physical Basis:** **Three-Dimensional Jeans Virial Collapse Diagnostic.**
+* **Mathematical Derivation:** In a 3D periodic mesh of $N^3$ cells with total mass $M_{\text{total}}$, matter is initially distributed with small perturbations around background density $\rho \approx 1.0$.
+  When gravitational clustering concentrates matter into compact virialized halos ($\rho > 3.0$), the ratio:
+  $$f_{\text{vir}} = \frac{M_{\text{vir}}}{M_{\text{total}}}$$
+  serves as an astrophysical diagnostic of nonlinear structure formation, without imposing artificial box-dependent global triggers on the cosmic background expansion.
 
 ---
 

@@ -70,10 +70,10 @@ def generate_eon_halo_report(
     sparc = SPARCHaloData()
     gal_data = sparc.get_galaxy(galaxy_name)
 
-    # 2. Extract Halo Profiles from 3D Simulation
+    # 2. Extract Halo Radial Diagnostics from Simulation
     analyzer = HaloRadialProfileAnalyzer(
         grid_size=engine.grid_size,
-        box_size_mpc=100.0,
+        box_size_mpc=getattr(engine, 'box_size_mpc', 100.0),
         n_shells=24
     )
     

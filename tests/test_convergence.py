@@ -120,6 +120,20 @@ class TestGridResolutionConvergence(unittest.TestCase):
         self.assertLess(kappa_code, 100.0)
         self.assertAlmostEqual(kappa_code, 50.0, delta=15.0)
 
+    def test_strict_mass_conservation_across_grids(self):
+        """
+        Verify that total mass M = integral rho d^3x is strictly conserved
+        with fractional drift |Delta M / M_0| < 10^-5 across multiple hydrodynamic steps.
+        """
+        for grid_n in [16, 32, 64]:
+            engine = CosmologicalEngine(grid_size=grid_n, auto_resume=False)
+            m_init = float(np.sum(engine.to_cpu(engine.rho)))
+            for _ in range(15):
+                engine.step()
+            m_final = float(np.sum(engine.to_cpu(engine.rho)))
+            drift = abs(m_final - m_init) / max(1e-10, m_init)
+            self.assertLess(drift, 1e-5, f"Mass drift {drift:.2e} exceeded 10^-5 for grid {grid_n}^3")
+
 
 if __name__ == '__main__':
     unittest.main()

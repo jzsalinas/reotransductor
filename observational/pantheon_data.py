@@ -16,9 +16,11 @@ class PantheonSupernovaeData:
     analytical cosmological distance modulus functions mu(z; H0, Omega_m, Omega_Lambda).
     """
 
-    def __init__(self, data_dir: str = "data/pantheon_2022"):
+    def __init__(self, data_dir: str = "data/pantheon_2022", mode: str = "binned"):
         self.data_dir = data_dir
+        self.mode = mode
         self.supernovae_points: List[Dict[str, Any]] = []
+        self.full_supernovae: List[Dict[str, Any]] = []
         self.benchmarks: Dict[str, float] = {
             "h0_planck": 67.36,
             "h0_shoes": 73.04,
@@ -28,11 +30,12 @@ class PantheonSupernovaeData:
         self._load_pantheon_data()
 
     def _load_pantheon_data(self):
-        """Loads Pantheon+ JSON database from disk or initializes default fallback."""
-        json_path = os.path.join(self.data_dir, "pantheon_plus_supernovae.json")
-        if os.path.exists(json_path):
+        """Loads Pantheon+ JSON databases (full 1,701 and binned) from disk."""
+        # Load binned / calibration dataset
+        binned_path = os.path.join(self.data_dir, "pantheon_plus_supernovae.json")
+        if os.path.exists(binned_path):
             try:
-                with open(json_path, 'r', encoding='utf-8') as f:
+                with open(binned_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 self.supernovae_points = data.get("binned_supernovae", [])
                 bm = data.get("cosmological_benchmarks", {})
@@ -40,6 +43,16 @@ class PantheonSupernovaeData:
                 self.benchmarks["h0_shoes"] = bm.get("h0_shoes_2022_kms_mpc", 73.04)
                 self.benchmarks["omega_m"] = bm.get("omega_m_fiducial", 0.315)
                 self.benchmarks["omega_lambda"] = bm.get("omega_lambda_fiducial", 0.685)
+            except Exception:
+                pass
+
+        # Load full 1,701 SNe dataset
+        full_path = os.path.join(self.data_dir, "pantheon_plus_full_1701.json")
+        if os.path.exists(full_path):
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    full_data = json.load(f)
+                self.full_supernovae = full_data.get("supernovae", [])
             except Exception:
                 pass
 
@@ -55,12 +68,19 @@ class PantheonSupernovaeData:
                 {"z_cmb": 1.1500, "mu_obs": 44.52, "err_mu": 0.125, "env_class": "Hubble Flow"}
             ]
 
-    def get_dataset(self) -> Dict[str, np.ndarray]:
+    def get_dataset(self, mode: Optional[str] = None) -> Dict[str, np.ndarray]:
         """Returns numpy arrays for redshift z, distance modulus mu_obs, and error err_mu."""
-        z_arr = np.array([p["z_cmb"] for p in self.supernovae_points], dtype=np.float64)
-        mu_arr = np.array([p["mu_obs"] for p in self.supernovae_points], dtype=np.float64)
-        err_arr = np.array([p["err_mu"] for p in self.supernovae_points], dtype=np.float64)
-        env_list = [p.get("env_class", "") for p in self.supernovae_points]
+        active_mode = mode or self.mode
+        if active_mode == "full" and self.full_supernovae:
+            z_arr = np.array([p["z_cmb"] for p in self.full_supernovae], dtype=np.float64)
+            mu_arr = np.array([p["mu_obs"] for p in self.full_supernovae], dtype=np.float64)
+            err_arr = np.array([p["err_mu"] for p in self.full_supernovae], dtype=np.float64)
+            env_list = ["Full Sample"] * len(self.full_supernovae)
+        else:
+            z_arr = np.array([p["z_cmb"] for p in self.supernovae_points], dtype=np.float64)
+            mu_arr = np.array([p["mu_obs"] for p in self.supernovae_points], dtype=np.float64)
+            err_arr = np.array([p["err_mu"] for p in self.supernovae_points], dtype=np.float64)
+            env_list = [p.get("env_class", "") for p in self.supernovae_points]
 
         return {
             "z": z_arr,
@@ -79,7 +99,7 @@ class PantheonSupernovaeData:
         omega_m: float = 0.315,
         omega_lambda: float = 0.685
     ) -> np.ndarray:
-        """
+        r"""
         Computes standard cosmological luminosity distance d_L(z) in Megaparsecs:
           d_L(z) = (1 + z) * (c / H0) * \int_0^z dz' / E(z')
           where E(z) = \sqrt{\Omega_m (1+z)^3 + \Omega_\Lambda}
@@ -108,7 +128,7 @@ class PantheonSupernovaeData:
         omega_m: float = 0.315,
         omega_lambda: float = 0.685
     ) -> np.ndarray:
-        """
+        r"""
         Computes theoretical distance modulus:
           \mu(z) = 5 * \log_{10}(d_L(z) / 10 pc) = 5 * \log_{10}(d_L(z) [Mpc]) + 25
         """
@@ -118,6 +138,6 @@ class PantheonSupernovaeData:
 
     @staticmethod
     def compute_chi2(mu_model: np.ndarray, mu_obs: np.ndarray, err_mu: np.ndarray) -> float:
-        """Calculates Chi-squared goodness of fit: \sum [ (mu_obs - mu_model) / err_mu ]^2."""
+        r"""Calculates Chi-squared goodness of fit: \sum [ (mu_obs - mu_model) / err_mu ]^2."""
         err_safe = np.maximum(1e-3, err_mu)
         return float(np.sum(((mu_obs - mu_model) / err_safe)**2))

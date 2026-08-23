@@ -70,7 +70,7 @@ class NANOGravPulsarData:
     # -------------------------------------------------------------------------
     @staticmethod
     def hellings_downs(zeta_deg: np.ndarray) -> np.ndarray:
-        """
+        r"""
         Analytical Hellings-Downs spatial cross-correlation curve:
           \Gamma_{HD}(\zeta) = \frac{1}{2} - \frac{1}{4} x + \frac{3}{2} x \ln(x)
           where x = (1 - \cos\zeta) / 2 \in [0, 1]
@@ -98,7 +98,7 @@ class NANOGravPulsarData:
         gamma: float = 4.333,
         f_ref_hz: float = 3.17e-8
     ) -> np.ndarray:
-        """
+        r"""
         Characteristic gravitational wave strain spectrum:
           h_c(f) = A_{GWB} * (f / f_{ref})^{(3 - \gamma) / 2}
           For supermassive black hole binaries: \gamma = 13/3 \implies (3 - 13/3)/2 = -2/3 = -0.667
@@ -109,6 +109,6 @@ class NANOGravPulsarData:
 
     @staticmethod
     def compute_chi2(gamma_model: np.ndarray, gamma_obs: np.ndarray, err_gamma: np.ndarray) -> float:
-        """Calculates Chi-squared goodness of fit: \sum [ (gamma_obs - gamma_model) / err_gamma ]^2."""
+        r"""Calculates Chi-squared goodness of fit: \sum [ (gamma_obs - gamma_model) / err_gamma ]^2."""
         err_safe = np.maximum(1e-3, err_gamma)
         return float(np.sum(((gamma_obs - gamma_model) / err_safe)**2))

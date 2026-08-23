@@ -74,7 +74,7 @@ def generate_eon_nanograv_report(
     # 2. Extract Galactic Pulsar Network Diagnostics from Simulation
     analyzer = PulsarTimingAnalyzer(
         grid_size=engine.grid_size,
-        box_size_mpc=100.0,
+        box_size_mpc=getattr(engine, 'box_size_mpc', 100.0),
         n_pulsars=84,
         n_bins=15
     )

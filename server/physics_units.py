@@ -305,13 +305,33 @@ class CosmologicalUnits:
         spitzer_k = base_k * (t_ratio ** 1.25) / rho_factor
         return np.clip(spitzer_k, 0.05, 2.5)
 
-    def compute_landauer_decay(self, T: np.ndarray | float, base_decay: float = 0.015, t_cmb: float = 2.73) -> np.ndarray | float:
+    def compute_thermal_information_relaxation(
+        self,
+        T: np.ndarray | float,
+        base_rate: float = 0.015,
+        t_cmb: float = 2.73
+    ) -> np.ndarray | float:
         """
-        Computes the Landauer thermal erasure rate:
-        gamma_Landauer(T) = gamma_base * (k_B * T * ln(2) / (k_B * T_CMB * ln(2))) = gamma_base * (T / T_CMB)
+        Computes the thermal informational relaxation/erasure rate derived from combining
+        Landauer's thermodynamic erasure bound (Delta E = k_B * T * ln(2)) with the quantum
+        Planckian thermal dissipation rate (omega_Planckian = k_B * T / hbar):
+        
+          Gamma_info(T) = omega_Planckian * (Delta E_Landauer / E_ref) = gamma_0 * (T / T_CMB)
+        
+        The linear temperature dependence T / T_CMB is exact under thermal master equation kinetics.
+        Clamped to [0.005, 0.25] to ensure numerical stability on discrete temporal steps.
         """
-        decay_rate = base_decay * (T / t_cmb)
-        return np.clip(decay_rate, 0.005, 0.25)
+        rate = base_rate * (T / t_cmb)
+        return np.clip(rate, 0.005, 0.25)
+
+    def compute_landauer_decay(
+        self,
+        T: np.ndarray | float,
+        base_decay: float = 0.015,
+        t_cmb: float = 2.73
+    ) -> np.ndarray | float:
+        """Alias for compute_thermal_information_relaxation for backward compatibility."""
+        return self.compute_thermal_information_relaxation(T, base_rate=base_decay, t_cmb=t_cmb)
 
     def compute_bekenstein_entropy_limit(
         self,

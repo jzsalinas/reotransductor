@@ -27,17 +27,61 @@ class PulsarTimingAnalyzer:
         self,
         center: Tuple[int, int, int] = (16, 16, 16),
         n_pulsars: Optional[int] = None,
-        seed: int = 42
+        seed: int = 42,
+        use_real_catalog: bool = True
     ) -> List[Dict[str, Any]]:
+        r"""
+        Generates 3D spatial coordinates and celestial unit vectors for pulsars.
+        When use_real_catalog=True, uses the exact celestial sky coordinates (RA, Dec)
+        of the official 68 NANOGrav millisecond pulsars (Agazie et al. 2023).
         """
-        Generates realistic 3D spatial coordinates and celestial unit vectors for simulated pulsars
-        distributed throughout the galactic potential well using golden spiral quasi-uniform sampling.
-        """
-        count = n_pulsars if n_pulsars is not None else self.n_pulsars
         rng = np.random.RandomState(seed)
         pulsars = []
         cx, cy, cz = center
 
+        # Attempt to load official 68 MSP coordinates from dataset
+        catalog_pulsars = []
+        if use_real_catalog:
+            try:
+                from observational.nanograv_data import NANOGravPulsarData
+                data_loader = NANOGravPulsarData()
+                catalog_pulsars = data_loader.pulsars
+            except Exception:
+                catalog_pulsars = []
+
+        count = self.n_pulsars if n_pulsars is None else n_pulsars
+        if use_real_catalog and len(catalog_pulsars) >= 10:
+            count = min(count, len(catalog_pulsars))
+            for i in range(count):
+                psr = catalog_pulsars[i]
+                ra_rad = np.radians(psr.get("ra_deg", 0.0))
+                dec_rad = np.radians(psr.get("dec_deg", 0.0))
+                dist_kpc = psr.get("distance_kpc", 1.5)
+
+                # Celestial sphere unit vector
+                nx = np.cos(dec_rad) * np.cos(ra_rad)
+                ny = np.cos(dec_rad) * np.sin(ra_rad)
+                nz = np.sin(dec_rad)
+
+                # Grid position in physical box around observer
+                grid_dist = (dist_kpc / 2.0) * (self.grid_size / 32.0)
+                px = (cx + grid_dist * nx) % self.grid_size
+                py = (cy + grid_dist * ny) % self.grid_size
+                pz = (cz + grid_dist * nz) % self.grid_size
+
+                pulsars.append({
+                    "id": i,
+                    "name": psr.get("name", f"PSR_{i}"),
+                    "n_vec": np.array([nx, ny, nz], dtype=np.float64),
+                    "pos": np.array([px, py, pz], dtype=np.float64),
+                    "dist": float(grid_dist),
+                    "theta_rad": float(np.pi / 2.0 - dec_rad),
+                    "phi_rad": float(ra_rad)
+                })
+            return pulsars
+
+        # Fallback to golden spiral quasi-uniform sampling if catalog is unavailable
+        count = n_pulsars if n_pulsars is not None else self.n_pulsars
         indices = np.arange(count, dtype=np.float64) + 0.5
         phi_golden = np.pi * (1.0 + 5.0**0.5)
 
@@ -57,6 +101,7 @@ class PulsarTimingAnalyzer:
 
             pulsars.append({
                 "id": i,
+                "name": f"SYNTH_{i}",
                 "n_vec": np.array([nx, ny, nz], dtype=np.float64),
                 "pos": np.array([px, py, pz], dtype=np.float64),
                 "dist": float(dist),
@@ -74,7 +119,7 @@ class PulsarTimingAnalyzer:
         n_wavevectors: int = 250,
         seed: int = 42
     ) -> np.ndarray:
-        """
+        r"""
         Computes the relativistic pulsar timing response from the transverse-traceless (TT)
         Fourier modes of the emergent proper time field:
           R(\hat{\mathbf{n}}) = \sum_{\mathbf{k}} [ F^+(\hat{\mathbf{n}}, \hat{\mathbf{k}}) h_+(\mathbf{k}) + F^\times(\hat{\mathbf{n}}, \hat{\mathbf{k}}) h_\times(\mathbf{k}) ]
@@ -143,7 +188,7 @@ class PulsarTimingAnalyzer:
         pulsars: List[Dict[str, Any]],
         delays: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
+        r"""
         Computes spatial angular cross-correlation \Gamma(\zeta) for all pairs of pulsars:
           \cos\zeta_{ij} = \hat{\mathbf{n}}_i \cdot \hat{\mathbf{n}}_j
           \Gamma(\zeta) = \langle \Delta\tau_i \Delta\tau_j \rangle_\zeta / \sigma_\tau^2
@@ -248,10 +293,10 @@ class PulsarTimingAnalyzer:
         gamma_ensemble = gamma_accum / 4.0
         lats, lons, sky_map = self.generate_celestial_sky_map(tau_3d, center)
 
-        # Estimate effective GWB amplitude
+        # Estimate dimensionless effective timing drift amplitude from network response
         all_delays = np.concatenate(delays_list)
         rms_drift = float(np.std(all_delays))
-        a_gwb_eff = float(np.clip(2.4e-15 * (1.0 + 0.15 * (rms_drift / max(1e-4, np.mean(tau_3d)))), 2.1e-15, 2.9e-15))
+        a_gwb_eff = float(rms_drift / max(1e-4, np.mean(tau_3d)))
 
         return {
             "observer_center": {"x": center[0], "y": center[1], "z": center[2]},
