@@ -14,12 +14,15 @@ class HaloRadialProfileAnalyzer:
     evaluating radial density distributions, rotation curves, and the central logarithmic slope.
     """
 
-    def __init__(self, grid_size: int = 32, box_size_mpc: float = 100.0, n_shells: int = 24):
+    def __init__(self, grid_size: int = 32, box_size_mpc: float = 100.0, n_shells: int = 24, r_max_mpc: Optional[float] = None):
         self.grid_size = grid_size
         self.box_size_mpc = box_size_mpc
         self.dx = box_size_mpc / grid_size
         self.n_shells = n_shells
-        self.r_max = box_size_mpc / 2.0
+        if r_max_mpc is not None:
+            self.r_max = r_max_mpc
+        else:
+            self.r_max = box_size_mpc / 2.0
 
         self.bin_edges = np.linspace(0.0, self.r_max, self.n_shells + 1, dtype=np.float64)
         self.r_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
@@ -71,7 +74,12 @@ class HaloRadialProfileAnalyzer:
                 shell_counts[b] = np.count_nonzero(mask)
 
         counts_safe = np.maximum(1, shell_counts)
-        radial_mean = shell_sums / counts_safe
+        valid_shells = (shell_counts > 0)
+        if np.any(valid_shells):
+            raw_means = shell_sums[valid_shells] / shell_counts[valid_shells]
+            radial_mean = np.interp(self.r_centers, self.r_centers[valid_shells], raw_means)
+        else:
+            radial_mean = np.zeros(self.n_shells, dtype=np.float64)
         return self.r_centers.copy(), radial_mean, shell_counts
 
     def compute_logarithmic_slope(self, r_arr: np.ndarray, rho_arr: np.ndarray) -> np.ndarray:
@@ -182,12 +190,30 @@ class HaloRadialProfileAnalyzer:
         phi_3d: Optional[np.ndarray] = None,
         tau_3d: Optional[np.ndarray] = None
     ) -> Dict[str, Any]:
-        """Full cosmological halo diagnostics suite."""
+        """Full cosmological halo diagnostics suite using adaptive bound halo overdensity profile."""
         center = self.locate_halo_center(rho_3d, phi_3d)
-        r_arr, rho_radial, _ = self.compute_radial_profile(rho_3d, center)
-        gamma_arr = self.compute_logarithmic_slope(r_arr, rho_radial)
-        m_enc, v_circ = self.compute_circular_velocity(r_arr, rho_radial)
-        fit_results = self.fit_nfw_vs_core(r_arr, rho_radial)
+        r_raw_arr, rho_raw, _ = self.compute_radial_profile(rho_3d, center)
+
+        rho_min = float(np.min(rho_raw))
+        rho_max = float(np.max(rho_raw))
+
+        # If sitting on top of large cosmic expansion background (rho_min / rho_max > 0.25)
+        if (rho_max > 0) and (rho_min / rho_max > 0.25):
+            d_rho = np.gradient(rho_raw)
+            min_indices = np.where(d_rho >= 0)[0]
+            virial_idx = min_indices[0] if len(min_indices) > 0 and min_indices[0] > 3 else len(rho_raw) - 1
+            r_arr = r_raw_arr[:virial_idx + 1]
+            rho_vir = rho_raw[:virial_idx + 1]
+            rho_bg = float(rho_vir[-1])
+            rho_bound = np.maximum(1e-5, rho_vir - rho_bg + 1e-4)
+        else:
+            r_arr = r_raw_arr
+            rho_bound = np.maximum(1e-5, rho_raw)
+            virial_idx = len(rho_raw) - 1
+
+        gamma_arr = self.compute_logarithmic_slope(r_arr, rho_bound)
+        m_enc, v_circ = self.compute_circular_velocity(r_arr, rho_bound)
+        fit_results = self.fit_nfw_vs_core(r_arr, rho_bound)
 
         # Inner slope estimation at innermost radial bin (r -> 0)
         inner_slope_gamma0 = float(gamma_arr[0]) if len(gamma_arr) > 0 else 0.0
@@ -197,12 +223,13 @@ class HaloRadialProfileAnalyzer:
         # Temperature/Memory radial profile if available
         tau_radial = None
         if tau_3d is not None:
-            _, tau_radial, _ = self.compute_radial_profile(tau_3d, center)
+            _, tau_radial_raw, _ = self.compute_radial_profile(tau_3d, center)
+            tau_radial = tau_radial_raw[:virial_idx + 1]
 
         return {
             "halo_center": {"x": center[0], "y": center[1], "z": center[2]},
             "r_mpc": np.round(r_arr, 3).tolist(),
-            "rho_radial": np.round(rho_radial, 5).tolist(),
+            "rho_radial": np.round(rho_bound, 5).tolist(),
             "log_slope_gamma": np.round(gamma_arr, 3).tolist(),
             "inner_slope_gamma0": round(inner_slope_gamma0, 3),
             "is_cored": is_cored,

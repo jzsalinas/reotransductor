@@ -136,9 +136,9 @@ self.A_MAX_CONFORMAL = 7.0
 
 ---
 
-### 2.10. `self.A_MAX_CONFORMAL = 7.0` (Penrose CCC Conformal Transition Threshold)
-* **Physical Basis:** **Penrose Conformal Cyclic Cosmology Asymptotic Dilution.**
-* **Mathematical Derivation:** If matter fails to concentrate into a single supermassive singularity, the universe undergoes monotonic cosmic expansion towards heat death.
+### 2.10. `self.A_MAX_CONFORMAL = 7.0` (Numerical Proxy for Penrose CCC Asymptotic Dilution)
+* **Physical Basis:** **Penrose Conformal Cyclic Cosmology (CCC) Asymptotic Dilution.**
+* **Mathematical Derivation & Numerical Proxy:** In analytical CCC, the conformal crossover formally occurs as $t \to \infty$. In a discrete computational framework with finite runtime, $a_{\text{max}} = 7.0$ serves as a rigorous **numerical truncation proxy/cutoff**.
   At scale factor $a = 7.0$, the volumetric matter density has diluted by:
   $$\frac{\rho(a)}{\rho(a=1)} = a^{-3} = 7.0^{-3} = \frac{1}{343} \approx 0.002915\text{ (0.29% of initial density)}$$
   In accordance with Penrose CCC, at asymptotic dilution all rest-mass particles decay or dilute, restoring exact conformal symmetry ($g_{\mu\nu} \to \Omega^2 g_{\mu\nu}$) and allowing the spacelike future boundary $\mathscr{I}^+$ of the old eon to seamlessly map to the spacelike past boundary $\mathscr{I}^-$ of the new eon.

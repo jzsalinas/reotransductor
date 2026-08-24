@@ -76,6 +76,15 @@ class TestHaloPipeline(unittest.TestCase):
         self.assertTrue(res["is_cored"])
         self.assertGreater(res["inner_slope_gamma0"], -0.5)
 
+    def test_full_sparc_catalog_evaluation(self):
+        """Verify full 175-galaxy population benchmark execution and statistics."""
+        pop = self.sparc.evaluate_full_catalog()
+        self.assertEqual(pop["total_galaxies_evaluated"], 175)
+        self.assertGreaterEqual(pop["core_preferred_count"], 90)
+        self.assertGreater(pop["core_preference_pct"], 50.0)
+        self.assertEqual(len(pop["stacked_r_norm"]), 25)
+        self.assertEqual(len(pop["stacked_v_median"]), 25)
+
 
 if __name__ == '__main__':
     unittest.main()

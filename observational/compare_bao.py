@@ -28,15 +28,35 @@ def run_bao_comparison(
     print("=" * 75)
     print("  🌌 REOTRANSDUCTOR OBSERVATIONAL PIPELINE: DESI 2024 BAO VALIDATION")
     print("=" * 75)
-    print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
-    engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
-    if steps > 0:
-        print(f"• Evolving additional {steps} integration steps...")
-        for _ in range(steps):
-            engine.step()
+    target_checkpoint = None
+    if os.path.isdir(checkpoint_path):
+        bao_files = sorted(glob.glob(os.path.join(checkpoint_path, "bao_eon_*.npz")))
+        if bao_files:
+            target_checkpoint = bao_files[-1]
+    elif os.path.isfile(checkpoint_path):
+        target_checkpoint = checkpoint_path
+
+    if target_checkpoint and os.path.exists(target_checkpoint):
+        print(f"• Loading Target BAO/Cosmic Noon Checkpoint: '{target_checkpoint}'...")
+        data = np.load(target_checkpoint)
+        grid_n = int(data['rho'].shape[0])
+        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
+        engine.rho = data['rho']
+        engine.tau = data['tau']
+        engine.scale_factor = float(data['scale_factor'])
+        engine.eon = int(data['eon'])
+        engine.total_steps = int(data.get('total_steps', 0))
+    else:
+        print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
+        engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
+        if steps > 0:
+            print(f"• Evolving additional {steps} integration steps...")
+            for _ in range(steps):
+                engine.step()
 
     print(f"• Evaluated State: Eon {engine.eon} | Steps: {engine.total_steps:,} | Scale Factor a = {engine.scale_factor:.3f}")
-    metrics = generate_eon_bao_report(engine, output_dir=os.path.dirname(output_fig) or ".")
+    snapshots_dir = "checkpoints/snapshots"
+    metrics = generate_eon_bao_report(engine, output_dir=snapshots_dir)
     print("\n" + "=" * 75)
     print("  📊 BAO SPATIAL CLUSTERING & STATISTICAL METRICS")
     print("=" * 75)

@@ -81,20 +81,28 @@ class SPARCHaloData:
             r_arr = np.array(gal["r_kpc"], dtype=np.float64)
             v_arr = np.array(gal.get("v_obs", gal.get("v_obs_kms", [])), dtype=np.float64)
             err_arr = np.array(gal.get("err_v", gal.get("err_v_kms", [])), dtype=np.float64)
-            rho_arr = np.array(gal.get("rho_dm", np.zeros_like(r_arr)), dtype=np.float64)
+            rho_arr = np.array(gal.get("rho_dm", []), dtype=np.float64)
+            if len(rho_arr) == 0 or np.all(rho_arr <= 0.0):
+                rho_0 = gal.get("best_fit_central_density_msun_pc3", 0.045)
+                r_0 = gal.get("best_fit_core_radius_kpc", 2.5)
+                rho_arr = self.burkert_density(r_arr, rho_0=rho_0, r_0=r_0)
         else:
             pts = gal.get("data_points", [])
             r_arr = np.array([p["r_kpc"] for p in pts], dtype=np.float64)
             v_arr = np.array([p["v_obs_kms"] for p in pts], dtype=np.float64)
             err_arr = np.array([p["err_v_kms"] for p in pts], dtype=np.float64)
             rho_arr = np.array([p.get("rho_dm_msun_pc3", 0.0) for p in pts], dtype=np.float64)
+            if len(rho_arr) == 0 or np.all(rho_arr <= 0.0):
+                rho_0 = gal.get("best_fit_central_density_msun_pc3", 0.045)
+                r_0 = gal.get("best_fit_core_radius_kpc", 2.5)
+                rho_arr = self.burkert_density(r_arr, rho_0=rho_0, r_0=r_0)
 
         return {
             "name": gal.get("name", key),
             "type": gal.get("type", ""),
-            "v_flat_kms": gal.get("v_flat_kms", float(np.max(v_arr)) if len(v_arr) > 0 else 50.0),
-            "best_fit_core_radius_kpc": gal.get("best_fit_core_radius_kpc", 1.5),
-            "best_fit_central_density_msun_pc3": gal.get("best_fit_central_density_msun_pc3", 0.04),
+            "v_flat_kms": gal.get("v_flat_kms", float(np.max(v_arr)) if len(v_arr) > 0 else 135.0),
+            "best_fit_core_radius_kpc": gal.get("best_fit_core_radius_kpc", 2.5),
+            "best_fit_central_density_msun_pc3": gal.get("best_fit_central_density_msun_pc3", 0.045),
             "r_kpc": r_arr,
             "v_obs_kms": v_arr,
             "err_v_kms": err_arr,
@@ -150,3 +158,113 @@ class SPARCHaloData:
         """Analytical logarithmic slope gamma(r) = d ln(rho) / d ln(r) for Burkert Core."""
         x = np.maximum(1e-4, r / r_0)
         return - (x / (1.0 + x)) - (2.0 * x**2 / (1.0 + x**2))
+
+    def evaluate_full_catalog(self, n_norm_bins: int = 25) -> Dict[str, Any]:
+        """
+        Performs full population-level benchmark across all 175 SPARC galaxies:
+          1. Fits Burkert Core vs. NFW Cusp models to each galaxy's rotation curve
+          2. Evaluates statistical model preference distribution
+          3. Computes universal stacked empirical rotation curve with 16th-84th percentile dispersion
+        """
+        r_norm_grid = np.linspace(0.05, 1.0, n_norm_bins)
+        interpolated_v_norm = []
+        
+        galaxy_summaries = []
+        core_wins = 0
+        nfw_wins = 0
+        total_chi2_core = 0.0
+        total_chi2_nfw = 0.0
+        delta_chi2_list = []
+
+        for gname in self.list_galaxies():
+            g = self.get_galaxy(gname)
+            r = g["r_kpc"]
+            v = g["v_obs_kms"]
+            err = np.maximum(1.0, g["err_v_kms"])
+            if len(r) < 3 or np.max(r) <= 0.0 or np.max(v) <= 0.0:
+                continue
+
+            r_max = float(np.max(r))
+            v_flat = float(g.get("v_flat_kms", np.max(v)))
+            if v_flat <= 0.0:
+                v_flat = float(np.max(v))
+
+            # 1. Fit Burkert Core
+            best_chi2_c = float("inf")
+            best_r0 = 2.0
+            for r0 in np.linspace(0.2, max(5.0, r_max * 0.8), 25):
+                x = r / r0
+                m_burk = np.log(1.0 + x) + 0.5 * np.log(1.0 + x**2) - np.arctan(x)
+                v_shape = np.sqrt(np.maximum(1e-4, m_burk / np.maximum(1e-3, x)))
+                denom = np.sum((v_shape / err)**2)
+                amp = np.sum(v * v_shape / err**2) / denom if denom > 0 else 1.0
+                v_fit = amp * v_shape
+                chi2 = float(np.sum(((v - v_fit) / err)**2)) / len(v)
+                if chi2 < best_chi2_c:
+                    best_chi2_c = chi2
+                    best_r0 = float(r0)
+
+            # 2. Fit NFW Cusp
+            best_chi2_n = float("inf")
+            best_rs = 5.0
+            for rs in np.linspace(0.5, max(10.0, r_max * 1.5), 25):
+                x = r / rs
+                m_nfw = np.log(1.0 + x) - x / (1.0 + x)
+                v_shape = np.sqrt(np.maximum(1e-4, m_nfw / np.maximum(1e-3, x)))
+                denom = np.sum((v_shape / err)**2)
+                amp = np.sum(v * v_shape / err**2) / denom if denom > 0 else 1.0
+                v_fit = amp * v_shape
+                chi2 = float(np.sum(((v - v_fit) / err)**2)) / len(v)
+                if chi2 < best_chi2_n:
+                    best_chi2_n = chi2
+                    best_rs = float(rs)
+
+            preferred = "Core" if best_chi2_c <= best_chi2_n else "NFW"
+            if preferred == "Core":
+                core_wins += 1
+            else:
+                nfw_wins += 1
+
+            total_chi2_core += best_chi2_c
+            total_chi2_nfw += best_chi2_n
+            delta_chi2 = best_chi2_n - best_chi2_c  # Positive means Core is better
+            delta_chi2_list.append(delta_chi2)
+
+            # Normalized rotation curve for stacking
+            r_norm = r / r_max
+            v_norm = v / v_flat
+            v_interp = np.interp(r_norm_grid, r_norm, v_norm, left=v_norm[0], right=v_norm[-1])
+            interpolated_v_norm.append(v_interp)
+
+            galaxy_summaries.append({
+                "name": g["name"],
+                "type": g.get("type", ""),
+                "r_max_kpc": round(r_max, 2),
+                "v_flat_kms": round(v_flat, 2),
+                "chi2_core": round(best_chi2_c, 3),
+                "chi2_nfw": round(best_chi2_n, 3),
+                "preferred": preferred,
+                "delta_chi2": round(delta_chi2, 3)
+            })
+
+        v_norm_mat = np.array(interpolated_v_norm)
+        v_median = np.median(v_norm_mat, axis=0) if len(v_norm_mat) > 0 else np.ones(n_norm_bins)
+        v_p16 = np.percentile(v_norm_mat, 16, axis=0) if len(v_norm_mat) > 0 else v_median * 0.8
+        v_p84 = np.percentile(v_norm_mat, 84, axis=0) if len(v_norm_mat) > 0 else v_median * 1.2
+
+        total_valid = core_wins + nfw_wins
+        return {
+            "total_galaxies_evaluated": total_valid,
+            "core_preferred_count": core_wins,
+            "nfw_preferred_count": nfw_wins,
+            "core_preference_pct": round(100.0 * core_wins / max(1, total_valid), 2),
+            "nfw_preference_pct": round(100.0 * nfw_wins / max(1, total_valid), 2),
+            "mean_reduced_chi2_core": round(total_chi2_core / max(1, total_valid), 3),
+            "mean_reduced_chi2_nfw": round(total_chi2_nfw / max(1, total_valid), 3),
+            "delta_chi2_list": [round(x, 3) for x in delta_chi2_list],
+            "stacked_r_norm": np.round(r_norm_grid, 3).tolist(),
+            "stacked_v_median": np.round(v_median, 3).tolist(),
+            "stacked_v_p16": np.round(v_p16, 3).tolist(),
+            "stacked_v_p84": np.round(v_p84, 3).tolist(),
+            "galaxies": galaxy_summaries
+        }

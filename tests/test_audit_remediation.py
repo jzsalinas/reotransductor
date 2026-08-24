@@ -189,6 +189,41 @@ class TestAuditRemediation(unittest.TestCase):
         np.testing.assert_allclose(tau_cpu, tau_gpu, rtol=5e-3, atol=5e-3)
         self.assertAlmostEqual(cpu_engine.scale_factor, gpu_engine.scale_factor, places=4)
 
+    def test_telemetry_structure_and_field_validity(self):
+        """
+        Verify that engine.get_telemetry() returns all required fields
+        without any NameError or missing variables.
+        """
+        engine = CosmologicalEngine(grid_size=16, checkpoint_dir=self.temp_dir, auto_resume=False, seed=42)
+        for _ in range(5):
+            engine.step()
+
+        telemetry = engine.get_telemetry()
+        self.assertIsInstance(telemetry, dict)
+        required_keys = [
+            "eon", "era", "scale_factor", "redshift", "temp_norm", "temp_astro",
+            "c_light", "mass_fraction", "s_bh", "s_crit", "tunnel_progress",
+            "progress_label", "active_route", "p_grav", "p_conformal",
+            "fossil_odometer", "time_myr", "grid_size", "grid_voxels",
+            "box_size_mpc", "cell_size_mpc", "h0_kms_mpc", "kappa_0_planck",
+            "attractor", "z_slice", "total_steps", "is_running"
+        ]
+        for key in required_keys:
+            self.assertIn(key, telemetry, f"Missing key '{key}' in telemetry payload")
+            self.assertIsNotNone(telemetry[key])
+
+    def test_headless_engine_batch_execution(self):
+        """
+        Verify that engine.step_batch executes multiple hydrodynamic steps
+        consistently and saves valid 6-epoch checkpoints.
+        """
+        engine = CosmologicalEngine(grid_size=16, checkpoint_dir=self.temp_dir, auto_resume=False, seed=42)
+        initial_steps = engine.total_steps
+        engine.step_batch(50)
+        self.assertEqual(engine.total_steps, initial_steps + 50)
+        self.assertGreater(engine.scale_factor, 1.0)
+        self.assertTrue(np.all(engine.to_cpu(engine.rho) > 0.0))
+
 
 if __name__ == '__main__':
     unittest.main()

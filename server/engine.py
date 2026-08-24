@@ -703,6 +703,8 @@ class CosmologicalEngine:
 
         prog_label = f"Frontera Conforme CCC Eón {self.eon}"
         active_route = "conformal"
+        p_conformal = float(self.progress)
+        p_grav = float(min(1.0, self.s_bh_val / max(1.0, self.s_crit)))
 
         tau_phys_max = float(self.t_coord + np.max(tau_cpu))
         time_myr = float(self.units.time_code_to_myr(tau_phys_max))

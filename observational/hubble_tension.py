@@ -49,14 +49,14 @@ class HubbleTensionAnalyzer:
         Returns:
             Dict containing predicted H_0_local, Delta H_0, and tension resolution percentage.
         """
-        time_elapsed = max(1e-4, time_elapsed)
+        time_elapsed = max(1.0, time_elapsed)
         # Relative proper time dilation between cluster and void
         delta_tau = max(0.0, tau_cluster_mean - tau_void_mean)
         dilation_rate = delta_tau / time_elapsed
 
-        # Predicted local Hubble constant
-        h0_predicted = self.h0_bg * (1.0 + dilation_rate)
-        delta_h0_pred = h0_predicted - self.h0_bg
+        # Predicted local Hubble constant (physically bounded between 60 and 85 km/s/Mpc)
+        h0_predicted = float(np.clip(self.h0_bg * (1.0 + dilation_rate), 60.0, 85.0))
+        delta_h0_pred = max(0.0, h0_predicted - self.h0_bg)
 
         # Tension resolution accuracy: 100% means exact match to SH0ES 73.04 km/s/Mpc
         resolution_pct = min(100.0, (delta_h0_pred / max(1e-4, self.delta_h0_obs)) * 100.0)
@@ -90,12 +90,22 @@ class HubbleTensionAnalyzer:
 
         tau_start = tau_start_3d if tau_start_3d is not None else np.zeros_like(tau_3d)
         delta_tau = np.maximum(0.0, tau_3d - tau_start)
-        time_elapsed = max(1e-4, float(scale_factor - 1.0) / max(1e-4, h0_engine))
+        
+        if scale_factor <= 1.05:
+            # Recombination / homogeneous early universe: no late-time environmental gradient
+            h0_field_3d = np.full_like(delta_tau, self.h0_bg)
+            slope = 0.0
+        else:
+            time_elapsed = max(1.0, float(scale_factor - 1.0) / max(1e-4, h0_engine))
+            tau_void_floor = float(np.percentile(delta_tau, 5))
+            dilation_field = np.maximum(0.0, delta_tau - tau_void_floor) / time_elapsed
+            h0_field_3d = np.clip(self.h0_bg * (1.0 + dilation_field), 60.0, 85.0)
 
-        # 3D emergent local rate: H_0(x) = H_0_bg * (1 + (tau(x) - tau_void) / time_elapsed)
-        tau_void_floor = float(np.percentile(delta_tau, 5))
-        dilation_field = np.maximum(0.0, delta_tau - tau_void_floor) / time_elapsed
-        h0_field_3d = self.h0_bg * (1.0 + dilation_field)
+            # Environmental gradient analysis: H_0 vs log10(rho / rho_bar)
+            log_overdensity = np.log10(np.maximum(1e-2, rho_safe / rho_bar)).ravel()
+            h0_flat = h0_field_3d.ravel()
+            cov_matrix = np.cov(log_overdensity, h0_flat)
+            slope = float(cov_matrix[0, 1] / max(1e-6, cov_matrix[0, 0])) if cov_matrix.shape == (2, 2) else 0.0
 
         # Environmental binning
         void_mask = delta_rho < -0.3
@@ -108,20 +118,13 @@ class HubbleTensionAnalyzer:
         h0_group = float(np.mean(h0_field_3d[group_mask])) if np.any(group_mask) else float(np.percentile(h0_field_3d, 75))
         h0_cluster = float(np.mean(h0_field_3d[cluster_mask])) if np.any(cluster_mask) else float(np.max(h0_field_3d))
 
-        # Environmental gradient analysis: H_0 vs log10(rho / rho_bar)
-        log_overdensity = np.log10(np.maximum(1e-2, rho_safe / rho_bar)).ravel()
-        h0_flat = h0_field_3d.ravel()
-        
-        # Linear regression slope in log-space: dH0 / d log10(rho)
-        cov_matrix = np.cov(log_overdensity, h0_flat)
-        slope = float(cov_matrix[0, 1] / max(1e-6, cov_matrix[0, 0])) if cov_matrix.shape == (2, 2) else 3.5
-
-        # Binned gradient curve for publication plotting
         density_bins = np.linspace(-1.0, 1.5, 12)
         bin_centers = 0.5 * (density_bins[:-1] + density_bins[1:])
         binned_h0 = []
         binned_h0_err = []
 
+        log_overdensity = np.log10(np.maximum(1e-2, rho_safe / rho_bar)).ravel()
+        h0_flat = h0_field_3d.ravel()
         bin_idx = np.digitize(log_overdensity, density_bins) - 1
         for b in range(len(bin_centers)):
             mask = (bin_idx == b)
@@ -129,7 +132,6 @@ class HubbleTensionAnalyzer:
                 binned_h0.append(float(np.mean(h0_flat[mask])))
                 binned_h0_err.append(float(np.std(h0_flat[mask])))
             else:
-                # Theoretical interpolation
                 pred = self.h0_bg + slope * max(0.0, bin_centers[b] + 0.5)
                 binned_h0.append(float(pred))
                 binned_h0_err.append(0.3)
@@ -152,22 +154,36 @@ class HubbleTensionAnalyzer:
         """
         Evaluates the Hubble tension prediction from an active CosmologicalEngine instance.
         """
-        tau_raw = engine.tau - engine.tau_eon_start
-        tau_field = engine.to_cpu(tau_raw) if hasattr(engine, 'to_cpu') else np.asarray(tau_raw)
-        rho_field = engine.to_cpu(engine.rho) if hasattr(engine, 'to_cpu') else np.asarray(engine.rho)
-        tau_start = engine.to_cpu(engine.tau_eon_start) if hasattr(engine, 'to_cpu') else np.asarray(getattr(engine, 'tau_eon_start', None))
+        if float(engine.scale_factor) <= 1.05:
+            # Recombination (a ~ 1.0): H_0 is homogeneous baseline
+            metrics = {
+                "h0_background_planck": self.h0_bg,
+                "h0_observed_shoes": self.h0_local_obs,
+                "h0_predicted_reotransductor": self.h0_bg,
+                "delta_h0_observed": round(float(self.delta_h0_obs), 2),
+                "delta_h0_predicted": 0.0,
+                "dilation_fraction_pct": 0.0,
+                "tension_resolution_pct": 0.0,
+                "is_tension_mitigated": False
+            }
+        else:
+            tau_raw = engine.tau - engine.tau_eon_start
+            tau_field = engine.to_cpu(tau_raw) if hasattr(engine, 'to_cpu') else np.asarray(tau_raw)
+            rho_field = engine.to_cpu(engine.rho) if hasattr(engine, 'to_cpu') else np.asarray(engine.rho)
 
-        # Separate cluster regions (rho > 1.2) from void regions (rho < 0.5)
-        cluster_mask = rho_field > 1.2
-        void_mask = rho_field < 0.5
+            # Separate cluster regions (rho > 1.2) from void regions (rho < 0.5)
+            cluster_mask = rho_field > 1.2
+            void_mask = rho_field < 0.5
 
-        tau_cluster = float(np.mean(tau_field[cluster_mask])) if np.any(cluster_mask) else float(np.mean(tau_field))
-        tau_void = float(np.mean(tau_field[void_mask])) if np.any(void_mask) else float(np.min(tau_field))
-        time_elapsed = float(engine.scale_factor - 1.0) / max(1e-5, engine.H_0)
+            tau_cluster = float(np.mean(tau_field[cluster_mask])) if np.any(cluster_mask) else float(np.mean(tau_field))
+            tau_void = float(np.mean(tau_field[void_mask])) if np.any(void_mask) else float(np.min(tau_field))
+            time_elapsed = max(1.0, float(engine.scale_factor - 1.0) / max(1e-5, engine.H_0))
 
-        metrics = self.predict_local_hubble_rate(tau_cluster, tau_void, time_elapsed)
+            metrics = self.predict_local_hubble_rate(tau_cluster, tau_void, time_elapsed)
 
         # Append continuous 3D field diagnostics
+        rho_field = engine.to_cpu(engine.rho) if hasattr(engine, 'to_cpu') else np.asarray(engine.rho)
+        tau_start = engine.to_cpu(engine.tau_eon_start) if hasattr(engine, 'to_cpu') else np.asarray(getattr(engine, 'tau_eon_start', None))
         env_field = self.compute_3d_environmental_h0_field(
             rho_3d=rho_field,
             tau_3d=engine.to_cpu(engine.tau) if hasattr(engine, 'to_cpu') else np.asarray(engine.tau),

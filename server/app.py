@@ -140,7 +140,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Reotransductor Cosmological Server",
     description="24/7 High-Performance Cosmological Physics Engine with Real-Time Web Dashboard",
-    version="2.2.0",
+    version="2.3.0",
     lifespan=lifespan
 )
 

@@ -125,7 +125,7 @@ class CosmologicalUnits:
         # CALIBRATED COSMOLOGICAL GRID & THERMODYNAMIC BASE SCALES
         # =====================================================================
         self.DT = 0.05
-        self.H_0 = 0.0003  # Calibrated expansion rate per code time unit
+        self.H_0 = self.get_hubble_code_unit()  # Dimensionless expansion rate derived directly from physical H0 and time_unit_s
         self.G_CONST = 0.0001  # Screened Poisson gravitational coupling parameter
         self.CS2_BASE = 0.18  # Adiabatic sound speed baseline at T_CMB = 2.7255 K
         self.DIFFUSION_BASE = 0.3  # Spitzer plasma conduction baseline at T_CMB
@@ -302,7 +302,7 @@ class CosmologicalUnits:
         mean_rho = max(0.1, mean_rho)
         rho_factor = 1.0 + np.maximum(0.0, rho) / mean_rho
         t_ratio = np.maximum(1.0, T / t_cmb)
-        spitzer_k = base_k * (t_ratio ** 1.25) / rho_factor
+        spitzer_k = base_k * (t_ratio ** 2.5) / rho_factor
         return np.clip(spitzer_k, 0.05, 2.5)
 
     def compute_thermal_information_relaxation(

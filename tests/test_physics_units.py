@@ -82,6 +82,27 @@ class TestPhysicsUnits(unittest.TestCase):
         self.assertAlmostEqual(self.units.rho_crit_si * 1e27, 9.205, delta=0.1)
         self.assertAlmostEqual(self.units.rho_crit_msun_mpc3 / 1e11, 1.36, delta=0.1)
 
+    def test_hubble_code_unit_roundtrip(self):
+        """Verify that H_0 is dynamically computed from physical h0_si * time_unit_s."""
+        expected = self.units.h0_si * self.units.time_unit_s
+        self.assertAlmostEqual(self.units.H_0, expected, places=12)
+        self.assertAlmostEqual(self.units.get_hubble_code_unit(), expected, places=12)
+
+    def test_spitzer_power_law_scaling(self):
+        """Verify that Spitzer thermal conductivity scales as T^(5/2) within the unclamped range."""
+        base = 0.1
+        # T1 = 1.5 * 2.73 ==> spitzer_k = 0.1 * 1.5^2.5 / 1.0 approx 0.275 (within [0.05, 2.5])
+        # T2 = 3.0 * 2.73 ==> spitzer_k = 0.1 * 3.0^2.5 / 1.0 approx 1.559 (within [0.05, 2.5])
+        k1 = self.units.compute_spitzer_conductivity(1.5 * 2.73, 0.0, base_k=base)
+        k2 = self.units.compute_spitzer_conductivity(3.0 * 2.73, 0.0, base_k=base)
+        ratio = k2 / k1
+        expected_ratio = 2.0 ** 2.5
+        self.assertAlmostEqual(ratio, expected_ratio, delta=0.05)
+
+    def test_kappa_0_exact_value(self):
+        """Verify that kappa_0 evaluated from CODATA constants equals 1.6487e-125."""
+        self.assertAlmostEqual(self.planck.KAPPA_0 / 1.6487e-125, 1.0, delta=0.01)
+
 
 if __name__ == '__main__':
     unittest.main()

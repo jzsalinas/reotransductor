@@ -6,7 +6,7 @@ __pycache__/
 .agents/
 screenshots/
 checkpoints/
-paper/
+#paper/
 audit/
 *.npz
 *.log

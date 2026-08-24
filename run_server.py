@@ -20,9 +20,26 @@ def main():
     parser.add_argument("--gpu", action="store_true", help="Enable NVIDIA CUDA GPU acceleration with CuPy")
     parser.add_argument("--cpu", action="store_true", help="Force CPU multi-core execution with NumPy / OpenBLAS (default)")
     parser.add_argument("--reset", action="store_true", help="Force clean reset to Eon 1 upon startup (archives previous checkpoints)")
+    parser.add_argument("--headless", action="store_true", help="Execute in ultra-fast headless background mode without web server or UI overhead")
     parser.add_argument("--log-level", type=str, default="info", help="Uvicorn log level (default: info)")
     
     args = parser.parse_args()
+
+    if args.box <= 0:
+        parser.error("--box must be > 0")
+
+    if args.headless:
+        # Delegate directly to headless high-speed production runner
+        from scripts.run_headless_simulation import main as headless_main
+        sys.argv = [sys.argv[0], "--grid", str(args.grid), "--box", str(args.box)]
+        if args.gpu:
+            sys.argv.append("--gpu")
+        if args.cpu:
+            sys.argv.append("--cpu")
+        if args.reset:
+            sys.argv.append("--reset")
+        headless_main()
+        return
 
     # Determine hardware preference (default to CPU unless --gpu is explicitly requested)
     gpu_requested = bool(args.gpu)

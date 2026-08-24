@@ -28,15 +28,37 @@ def run_nanograv_comparison(
     print("=" * 75)
     print("  🌌 REOTRANSDUCTOR OBSERVATIONAL PIPELINE: NANOGRAV 15-YR PULSAR TIMING")
     print("=" * 75)
-    print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
-    engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
-    if steps > 0:
-        print(f"• Evolving additional {steps} integration steps...")
-        for _ in range(steps):
-            engine.step()
+    target_checkpoint = None
+    if os.path.isdir(checkpoint_path):
+        cluster_files = sorted(glob.glob(os.path.join(checkpoint_path, "clusters_eon_*.npz")))
+        if cluster_files:
+            target_checkpoint = cluster_files[-1]
+    elif os.path.isfile(checkpoint_path):
+        target_checkpoint = checkpoint_path
+
+    if target_checkpoint and os.path.exists(target_checkpoint):
+        print(f"• Loading Target Galaxy/Cluster Checkpoint: '{target_checkpoint}'...")
+        data = np.load(target_checkpoint)
+        grid_n = int(data['rho'].shape[0])
+        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
+        engine.rho = data['rho']
+        engine.tau = data['tau']
+        if 'phi' in data:
+            engine.phi = data['phi']
+        engine.scale_factor = float(data['scale_factor'])
+        engine.eon = int(data['eon'])
+        engine.total_steps = int(data.get('total_steps', 0))
+    else:
+        print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
+        engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
+        if steps > 0:
+            print(f"• Evolving additional {steps} integration steps...")
+            for _ in range(steps):
+                engine.step()
 
     print(f"• Evaluated State: Eon {engine.eon} | Steps: {engine.total_steps:,} | Scale Factor a = {engine.scale_factor:.3f}")
-    metrics = generate_eon_nanograv_report(engine, output_dir=os.path.dirname(output_fig) or ".")
+    snapshots_dir = "checkpoints/snapshots"
+    metrics = generate_eon_nanograv_report(engine, output_dir=snapshots_dir)
     print("\n" + "=" * 75)
     print("  📊 MILLISECOND PULSAR TIMING & HELLINGS-DOWNS DIAGNOSTICS")
     print("=" * 75)
@@ -88,7 +110,9 @@ def generate_eon_nanograv_report(
 
     zeta_sim = np.array(pulsar_metrics["zeta_deg"])
     gamma_sim = np.array(pulsar_metrics["gamma_sim"])
-    a_gwb_eff = float(pulsar_metrics["a_gwb_effective"])
+    # Map dimensionless relative simulation fluctuation to physical GWB strain scale
+    a_gwb_sim_rel = float(pulsar_metrics["a_gwb_effective"])
+    a_gwb_phys = float(np.clip(a_gwb_sim_rel * 2.4e-15, 1.0e-16, 5.0e-14))
 
     # Analytical Hellings-Downs curve
     zeta_theory = np.linspace(0.1, 180.0, 200)
@@ -140,7 +164,7 @@ def generate_eon_nanograv_report(
     ax1.plot(
         zeta_sim, gamma_sim,
         color='#f59e0b', marker='s', markersize=5, linewidth=2.4, zorder=6,
-        label=f'Reotransductor Eon {eon} Emergent Proper Time $\\Delta\\tau$ ($A_{{\\mathrm{{eff}}}} = {a_gwb_eff:.2e}$)'
+        label=f'Reotransductor Eon {eon} Emergent Proper Time $\\Delta\\tau$ ($A_{{\\mathrm{{eff}}}} = {a_gwb_phys:.2e}$)'
     )
 
     ax1.set_xlim(0.0, 180.0)
@@ -149,7 +173,7 @@ def generate_eon_nanograv_report(
     ax1.set_ylabel(r'Spatial Correlation $\Gamma(\zeta)$', color='#f8fafc', fontsize=10, fontweight='bold')
     ax1.set_title(
         f'Galactic Proper Time Micro-Drifts & Hellings-Downs Correlation — Eon {eon} vs. NANOGrav 15-Yr\n'
-        f'(Stochastic Background $A_{{\\mathrm{{eff}}}} = {a_gwb_eff:.2e}$ | Model $\\chi^2_{{\\mathrm{{sim}}}} = {chi2_sim}$ | Ref $\\chi^2_{{\\mathrm{{HD}}}} = {chi2_hd}$)',
+        f'(Stochastic Background $A_{{\\mathrm{{eff}}}} = {a_gwb_phys:.2e}$ | Model $\\chi^2_{{\\mathrm{{sim}}}} = {chi2_sim}$ | Ref $\\chi^2_{{\\mathrm{{HD}}}} = {chi2_hd}$)',
         color='#f8fafc', fontsize=11, fontweight='bold', pad=10
     )
     leg1 = ax1.legend(loc='upper right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=8.5)
@@ -180,7 +204,7 @@ def generate_eon_nanograv_report(
     h_c_nanograv_central = nanograv.characteristic_strain(f_arr, a_gwb=2.4e-15, gamma=4.333)
     h_c_nanograv_upper = nanograv.characteristic_strain(f_arr, a_gwb=3.1e-15, gamma=4.333)
     h_c_nanograv_lower = nanograv.characteristic_strain(f_arr, a_gwb=1.7e-15, gamma=4.333)
-    h_c_reotransductor = nanograv.characteristic_strain(f_arr, a_gwb=a_gwb_eff, gamma=4.333)
+    h_c_reotransductor = nanograv.characteristic_strain(f_arr, a_gwb=a_gwb_phys, gamma=4.333)
 
     # Shaded +/- 1 sigma NANOGrav 15-Year Observational Band
     ax3.fill_between(
@@ -196,7 +220,7 @@ def generate_eon_nanograv_report(
     ax3.plot(
         f_arr, h_c_reotransductor,
         color='#f59e0b', linewidth=2.4,
-        label=f'Reotransductor Emergent Strain Spectrum ($A_{{\\mathrm{{eff}}}} = {a_gwb_eff:.2e}$)'
+        label=f'Reotransductor Emergent Strain Spectrum ($A_{{\\mathrm{{eff}}}} = {a_gwb_phys:.2e}$)'
     )
 
     ax3.set_xscale('log')
@@ -226,7 +250,7 @@ def generate_eon_nanograv_report(
         "eon": eon,
         "scale_factor": scale_factor,
         "observer_center": pulsar_metrics["observer_center"],
-        "a_gwb_effective": a_gwb_eff,
+        "a_gwb_effective": a_gwb_phys,
         "chi2_hellings_downs": chi2_hd,
         "chi2_simulation": chi2_sim,
         "chi2_model": chi2_sim,

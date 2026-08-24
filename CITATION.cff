@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software in your research, please cite it as below."
 title: "Reotransductor: Emergent Proper Time from Non-Equilibrium Dissipation in Computational Cosmology"
-version: 2.2.0
+version: 2.3.0
 date-released: 2026-08-21
 authors:
   - family-names: "Salinas"

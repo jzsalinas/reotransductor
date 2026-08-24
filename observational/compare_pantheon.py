@@ -21,25 +21,55 @@ def run_pantheon_comparison(
     checkpoint_path: str = "checkpoints",
     auto_resume: bool = True,
     steps: int = 0,
+    mode: str = "full",
     output_fig: str = "assets/pantheon_hubble_tension.png"
 ) -> Dict[str, Any]:
     """Executes live Hubble tension and Pantheon+ supernovae comparison on active cosmological state."""
     os.makedirs(os.path.dirname(output_fig) or ".", exist_ok=True)
     print("=" * 75)
-    print("  🌌 REOTRANSDUCTOR OBSERVATIONAL PIPELINE: HUBBLE TENSION & PANTHEON+ SNe")
+    print(f"  🌌 REOTRANSDUCTOR OBSERVATIONAL PIPELINE: HUBBLE TENSION & PANTHEON+ SNe ({mode.upper()})")
     print("=" * 75)
-    print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
-    engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
-    if steps > 0:
-        print(f"• Evolving additional {steps} integration steps...")
-        for _ in range(steps):
-            engine.step()
+    # Prioritize dedicated local universe epoch checkpoints (a ~ 4.5)
+    target_checkpoint = None
+    if os.path.isdir(checkpoint_path):
+        pantheon_files = sorted(glob.glob(os.path.join(checkpoint_path, "pantheon_eon_*.npz")))
+        if pantheon_files:
+            target_checkpoint = pantheon_files[-1]
+    elif os.path.isfile(checkpoint_path):
+        target_checkpoint = checkpoint_path
+
+    if target_checkpoint and os.path.exists(target_checkpoint):
+        print(f"• Loading Target Local Universe Checkpoint: '{target_checkpoint}'...")
+        data = np.load(target_checkpoint)
+        grid_n = int(data['rho'].shape[0])
+        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
+        engine.rho = data['rho']
+        engine.v_x = data.get('v_x', None)
+        engine.v_y = data.get('v_y', None)
+        engine.v_z = data.get('v_z', None)
+        engine.T = data.get('T', None)
+        engine.I = data.get('I', None)
+        engine.tau = data['tau']
+        if 'phi' in data:
+            engine.phi = data['phi']
+        engine.scale_factor = float(data['scale_factor'])
+        engine.eon = int(data['eon'])
+        engine.total_steps = int(data.get('total_steps', 0))
+    else:
+        print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
+        engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
+        if steps > 0:
+            print(f"• Evolving additional {steps} integration steps...")
+            for _ in range(steps):
+                engine.step()
 
     print(f"• Evaluated State: Eon {engine.eon} | Steps: {engine.total_steps:,} | Scale Factor a = {engine.scale_factor:.3f}")
-    metrics = generate_eon_pantheon_report(engine, output_dir=os.path.dirname(output_fig) or ".")
+    snapshots_dir = "checkpoints/snapshots"
+    metrics = generate_eon_pantheon_report(engine, mode=mode, output_dir=snapshots_dir)
     print("\n" + "=" * 75)
     print("  📊 HUBBLE TENSION & ENVIRONMENTAL EXPANSION DIAGNOSTICS")
     print("=" * 75)
+    print(f"• Pantheon+ Sample Size:            {metrics['total_sne']} Supernovae Type Ia")
     print(f"• Planck 2018 Baseline (CMB/Void): {metrics['h0_background_planck']} km/s/Mpc")
     print(f"• SH0ES 2022 Observed (Cluster):   {metrics['h0_observed_shoes']} km/s/Mpc (Tension: +{metrics['delta_h0_observed']} km/s/Mpc)")
     print(f"• Reotransductor Predicted H_0:     {metrics['h0_predicted_reotransductor']} km/s/Mpc (Delta: +{metrics['delta_h0_predicted']} km/s/Mpc)")
@@ -53,12 +83,13 @@ def run_pantheon_comparison(
 
 def generate_eon_pantheon_report(
     engine,
+    mode: str = "full",
     output_dir: str = "checkpoints/snapshots"
 ) -> Dict[str, Any]:
     """
     Generates complete Hubble Tension and Pantheon+ Supernovae observational report:
       1. Evaluates local dilated expansion rate H_0(x) across cosmic web environments
-      2. Ingests official Pantheon+ (2022) distance modulus data
+      2. Ingests official Pantheon+ (2022) distance modulus data (1,701 full sample or binned)
       3. Computes Chi^2 and residual curves
       4. Renders and saves 3-panel publication figure
     """
@@ -67,7 +98,7 @@ def generate_eon_pantheon_report(
     scale_factor = float(engine.scale_factor)
 
     # 1. Ingest Pantheon+ Observational Data
-    pantheon = PantheonSupernovaeData()
+    pantheon = PantheonSupernovaeData(mode=mode)
     data = pantheon.get_dataset()
     z_sne = data["z"]
     mu_obs = data["mu_obs"]
@@ -149,11 +180,18 @@ def generate_eon_pantheon_report(
         color='#f59e0b', linewidth=2.4, zorder=5,
         label=f'Reotransductor Environmental Model ($H_0(\\mathbf{{x}})$, $\\chi^2 = {chi2_reotransductor}$)'
     )
-    ax1.errorbar(
-        z_sne, mu_obs, yerr=err_mu,
-        fmt='o', color='#38bdf8', ecolor='#0284c7', elinewidth=1.6, capsize=3.5,
-        markersize=5.5, zorder=6, label=f'Pantheon+ (2022) Calibration Subset ($N = 13$ Bins)'
-    )
+    if len(z_sne) > 100:
+        ax1.errorbar(
+            z_sne, mu_obs, yerr=err_mu,
+            fmt='o', color='#38bdf8', ecolor='#0284c7', elinewidth=0.8, alpha=0.35, capsize=0,
+            markersize=3.0, zorder=4, label=f'Pantheon+ (2022) Full Sample ($N = {len(z_sne):,}$ SNe Ia)'
+        )
+    else:
+        ax1.errorbar(
+            z_sne, mu_obs, yerr=err_mu,
+            fmt='o', color='#38bdf8', ecolor='#0284c7', elinewidth=1.6, capsize=3.5,
+            markersize=5.5, zorder=6, label=f'Pantheon+ (2022) Calibration Subset ($N = {len(z_sne)}$ Bins)'
+        )
 
     ax1.set_xscale('log')
     ax1.set_xlim(0.008, 1.5)
@@ -161,7 +199,7 @@ def generate_eon_pantheon_report(
     ax1.set_ylabel(r'Distance Modulus $\mu(z)$ [mag]', color='#f8fafc', fontsize=11, fontweight='bold')
     ax1.set_title(
         f'Environmental Hubble Rate Analysis — Eon {eon} vs. Pantheon+ SNe Ia (2022)\n'
-        f'(Cluster $H_0 = {h0_pred:.2f}\\ \\mathrm{{km/s/Mpc}}$ | Exploratory Lattice Benchmark)',
+        f'(Cluster $H_0 = {h0_pred:.2f}\\ \\mathrm{{km/s/Mpc}}$ | Sample: {len(z_sne):,} SNe Ia)',
         color='#f8fafc', fontsize=12, fontweight='bold', pad=10
     )
     leg1 = ax1.legend(loc='lower right', framealpha=0.85, facecolor='#0b1120', edgecolor='#334155', fontsize=9)
@@ -204,9 +242,11 @@ def generate_eon_pantheon_report(
     ax3.axhspan(-1.0, 1.0, alpha=0.15, color='#10b981', label=r'$\pm 1\sigma$ Observational Confidence')
     ax3.axhspan(-2.0, 2.0, alpha=0.08, color='#3b82f6', label=r'$\pm 2\sigma$ Confidence')
 
+    pt_size = 12 if len(z_sne) > 100 else 45
+    pt_alpha = 0.40 if len(z_sne) > 100 else 0.85
     ax3.scatter(
         z_sne, residuals_reotransductor,
-        color='#38bdf8', marker='o', s=45, edgecolors='#0284c7', zorder=5,
+        color='#38bdf8', marker='o', s=pt_size, alpha=pt_alpha, edgecolors='none' if len(z_sne) > 100 else '#0284c7', zorder=5,
         label=r'Normalized Residuals $(\mu_{\mathrm{obs}} - \mu_{\mathrm{model}}) / \sigma_\mu$'
     )
 
@@ -235,6 +275,7 @@ def generate_eon_pantheon_report(
     return {
         "eon": eon,
         "scale_factor": scale_factor,
+        "total_sne": len(z_sne),
         "h0_background_planck": h0_planck,
         "h0_observed_shoes": h0_shoes,
         "h0_predicted_reotransductor": h0_pred,
@@ -250,7 +291,7 @@ def generate_eon_pantheon_report(
     }
 
 
-def process_all_existing_checkpoints_pantheon(checkpoints_dir: str = "checkpoints"):
+def process_all_existing_checkpoints_pantheon(checkpoints_dir: str = "checkpoints", mode: str = "full"):
     """Processes all historical Pantheon/Universe Local checkpoints (pantheon_eon_*.npz or eon_*.npz)."""
     # Prioritize dedicated local universe epoch checkpoints (a ~ 4.5)
     npz_files = sorted(glob.glob(os.path.join(checkpoints_dir, "pantheon_eon_*.npz")))
@@ -261,13 +302,14 @@ def process_all_existing_checkpoints_pantheon(checkpoints_dir: str = "checkpoint
         print(f"No Pantheon or eon checkpoints found in '{checkpoints_dir}'.")
         return
 
-    print(f"• Found {len(npz_files)} Pantheon/H0 checkpoints in '{checkpoints_dir}'. Processing Hubble reports...")
+    print(f"• Found {len(npz_files)} Pantheon checkpoints in '{checkpoints_dir}'. Processing Hubble Tension reports...")
     snapshots_dir = os.path.join(checkpoints_dir, "snapshots")
     engine = CosmologicalEngine(checkpoint_dir=checkpoints_dir, auto_resume=False)
 
     for npz_path in npz_files:
         try:
             data = np.load(npz_path)
+            engine.grid_size = int(data['rho'].shape[0])
             engine.rho = data['rho']
             engine.v_x = data['v_x']
             engine.v_y = data['v_y']
@@ -283,8 +325,8 @@ def process_all_existing_checkpoints_pantheon(checkpoints_dir: str = "checkpoint
             if 'tau_eon_start' in data:
                 engine.tau_eon_start = data['tau_eon_start']
 
-            print(f"\n--- Processing Hubble: {os.path.basename(npz_path)} (Eon {engine.eon}) ---")
-            metrics = generate_eon_pantheon_report(engine, output_dir=snapshots_dir)
+            print(f"\n--- Processing Hubble: {os.path.basename(npz_path)} (Eon {engine.eon}, Grid {engine.grid_size}³) ---")
+            metrics = generate_eon_pantheon_report(engine, mode=mode, output_dir=snapshots_dir)
             print(f"  * H0 Predicted: {metrics['h0_predicted_reotransductor']} km/s/Mpc | Resolution: {metrics['tension_resolution_pct']}% | Chi2: {metrics['chi2_reotransductor']}")
         except Exception as ex:
             print(f"  * Error processing {npz_path}: {ex}")
@@ -296,15 +338,18 @@ if __name__ == '__main__':
     parser.add_argument("--steps", type=int, default=0, help="Additional steps to simulate before evaluation")
     parser.add_argument("--from-scratch", action="store_true", help="Start from blank initial conditions")
     parser.add_argument("--process-all", action="store_true", help="Process and generate Pantheon plots for all historical checkpoints")
+    parser.add_argument("--binned", action="store_true", help="Use 13-bin calibration subset instead of full 1,701 SNe sample")
     parser.add_argument("--output", type=str, default="assets/pantheon_hubble_tension.png", help="Output PNG path")
     args = parser.parse_args()
 
+    mode = "binned" if args.binned else "full"
     if args.process_all:
-        process_all_existing_checkpoints_pantheon(checkpoints_dir=args.checkpoint_dir)
+        process_all_existing_checkpoints_pantheon(checkpoints_dir=args.checkpoint_dir, mode=mode)
     else:
         run_pantheon_comparison(
             checkpoint_path=args.checkpoint_dir,
             auto_resume=not args.from_scratch,
             steps=args.steps,
+            mode=mode,
             output_fig=args.output
         )
