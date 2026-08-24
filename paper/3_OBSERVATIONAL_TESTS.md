@@ -122,7 +122,7 @@ Confrontation against canonical SPARC systems confirms strong statistical prefer
 * **NGC 2403 (Late-Type Spiral):** Reotransductor $\chi^2_\nu = 16.92$ vs. NFW $\chi^2_\nu = 75.50$ ($4.5\times$ better goodness of fit).
 * **UGC 02885 (Rubin's Galaxy, Massive Spiral):** Reotransductor $\chi^2_\nu = 1.36$ vs. NFW $\chi^2_\nu = 4.70$.
 
-![Figure: SPARC Galaxy Rotation Curves](assets/galaxy_rotation_curve_sparc.png)
+![Figure: SPARC Galaxy Rotation Curves](../assets/galaxy_rotation_curve_sparc.png)
 *Figure 4: (A) Midplane baryonic density $\log_{10}(\rho_b/\bar{\rho})$ with velocity streamlines. (B) Emergent proper time field $\tau(\mathbf{x})$. (C) Complete rotation curve $V(R)$ [km/s] vs. SPARC observational data points. (D) Standardized velocity residuals $(V_{\text{model}} - V_{\text{obs}})/\sigma_V$.*
 
 ---

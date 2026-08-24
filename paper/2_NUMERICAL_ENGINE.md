@@ -114,10 +114,10 @@ Each checkpoint encapsulates:
 To avoid indefinite execution while modeling Penrose's Conformal Cyclic Cosmology (where asymptotic dilution formally occurs as $a \to \infty$), the simulation employs a numerical stopping threshold at $a_{\max} = 7.00$, where matter density has diluted to $\rho(a=7) / \rho_0 = 1 / 343 \approx 0.29\%$. At this boundary, the engine resets to the next cosmological eon with holographic phase-locking of primordial perturbations:
 $$\hat{\rho}_{\text{new}}(\mathbf{k}) = \sqrt{P(k)} \exp\left(i \left[ \alpha_{\text{mem}} \operatorname{Arg}(\hat{\tau}(\mathbf{k})) + (1 - \alpha_{\text{mem}}) \theta_{\text{quant}}(\mathbf{k}) \right]\right).$$
 
-![Figure 1: Conformal Cutoff Criterion and Optimization Analysis](assets/methodology_conformal_cutoff.png)
+![Figure 1: Conformal Cutoff Criterion and Optimization Analysis](../assets/methodology_conformal_cutoff.png)
 *Figure 1: (A) Cosmological component dilution ($\rho_m \propto a^{-3}$, $T \propto a^{-1}$) showing the approach to the asymptotic regime and the numerical stopping threshold at $a_{\max} = 7.00$. (B) Trade-off curve between asymptotic metric truncation error $\epsilon(a_{\max})$ and relative computational cost.*
 
-![Figure 2: Reotransductor Cosmological Evolution Diagram](assets/methodology_dual_transition_phase.png)
+![Figure 2: Reotransductor Cosmological Evolution Diagram](../assets/methodology_dual_transition_phase.png)
 *Figure 2: Cosmological evolution diagram illustrating the standard 3D hydrodynamic evolution regime across the 5 landmark observational epochs and the global Route B Conformal Boundary ($a \ge 7.00$).*
 
 ---
@@ -140,7 +140,7 @@ A systematic multi-resolution benchmark was executed across five lattice sizes (
 
 *Note on VRAM Scaling:* While the raw active tensor allocation at $256^3$ is $\approx 768\text{ MB}$, CuPy's dynamic memory pool, FFT scratch workspace, and intermediate hydrodynamic gradient buffers allocate a total peak of $\approx 2.21\text{ GB}$ ($61\%$ of the $3.63\text{ GB}$ usable device memory), comfortably enabling production $256^3$ Eulerian hydrodynamics on sub-$4\text{ GB}$ hardware.
 
-![Figure 3: Multi-Resolution Numerical Convergence](assets/numerical_convergence_study.png)
+![Figure 3: Multi-Resolution Numerical Convergence](../assets/numerical_convergence_study.png)
 *Figure 3: (A) Global mass conservation demonstrating fractional drift $|\Delta M/M_0| \le 1.28 \times 10^{-7}$. (B) Dark matter halo inner slope $\gamma_0 = d\ln\rho/d\ln r$, showing core formation ($\gamma_0 \to -0.056$) compared to NFW cusps ($\gamma = -1.00$). (C) Spatial correlation peak. (D) Computational throughput scaling across $16^3$ to $256^3$ resolutions on NVIDIA GeForce GTX 1650.*
 
 ### 5.2 Automated Continuous Integration Suite
