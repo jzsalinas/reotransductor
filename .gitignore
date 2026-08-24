@@ -16,3 +16,7 @@ audit/
 telegram_config.json
 config.local.json
 .env
+
+# Large SPARC Validation Data (Destined for Zenodo)
+assets/galaxies/
+assets/*.zip

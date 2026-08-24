@@ -106,7 +106,10 @@ $$\Sigma = 0 \implies u^\mu \nabla_\mu \tau = 1 \implies \tau(t) = t + \tau_0.$$
 *When $\tau(x^\mu)$ is treated as a passive clock tracer, it does not contribute to the stress-energy tensor, preserving the exact contracted Bianchi identities:*
 $$\nabla_\mu T^{\mu\nu}_{\text{matter}} = 0 \iff \nabla_\mu G^{\mu\nu} = 0.$$
 
-### 4.4 Conformal Boundary and Crossover Hypothesis
+### 4.4 Phenomenological Consequence (Emergent Galactic Cores)
+*In virialized, steady-state astrophysical systems (such as mature $z=0$ galaxies), the local accumulation of the time-dilation field $\tau$ flattens the central effective gravitational potential. As a rigorous phenomenological consequence, this dissipative framework natively predicts the kinetic emergence of Burkert-like constant-density cores in galactic centers, circumventing the cuspy singularities historically expected under collisionless NFW dark matter profiles.*
+
+### 4.5 Conformal Boundary and Crossover Hypothesis
 Under asymptotic cosmic expansion with positive cosmological constant $\Lambda > 0$, the matter density dilutes as $\rho \propto a^{-3} \to 0$ and radiation cools as $T \propto a^{-1} \to 0$. In accordance with Penrose's Conformal Cyclic Cosmology (CCC), as $a \to \infty$, the metric approaches conformal invariance ($m \to 0$). The spacelike future hypersurface $\mathscr{I}^+$ of Eon $N$ maps to the past Big Bang hypersurface $\mathscr{I}^-$ of Eon $N+1$ via the global conformal rescaling $\hat{g}_{\mu\nu} = \Omega^2 g_{\mu\nu}$. In this framework, primordial perturbations inherit the phase of the fossil proper time tensor:
 $$\hat{\rho}_{\text{new}}(\mathbf{k}) = \sqrt{P(k)} \exp\left(i \left[ \alpha_{\text{mem}} \operatorname{Arg}(\hat{\tau}(\mathbf{k})) + (1 - \alpha_{\text{mem}}) \theta_{\text{quant}}(\mathbf{k}) \right]\right).$$
 

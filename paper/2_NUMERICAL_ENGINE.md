@@ -25,6 +25,7 @@ Reotransductor resolves these challenges by providing:
 3. Multi-resolution adaptability ($16^3, 32^3, 64^3, 128^3, 256^3$) with user-defined physical box sizes ($L_{\text{box}} \in [10, 1000]\text{ Mpc}$).
 4. An ultra-fast headless production CLI runner (`scripts/run_headless_simulation.py`) achieving $> 500\text{ steps/s}$ for batch data generation without web server overhead.
 5. Standardized observational comparison pipelines confronting simulation snapshots against full astronomical databases (Pantheon+, DESI DR2, SPARC, Planck 2018, NANOGrav).
+6. A dual-architecture execution model structurally separating the `CosmologicalEngine` (full first-principles fluid time-integration via SSP-RK2) from the `GalacticReotransductorSimulator` (a dedicated Asymptotic Steady-State Predictor capable of batch-evaluating the 175-galaxy SPARC database).
 
 ---
 

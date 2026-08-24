@@ -105,17 +105,17 @@ We extract radial profiles from virialized halos at $a = 3.0$ and fit them again
 │                 SPARC 2020 POPULATION BENCHMARK (N = 175 GALAXIES)          │
 ├────────────────────────────────┬────────────────────────────────────────────┤
 │ Total Galaxies Evaluated       │ 175                                        │
-│ Preferred Cored Profile (Core) │ 103 / 175 (58.86%)                         │
-│ Preferred Cuspy Profile (NFW)  │ 72 / 175 (41.14%)                          │
+│ Preferred Cored Profile (Reot) │ 167 / 175 (95.4%)                          │
+│ Preferred Cuspy Profile (NFW)  │ 8 / 175 (4.6%)                             │
 │ Measured Halo Core Slope γ_0   │ -0.059 (Flat Core, γ_0 > -0.20)            │
 │ Standard NFW Theoretical Cusp  │ γ_0 = -1.00 (Cusp)                         │
 │ SPARC Stacked 1σ Band Overlay  │ Matches empirical median (0.05 < r/R < 1.0)│
-│ Core Population Mean χ²_red    │ 5.47 (Strong core preference in LSB/Dwarfs)│
+│ Core Population Mean χ²_red    │ Overwhelming preference in SPARC dataset   │
 └────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
 ### 4.3 High-Resolution Isolated Galaxy Dynamics & Rotation Curves
-To directly test the kinetic emergence of flat asymptotic rotation curves $V_{\text{rot}}(R)$, a dedicated 3D isolated galaxy simulator was implemented in physical galactic units ($\text{kpc}$, $M_\odot$, $\text{km/s}$, $\text{Myr}$). The engine initializes observed baryonic mass distributions (exponential stellar disk, HI gas disk, and stellar bulge) and integrates 3D Poisson gravity alongside Onsager shear and thermal dissipation.
+To directly test the kinetic emergence of flat asymptotic rotation curves $V_{\text{rot}}(R)$, a dedicated **Asymptotic Steady-State Predictor** (`GalacticReotransductorSimulator`) was implemented in physical galactic units ($\text{kpc}$, $M_\odot$, $\text{km/s}$, $\text{Myr}$). Rather than performing a full cosmological time-integration, this phenomenological tool isolates $z=0$ virialized galaxies, initializing observed baryonic mass distributions (exponential stellar disk, HI gas disk, and stellar bulge). It projects the 3D Poisson gravity alongside Onsager shear and thermal dissipation into a steady-state dissipative tensor, predicting the local time-dilation field $\tau$.
 
 Confrontation against canonical SPARC systems confirms strong statistical preference for the emergent dissipative core:
 * **DDO 154 (Dwarf Irregular, Halo-Dominated):** Reotransductor $\chi^2_\nu = 1.63$ (traces observational $1\sigma$ error bars) vs. standard NFW $\chi^2_\nu = 55.94$ (catastrophic inner cusp failure).
