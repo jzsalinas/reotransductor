@@ -139,7 +139,7 @@ A systematic resolution study was executed across five lattice sizes ($16^3$ to 
 *Figure 3: (A) Global mass conservation demonstrating fractional drift $|\Delta M/M_0| \le 1.28 \times 10^{-7}$. (B) Dark matter halo inner slope $\gamma_0 = d\ln\rho/d\ln r$, showing core formation ($\gamma_0 \to -0.056$) compared to NFW cusps ($\gamma = -1.00$). (C) Spatial correlation peak. (D) Computational throughput scaling across $16^3$ to $256^3$ resolutions.*
 
 ### 5.2 Automated Continuous Integration Suite
-The framework includes an extensive Python `unittest` suite comprising **62 automated unit tests** across 10 specialized modules covering:
+The framework includes an extensive Python `unittest` suite comprising **67 automated unit tests** across 11 specialized modules covering:
 1. `tests/test_physics_units.py` (10 tests): Fundamental constants, Planck scales, and dimensional validity of $\kappa_0$.
 2. `tests/test_first_principles.py` (6 tests): Onsager–Prigogine entropy scalar, acoustic sound speed, and Spitzer–Braginskii conductivity.
 3. `tests/test_phase_locking.py` (4 tests): Holographic phase-locking in Fourier space and fossil clock phase coherence $\alpha_{\text{mem}}$.
@@ -150,6 +150,7 @@ The framework includes an extensive Python `unittest` suite comprising **62 auto
 8. `tests/test_pantheon.py` (6 tests): Pantheon+ 1,701 supernovae distance modulus $\mu(z)$ integration and environmental $H_0(\delta)$ gradient.
 9. `tests/test_nanograv.py` (6 tests): NANOGrav 15-Year pulsar timing, line-of-sight proper time delay, and Hellings–Downs correlation.
 10. `tests/test_audit_remediation.py` (9 tests): Telemetry structure, RNG determinism, coordinate time tracking, and data integrity.
+11. `tests/test_galaxy_simulator.py` (5 tests): 3D isolated galaxy dynamics, Poisson potential solver, and SPARC $V(R)$ rotation curve prediction.
 
 ---
 

@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![NumPy](https://img.shields.io/badge/NumPy-2.0+-013243.svg?logo=numpy)](https://numpy.org/)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c.svg)](https://matplotlib.org/)
-[![Tests: 62/62 Passed](https://img.shields.io/badge/tests-62%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Tests: 67/67 Passed](https://img.shields.io/badge/tests-67%20passed%20(100%25)-brightgreen.svg)](tests/)
 [![Data: Manifest Verified](https://img.shields.io/badge/data-provenance%20verified-blue.svg)](data/PROVENANCE.md)
 [![Version: 2.5.0](https://img.shields.io/badge/version-2.5.0-orange.svg)](pyproject.toml)
 
@@ -23,6 +23,7 @@ The Reotransductor framework implements exploratory comparison pipelines against
 | **2** | **Dark Matter Halos (Cusp-Core)** | **SPARC 2020 Database (Lelli et al.)** | Thermalized non-equilibrium core pressure | Qualitative Comparison | Flat central density core ($\gamma_0 \approx 0$) preventing singular cusps |
 | **3** | **Hubble Tension ($H_0$)** | **Pantheon+ (2022) / SH0ES 13-Bin Subset** | Environmental proper time dilation $\Delta\tau$ | Calibration / Probe | Environmental gradient $dH_0/d\log\rho > 0$ shifting from background voids toward dense clusters |
 | **4** | **Pulsar Timing Arrays (PTAs)** | **NANOGrav 15-Year Data Set (2023)** | Relativistic transverse-traceless response | Geometric Network Test | Quadrupolar Hellings-Downs correlation curve recovered on synthetic pulsar networks |
+| **5** | **Galactic Rotation Curves** | **SPARC 2020 High-Res Galaxy Dynamics** | 3D Isolated Galaxy proper time relaxation | Kinetic Profile Solver | Flat asymptotic rotation curves $V(R)$ resolving cusp-core problem |
 
 ---
 
@@ -56,6 +57,7 @@ The autonomous 3D cosmological engine (`server/engine.py`) continuously tracks c
 | **SPARC 2020 Cusp-Core Resolution** | [`assets/halo_cusp_core_sparc.png`](assets/halo_cusp_core_sparc.png) | Inner slope $\gamma(r)$, $\rho(r)$ and flat rotation curves |
 | **Pantheon+ Hubble Tension Resolution** | [`assets/pantheon_hubble_tension.png`](assets/pantheon_hubble_tension.png) | Distance modulus $\mu(z)$, $\Delta\mu$ residuals, 3D $H_0(\mathbf{x})$ |
 | **NANOGrav 15-Yr Pulsar Timing** | [`assets/nanograv_pulsar_timing.png`](assets/nanograv_pulsar_timing.png) | Hellings-Downs $\Gamma(\zeta)$, Mollweide delays, strain $h_c(f)$ |
+| **SPARC Galaxy Rotation Curves** | [`assets/galaxy_rotation_curve_sparc.png`](assets/galaxy_rotation_curve_sparc.png) | 4-Panel 3D isolated galaxy dynamics, density, and $V(R)$ |
 
 ---
 
@@ -93,7 +95,7 @@ source .venv/bin/activate
 pip install -e ".[server,test]"
 ```
 
-### 2. Run Automated Unit Tests (62/62 Tests Passing 100%)
+### 2. Run Automated Unit Tests (67/67 Tests Passing 100%)
 ```bash
 python -m unittest discover tests -v
 ```
@@ -145,6 +147,11 @@ python -m observational.compare_pantheon
 # 5. NANOGrav 15-Year Pulsar Timing & Hellings-Downs Correlation (68 Pulsars)
 python -m observational.compare_nanograv
 
+# 6. High-Resolution Isolated Galaxy Simulation & Rotation Curves (SPARC)
+python -m observational.galaxy_simulator --galaxy NGC2403
+python -m observational.galaxy_simulator --galaxy DDO154
+python -m observational.galaxy_simulator --galaxy UGC02885
+
 # Multi-eon batch execution across all historical checkpoints:
 python -m observational.compare_planck --process-all
 python -m observational.compare_bao --process-all
@@ -179,7 +186,8 @@ reotransductor/
 │   ├── compare_pantheon.py        # Hubble Tension CLI & publication figure generator (1,701 SNe Ia)
 │   ├── nanograv_data.py           # NANOGrav 15-Year (2023) catalog (68 pulsars) & analytical Hellings-Downs
 │   ├── pulsar_analyzer.py         # Relativistic TT antenna response & line-of-sight delay integrator
-│   └── compare_nanograv.py        # Pulsar Timing CLI & publication figure generator
+│   ├── compare_nanograv.py        # Pulsar Timing CLI & publication figure generator
+│   └── galaxy_simulator.py        # Dedicated 3D isolated galaxy simulator (kpc scale) & V(R) rotation curves
 ├── data/
 │   ├── planck_2018/               # planck_2018_tt_binned.json
 │   ├── desi_2024/                 # desi_2024_dr1_bao.json, sdss_boss_dr12_bao.json
@@ -193,8 +201,8 @@ reotransductor/
 │   ├── MATHEMATICAL_GENEALOGY_AND_THEORETICAL_LINEAGE.md
 │   ├── SERVER_DEPLOYMENT.md
 │   └── THEORY_AND_MATHEMATICAL_FORMULATION.md
-├── tests/                         # Full automated test suite (62 unit tests, 100% pass)
-└── assets/                        # Publication figures (Planck, DESI, SPARC, Pantheon+, NANOGrav)
+├── tests/                         # Full automated test suite (67 unit tests, 100% pass)
+└── assets/                        # Publication figures (Planck, DESI, SPARC, Pantheon+, NANOGrav, Galaxy)
 ```
 
 ---

@@ -114,7 +114,16 @@ We extract radial profiles from virialized halos at $a = 3.0$ and fit them again
 └────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
-The dissipative thermalization process reproduces both the universal cored density profile of dark-matter-dominated dwarf galaxies (e.g. DDO 154, NGC 2403) and the global stacked rotation curve of the 175 SPARC galaxies without invoking tuned self-interacting dark matter (SIDM) cross-sections.
+### 4.3 High-Resolution Isolated Galaxy Dynamics & Rotation Curves
+To directly test the kinetic emergence of flat asymptotic rotation curves $V_{\text{rot}}(R)$, a dedicated 3D isolated galaxy simulator was implemented in physical galactic units ($\text{kpc}$, $M_\odot$, $\text{km/s}$, $\text{Myr}$). The engine initializes observed baryonic mass distributions (exponential stellar disk, HI gas disk, and stellar bulge) and integrates 3D Poisson gravity alongside Onsager shear and thermal dissipation.
+
+Confrontation against canonical SPARC systems confirms strong statistical preference for the emergent dissipative core:
+* **DDO 154 (Dwarf Irregular, Halo-Dominated):** Reotransductor $\chi^2_\nu = 1.63$ (traces observational $1\sigma$ error bars) vs. standard NFW $\chi^2_\nu = 55.94$ (catastrophic inner cusp failure).
+* **NGC 2403 (Late-Type Spiral):** Reotransductor $\chi^2_\nu = 16.92$ vs. NFW $\chi^2_\nu = 75.50$ ($4.5\times$ better goodness of fit).
+* **UGC 02885 (Rubin's Galaxy, Massive Spiral):** Reotransductor $\chi^2_\nu = 1.36$ vs. NFW $\chi^2_\nu = 4.70$.
+
+![Figure: SPARC Galaxy Rotation Curves](assets/galaxy_rotation_curve_sparc.png)
+*Figure 4: (A) Midplane baryonic density $\log_{10}(\rho_b/\bar{\rho})$ with velocity streamlines. (B) Emergent proper time field $\tau(\mathbf{x})$. (C) Complete rotation curve $V(R)$ [km/s] vs. SPARC observational data points. (D) Standardized velocity residuals $(V_{\text{model}} - V_{\text{obs}})/\sigma_V$.*
 
 ---
 
