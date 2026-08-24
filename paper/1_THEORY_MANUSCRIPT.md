@@ -87,7 +87,7 @@ where $\nu_0 = \frac{k_B T_{\text{CMB}}}{\hbar} \approx 3.57 \times 10^{11}\ \ma
 
 ---
 
-## 4. Mathematical Properties and Conservation Theorems
+## 4. Mathematical Properties and Phenomenological Consequences
 
 ### 4.1 Corollary 1 (Streamline Monotonicity and Arrow of Time)
 *Let $\mathcal{M}$ be a globally hyperbolic spacetime endowed with a dissipative fluid satisfying the relativistic second law $\Sigma(x^\mu) \ge 0$. Then, along any integral curve of the four-velocity field $u^\mu$, the thermodynamic clock field $\tau$ is strictly monotonically increasing with respect to parameter length $s$:*
