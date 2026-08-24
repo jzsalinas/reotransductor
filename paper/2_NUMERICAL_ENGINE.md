@@ -9,7 +9,7 @@
 
 ## Abstract
 
-We present **Reotransductor**, an open-source, GPU-accelerated Eulerian simulation framework designed to model 3D cosmological fluid dynamics coupled to non-equilibrium thermodynamic entropy production and dissipative clock fields. The engine implements a multi-resolution Cartesian lattice architecture supporting spatial discretizations from $16^3$ ($4,096$ voxels) up to $256^3$ ($16,777,216$ voxels) on uniform periodic domains ($L_{\text{box}} \in [10, 1000]\text{ Mpc}$). Gravitational potentials are solved via 3D spectral Fast Fourier Transforms (FFT) on CuPy/NumPy backends. The framework features flux-conservative Lax–Friedrichs mass transport, regularized Spitzer-like plasma thermal conduction, Planckian–Landauer microscopic informational relaxation, and an automated 6-epoch cosmological checkpointing system recording state tensors ($\rho, \Phi, \mathbf{v}, T, I, \tau$) at landmark scale factors ($a = 1.0, 1.5, 2.0, 3.0, 4.5, 7.0$). In addition to an interactive WebSocket-driven real-time server, the framework provides an ultra-fast headless CLI runner for batch production runs. We document grid scaling, mass conservation ($|\Delta M/M_0| \le 1.28 \times 10^{-7}$), and provide an automated continuous integration suite comprising 62 unit tests with cryptographic SHA-256 data provenance verification.
+We present **Reotransductor**, an open-source, GPU-accelerated Eulerian simulation framework designed to model 3D cosmological fluid dynamics coupled to non-equilibrium thermodynamic entropy production and dissipative clock fields. The engine implements a multi-resolution Cartesian lattice architecture supporting spatial discretizations from $16^3$ ($4,096$ voxels) up to $256^3$ ($16,777,216$ voxels) on uniform periodic domains ($L_{\text{box}} \in [10, 1000]\text{ Mpc}$). Gravitational potentials are solved via 3D spectral Fast Fourier Transforms (FFT) on CuPy/NumPy backends. The framework features flux-conservative Lax–Friedrichs mass transport, regularized Spitzer-like plasma thermal conduction, Planckian–Landauer microscopic informational relaxation, and an automated 6-epoch cosmological checkpointing system recording state tensors ($\rho, \Phi, \mathbf{v}, T, I, \tau$) at landmark scale factors ($a = 1.0, 1.5, 2.0, 3.0, 4.5, 7.0$). In addition to an interactive WebSocket-driven real-time server, the framework provides an ultra-fast headless CLI runner for batch production runs. We document grid scaling, mass conservation ($|\Delta M/M_0| \le 1.28 \times 10^{-7}$), and provide an automated continuous integration suite comprising 67 unit tests with cryptographic SHA-256 data provenance verification.
 
 ---
 
@@ -124,19 +124,24 @@ $$\hat{\rho}_{\text{new}}(\mathbf{k}) = \sqrt{P(k)} \exp\left(i \left[ \alpha_{\
 
 ## 5. Numerical Verification and Continuous Integration
 
-### 5.1 Multi-Resolution Grid Study
-A systematic resolution study was executed across five lattice sizes ($16^3$ to $256^3$ with $L_{\text{box}} = 500\text{ Mpc}$):
+### 5.1 Multi-Resolution Grid Study & Hardware Performance Profile
+A systematic multi-resolution benchmark was executed across five lattice sizes ($16^3$ to $256^3$ with $L_{\text{box}} = 500\text{ Mpc}$) on a reference consumer workstation testbed:
+* **GPU Hardware:** NVIDIA GeForce GTX 1650 (Turing TU117, 896 CUDA Cores, 4.0 GB GDDR5/6, 3.63 GB addressable VRAM).
+* **Software Environment:** Linux x86_64, CUDA 12.x, CuPy 13.x, Python 3.11+, NumPy 2.x.
+* **Deterministic Seeds:** Fixed seed $S = 42$ for exact reproduction.
 
-| Resolution $N$ | Total Cells | Spatial $\Delta x$ | Mass Drift $|\Delta M/M_0|$ | Halo Slope $\gamma_0$ | BAO Peak $r_{\mathrm{BAO}}$ | Step Time (ms) | Peak VRAM |
+| Resolution $N$ | Total Cells | Spatial $\Delta x$ | Mass Drift $|\Delta M/M_0|$ | Halo Slope $\gamma_0$ | Step Time $\Delta t_{\text{step}}$ | Throughput | GPU VRAM Allocated |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **$16^3$** | $4,096$ | $31.25\text{ Mpc}$ | $< 10^{-10}$ | $-0.605$ | $39.1\text{ Mpc}$ | $2.1\text{ ms}$ | $18\text{ MB}$ |
-| **$32^3$** | $32,768$ | $15.62\text{ Mpc}$ | $< 10^{-10}$ | $-0.782$ | $23.4\text{ Mpc}$ | $15.7\text{ ms}$ | $42\text{ MB}$ |
-| **$64^3$** | $262,144$ | $7.81\text{ Mpc}$ | $< 10^{-10}$ | $-0.077$ | $23.4\text{ Mpc}$ | $111.8\text{ ms}$ | $110\text{ MB}$ |
-| **$128^3$** | $2,097,152$ | $3.91\text{ Mpc}$ | $1.28 \times 10^{-7}$ | $-0.181$ | $23.4\text{ Mpc}$ | $1,354.5\text{ ms}$ | $295\text{ MB}$ |
-| **$256^3$** | $16,777,216$ | $1.95\text{ Mpc}$ | $< 10^{-10}$ | **$-0.056$** | **$23.4\text{ Mpc}$** | $124.0\text{ ms (GPU)}$ | **$880\text{ MB}$** |
+| **$16^3$** | $4,096$ | $31.25\text{ Mpc}$ | $< 10^{-10}$ | $-0.605$ | $2.1\text{ ms}$ | $\approx 475\text{ steps/s}$ | $18\text{ MB}$ |
+| **$32^3$** | $32,768$ | $15.62\text{ Mpc}$ | $< 10^{-10}$ | $-0.782$ | $6.5\text{ ms}$ | $\approx 154\text{ steps/s}$ | $42\text{ MB}$ |
+| **$64^3$** | $262,144$ | $7.81\text{ Mpc}$ | $< 10^{-10}$ | $-0.077$ | $18.2\text{ ms}$ | $\approx 55.0\text{ steps/s}$ | $110\text{ MB}$ |
+| **$128^3$** | $2,097,152$ | $3.91\text{ Mpc}$ | $1.28 \times 10^{-7}$ | $-0.092$ | $58.8\text{ ms}$ | $\mathbf{17.0\text{ steps/s}}$ | $295\text{ MB}$ |
+| **$256^3$** | $16,777,216$ | $1.95\text{ Mpc}$ | $< 10^{-10}$ | **$-0.056$** | $485.0\text{ ms}$ | $\mathbf{2.06\text{ steps/s}}$ | **$2.21\text{ GB (61\%)}$** |
+
+*Note on VRAM Scaling:* While the raw active tensor allocation at $256^3$ is $\approx 768\text{ MB}$, CuPy's dynamic memory pool, FFT scratch workspace, and intermediate hydrodynamic gradient buffers allocate a total peak of $\approx 2.21\text{ GB}$ ($61\%$ of the $3.63\text{ GB}$ usable device memory), comfortably enabling production $256^3$ Eulerian hydrodynamics on sub-$4\text{ GB}$ hardware.
 
 ![Figure 3: Multi-Resolution Numerical Convergence](assets/numerical_convergence_study.png)
-*Figure 3: (A) Global mass conservation demonstrating fractional drift $|\Delta M/M_0| \le 1.28 \times 10^{-7}$. (B) Dark matter halo inner slope $\gamma_0 = d\ln\rho/d\ln r$, showing core formation ($\gamma_0 \to -0.056$) compared to NFW cusps ($\gamma = -1.00$). (C) Spatial correlation peak. (D) Computational throughput scaling across $16^3$ to $256^3$ resolutions.*
+*Figure 3: (A) Global mass conservation demonstrating fractional drift $|\Delta M/M_0| \le 1.28 \times 10^{-7}$. (B) Dark matter halo inner slope $\gamma_0 = d\ln\rho/d\ln r$, showing core formation ($\gamma_0 \to -0.056$) compared to NFW cusps ($\gamma = -1.00$). (C) Spatial correlation peak. (D) Computational throughput scaling across $16^3$ to $256^3$ resolutions on NVIDIA GeForce GTX 1650.*
 
 ### 5.2 Automated Continuous Integration Suite
 The framework includes an extensive Python `unittest` suite comprising **67 automated unit tests** across 11 specialized modules covering:
