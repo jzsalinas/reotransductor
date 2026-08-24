@@ -89,7 +89,7 @@ where $\nu_0 = \frac{k_B T_{\text{CMB}}}{\hbar} \approx 3.57 \times 10^{11}\ \ma
 
 ## 4. Mathematical Properties and Conservation Theorems
 
-### Theorem 1 (Streamline Monotonicity and Arrow of Time)
+### 4.1 Theorem 1 (Streamline Monotonicity and Arrow of Time)
 *Let $\mathcal{M}$ be a globally hyperbolic spacetime endowed with a dissipative fluid satisfying the relativistic second law $\Sigma(x^\mu) \ge 0$. Then, along any integral curve of the four-velocity field $u^\mu$, the thermodynamic clock field $\tau$ is strictly monotonically increasing with respect to parameter length $s$:*
 $$\frac{d\tau}{ds} \ge \frac{1}{c} > 0.$$
 
@@ -98,11 +98,11 @@ Along a streamline parameterized by proper distance $ds = c \, dt$, we have $u^\
 $$\frac{d\tau}{ds} = \frac{1}{c} [1 + \kappa_0 \Sigma] \ge \frac{1}{c} > 0.$$
 Hence, the scalar field $\tau$ is strictly monotonic along fluid streamlines, preventing closed timelike loops in the internal clock variable. $\blacksquare$
 
-### Theorem 2 (Equilibrium Limit in Synchronous Coordinates)
+### 4.2 Theorem 2 (Equilibrium Limit in Synchronous Coordinates)
 *In any region of spacetime where the matter distribution reaches global thermodynamic equilibrium ($\nabla_\mu T = 0, \nabla_\mu \Phi = 0, \Sigma = 0$), the clock field reduces identically to standard geometric coordinate time:*
 $$\Sigma = 0 \implies u^\mu \nabla_\mu \tau = 1 \implies \tau(t) = t + \tau_0.$$
 
-### Theorem 3 (Stress-Energy Conservation Without Backreaction)
+### 4.3 Theorem 3 (Stress-Energy Conservation Without Backreaction)
 *When $\tau(x^\mu)$ is treated as a passive clock tracer, it does not contribute to the stress-energy tensor, preserving the exact contracted Bianchi identities:*
 $$\nabla_\mu T^{\mu\nu}_{\text{matter}} = 0 \iff \nabla_\mu G^{\mu\nu} = 0.$$
 

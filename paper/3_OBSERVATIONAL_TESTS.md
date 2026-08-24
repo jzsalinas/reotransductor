@@ -125,6 +125,14 @@ Confrontation against canonical SPARC systems confirms strong statistical prefer
 ![Figure: SPARC Galaxy Rotation Curves](../assets/galaxy_rotation_curve_sparc.png)
 *Figure 4: (A) Midplane baryonic density $\log_{10}(\rho_b/\bar{\rho})$ with velocity streamlines. (B) Emergent proper time field $\tau(\mathbf{x})$. (C) Complete rotation curve $V(R)$ [km/s] vs. SPARC observational data points. (D) Standardized velocity residuals $(V_{\text{model}} - V_{\text{obs}})/\sigma_V$.*
 
+### 4.4 Spiral Arms as Self-Sustaining Prigogine Dissipative Structures
+Beyond reproducing flat asymptotic rotation velocities, the non-equilibrium hydrodynamic framework provides a natural physical resolution to the classical *Winding Problem* and the long-term persistence of galactic spiral arms (Lin & Shu 1964). 
+
+In standard collisionless dynamics, density waves dissipate energy through hydrodynamic shock heating and shear viscosity, requiring external periodic driving to prevent rapid decay. Within the Reotransductor formulation:
+1. **Localized Entropy Production:** Interstellar gas flowing through rotating spiral compression ridges undergoes sharp shock and shear dissipation ($\sigma_{\text{shear}} \propto \mu (\partial v_i / \partial x_j)^2$), maximizing entropy generation along the spiral arms.
+2. **Torque from Proper Time Phase Lags:** The resulting localized accumulation of physical proper time $\Delta\tau(\mathbf{x})$ induces a spatial phase displacement between the baryonic density ridge $\rho(\mathbf{x})$ and the effective gravitational potential well $\Phi_{\text{eff}}(\mathbf{x})$. This creates a self-sustained gravitational torque $\boldsymbol{\tau}_{\text{torque}} = -\rho \nabla\Phi_{\text{eff}}$ that transfers angular momentum outward from the dense core to the outer disk, continuously replenishing the wave pattern against viscous damping.
+3. **Inner Resonance Softening:** The emergent cored central profile ($\gamma_0 \to 0$) softens the singular Inner Lindblad Resonance (ILR) present in cuspy NFW profiles, preventing destructive wave reflection and allowing stable, self-organized grand-design spiral patterns to endure across gigayear timescales as genuine macroscopic *Prigogine Dissipative Structures*.
+
 ---
 
 ## 5. Probe 4: Galactic Pulsar Timing and NANOGrav 15-Year
@@ -183,3 +191,5 @@ To maintain strict scientific transparency, we highlight the statistical boundar
 6. Planck Collaboration. (2020). *Planck 2018 results. VI. Cosmological parameters*. A&A, 641, A6.
 7. Navarro, J. F., Frenk, C. S., & White, S. D. (1997). *A Universally Invariant Profile for Dark Matter Haloes*. ApJ, 490(2), 493.
 8. Burkert, A. (1995). *The Structure of Dark Matter Haloes in Dwarf Galaxies*. ApJL, 447, L25.
+9. Lin, C. C., & Shu, F. H. (1964). *On the Spiral Structure of Disk Galaxies*. ApJ, 140, 646.
+10. Nicolis, G., & Prigogine, I. (1977). *Self-Organization in Nonequilibrium Systems: From Dissipative Structures to Order through Fluctuations*. Wiley-Interscience.
