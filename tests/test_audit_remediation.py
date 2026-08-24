@@ -17,7 +17,11 @@ import shutil
 from server.engine import CosmologicalEngine
 from server.physics_units import CosmologicalUnits, FundamentalConstants, PlanckScales
 from observational.nanograv_data import NANOGravPulsarData
-from observational.compare_nanograv import generate_eon_nanograv_report
+from experiments.compare_planck import generate_eon_observational_report
+from experiments.compare_bao import generate_eon_bao_report
+from experiments.compare_halo import generate_eon_halo_report
+from experiments.compare_pantheon import generate_eon_pantheon_report
+from experiments.compare_nanograv import generate_eon_nanograv_report
 
 
 class TestAuditRemediation(unittest.TestCase):

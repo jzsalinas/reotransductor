@@ -1,7 +1,7 @@
 """
 Command-Line Utility and Publication Plot Generator:
 Compares Reotransductor Cosmological Simulation with ESA Planck 2018 CMB Data.
-Generates assets/planck_comparison_spectrum.png.
+Generates results/paper_I/planck_comparison_spectrum.png.
 """
 
 import os
@@ -21,7 +21,7 @@ def run_planck_comparison(
     checkpoint_path: str = "checkpoints",
     auto_resume: bool = True,
     steps: int = 0,
-    output_fig: str = "assets/planck_comparison_spectrum.png"
+    output_fig: str = "results/paper_I/planck_comparison_spectrum.png"
 ):
     """Executes live comparison on active state and outputs figure."""
     os.makedirs(os.path.dirname(output_fig), exist_ok=True)
@@ -123,8 +123,8 @@ def generate_eon_observational_report(engine, output_dir: str = "checkpoints/sna
         scale_factor=float(engine.scale_factor),
         time_myr=time_myr
     )
-    # Also save as latest preview in assets/
-    latest_mollweide_path = "assets/latest_cmb_mollweide.png"
+    # Also save as latest preview in results/paper_I/
+    latest_mollweide_path = "results/paper_I/latest_cmb_mollweide.png"
     try:
         os.makedirs("assets", exist_ok=True)
         shutil.copyfile(mollweide_eon_path, latest_mollweide_path)
@@ -178,8 +178,8 @@ def generate_eon_observational_report(engine, output_dir: str = "checkpoints/sna
     plt.close()
     print(f"• Planck comparison plot successfully saved to: {planck_comp_path}")
 
-    # Also copy to assets/planck_comparison_spectrum.png
-    latest_spectrum_path = "assets/planck_comparison_spectrum.png"
+    # Also copy to results/paper_I/planck_comparison_spectrum.png
+    latest_spectrum_path = "results/paper_I/planck_comparison_spectrum.png"
     try:
         shutil.copyfile(planck_comp_path, latest_spectrum_path)
     except Exception:
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     parser.add_argument("--steps", type=int, default=0, help="Additional integration steps to simulate before evaluation")
     parser.add_argument("--from-scratch", action="store_true", help="Start from blank initial conditions rather than active checkpoint")
     parser.add_argument("--process-all", action="store_true", help="Process and generate plots for all historical eon_*.npz checkpoints")
-    parser.add_argument("--output", type=str, default="assets/planck_comparison_spectrum.png", help="Output PNG path")
+    parser.add_argument("--output", type=str, default="results/paper_I/planck_comparison_spectrum.png", help="Output PNG path")
     args = parser.parse_args()
 
     if args.process_all:

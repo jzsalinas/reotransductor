@@ -1,7 +1,7 @@
 """
 Command-Line Utility and Publication Plot Generator:
 Compares Reotransductor Cosmological Simulation with SPARC Galaxy Observations and NFW Cusp Model.
-Evaluates the resolution of the Cusp-Core Problem and generates assets/halo_cusp_core_sparc.png.
+Evaluates the resolution of the Cusp-Core Problem and generates results/paper_II/halo_cusp_core_sparc.png.
 """
 
 import os
@@ -22,7 +22,7 @@ def run_halo_comparison(
     auto_resume: bool = True,
     steps: int = 0,
     galaxy_name: str = "NGC_2403",
-    output_fig: str = "assets/halo_cusp_core_sparc.png"
+    output_fig: str = "results/paper_II/halo_cusp_core_sparc.png"
 ) -> Dict[str, Any]:
     """Executes live halo radial profile comparison on active cosmological state."""
     os.makedirs(os.path.dirname(output_fig) or ".", exist_ok=True)
@@ -261,8 +261,8 @@ def generate_eon_halo_report(
     plt.savefig(eon_halo_path, dpi=180, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close(fig)
 
-    # Copy to assets/
-    latest_halo_path = "assets/halo_cusp_core_sparc.png"
+    # Copy to results/paper_II/
+    latest_halo_path = "results/paper_II/halo_cusp_core_sparc.png"
     try:
         os.makedirs("assets", exist_ok=True)
         shutil.copyfile(eon_halo_path, latest_halo_path)
@@ -282,7 +282,7 @@ def generate_eon_halo_report(
 
 def run_full_sparc_population_analysis(
     checkpoint_path: str = "checkpoints",
-    output_fig: str = "assets/halo_cusp_core_sparc.png"
+    output_fig: str = "results/paper_II/halo_cusp_core_sparc.png"
 ) -> Dict[str, Any]:
     """
     Executes full population-level benchmark across all 175 SPARC galaxies:
@@ -435,7 +435,7 @@ def run_full_sparc_population_analysis(
     )
 
     plt.savefig(output_fig, dpi=180, bbox_inches='tight', facecolor=fig.get_facecolor())
-    pop_fig_path = "assets/halo_sparc_population_175.png"
+    pop_fig_path = "results/paper_II/halo_sparc_population_175.png"
     try:
         shutil.copyfile(output_fig, pop_fig_path)
     except Exception:
@@ -497,7 +497,7 @@ if __name__ == '__main__':
     parser.add_argument("--process-all", action="store_true", help="Process and generate Halo plots for all historical checkpoints")
     parser.add_argument("--all-galaxies", action="store_true", help="Run full population benchmark across all 175 SPARC galaxies")
     parser.add_argument("--galaxy", type=str, default="NGC_2403", help="SPARC benchmark galaxy identifier (e.g. NGC_2403, DDO_154)")
-    parser.add_argument("--output", type=str, default="assets/halo_cusp_core_sparc.png", help="Output PNG path")
+    parser.add_argument("--output", type=str, default="results/paper_II/halo_cusp_core_sparc.png", help="Output PNG path")
     args = parser.parse_args()
 
     if args.all_galaxies:

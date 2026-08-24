@@ -1,7 +1,7 @@
 """
 Command-Line Utility and Publication Plot Generator:
 Compares Reotransductor Cosmological Simulation with DESI 2024 & SDSS BOSS BAO Observations.
-Generates assets/bao_comparison_desi.png and per-eon snapshot reports.
+Generates results/paper_II/bao_comparison_desi.png and per-eon snapshot reports.
 """
 
 import os
@@ -21,7 +21,7 @@ def run_bao_comparison(
     checkpoint_path: str = "checkpoints",
     auto_resume: bool = True,
     steps: int = 0,
-    output_fig: str = "assets/bao_comparison_desi.png"
+    output_fig: str = "results/paper_II/bao_comparison_desi.png"
 ) -> Dict[str, Any]:
     """Executes live BAO comparison on active cosmological state and outputs figure."""
     os.makedirs(os.path.dirname(output_fig) or ".", exist_ok=True)
@@ -73,7 +73,7 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
     Generates complete BAO observational report for an active or checkpointed eon:
       1. Computes 3D spatial correlation function xi_rho(r) and memory xi_tau(r)
       2. Compares against official DESI 2024 DR1 and SDSS BOSS DR12 datasets
-      3. Renders and saves publication plot bao_comparison_eon_N.png and assets/bao_comparison_desi.png
+      3. Renders and saves publication plot bao_comparison_eon_N.png and results/paper_II/bao_comparison_desi.png
     """
     os.makedirs(output_dir, exist_ok=True)
     eon = engine.eon
@@ -189,8 +189,8 @@ def generate_eon_bao_report(engine, output_dir: str = "checkpoints/snapshots") -
     plt.savefig(eon_bao_path, dpi=180, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close(fig)
 
-    # Save Latest Preview in assets/
-    latest_bao_path = "assets/bao_comparison_desi.png"
+    # Save Latest Preview in results/paper_II/
+    latest_bao_path = "results/paper_II/bao_comparison_desi.png"
     try:
         os.makedirs("assets", exist_ok=True)
         shutil.copyfile(eon_bao_path, latest_bao_path)
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     parser.add_argument("--steps", type=int, default=0, help="Additional integration steps to simulate before evaluation")
     parser.add_argument("--from-scratch", action="store_true", help="Start from blank initial conditions rather than active checkpoint")
     parser.add_argument("--process-all", action="store_true", help="Process and generate BAO plots for all historical eon_*.npz checkpoints")
-    parser.add_argument("--output", type=str, default="assets/bao_comparison_desi.png", help="Output PNG path")
+    parser.add_argument("--output", type=str, default="results/paper_II/bao_comparison_desi.png", help="Output PNG path")
     args = parser.parse_args()
 
     if args.process_all:

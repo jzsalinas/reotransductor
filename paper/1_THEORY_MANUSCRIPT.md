@@ -9,9 +9,9 @@
 
 ## Abstract
 
-In standard General Relativity, proper time along a timelike worldline is a purely geometric parameter determined by the metric interval $d\tau_{\text{geom}} = \sqrt{-g_{\mu\nu} dx^\mu dx^\nu} / c$, remaining decoupled from local irreversible processes. In this paper, we investigate a covariant constitutive extension in which a scalar thermodynamic clock field $\tau(x^\mu)$ accrues an additional rate proportional to the local scalar density of irreversible entropy production $\Sigma(x^\mu) = \nabla_\mu s^\mu \ge 0$, as formulated in relativistic non-equilibrium thermodynamics (Onsager–Prigogine–Israel–Stewart framework). We postulate the effective evolution equation along fluid streamlines tangent to the four-velocity $u^\mu$:
+In standard General Relativity, proper time along a timelike worldline is a purely geometric parameter determined by the metric interval $d\tau_{\text{geom}} = \sqrt{-g_{\mu\nu} dx^\mu dx^\nu} / c$, remaining decoupled from local irreversible processes. In this paper, we propose a phenomenological covariant constitutive hypothesis in which a scalar thermodynamic clock field $\tau(x^\mu)$ accrues an additional rate proportional to the local scalar density of irreversible entropy production $\Sigma(x^\mu) = \nabla_\mu s^\mu \ge 0$, as formulated in relativistic non-equilibrium thermodynamics (Onsager–Prigogine–Israel–Stewart framework). We postulate the effective evolution equation along fluid streamlines tangent to the four-velocity $u^\mu$:
 $$u^\mu \nabla_\mu \tau = 1 + \kappa_0 \Sigma(x^\mu),$$
-where $\kappa_0 \equiv \frac{\hbar^2 G^2}{c^7 k_B} \approx 1.6487 \times 10^{-125}\ \mathrm{m\cdot s^3\cdot K\cdot kg^{-1}}$ represents the unique dimensional coupling scale formed from the fundamental constants of Planck and Boltzmann. We establish that: (i) the non-negativity of entropy production ($\Sigma \ge 0$) rigorously guarantees the strict local monotonicity of the clock field along fluid streamlines ($u^\mu \nabla_\mu \tau \ge 1$); (ii) in global thermodynamic equilibrium ($\Sigma \to 0$), the clock field reduces identically to standard geometric coordinate time in synchronous/comoving parametrization; and (iii) covariant stress-energy conservation $\nabla_\mu T^{\mu\nu} = 0$ is preserved when $\tau(x^\mu)$ acts as a passive thermodynamic tracer without gravitational backreaction. We provide analytical solutions for spatially flat Friedmann–Lemaître–Robertson–Walker (FLRW) cosmologies with regularized primordial limits and for idealized spherically symmetric collapsing dissipative configurations.
+where $\kappa_0 \equiv \frac{\hbar^2 G^2}{c^7 k_B} \approx 1.6487 \times 10^{-125}\ \mathrm{m\cdot s^3\cdot K\cdot kg^{-1}}$ represents the unique dimensional coupling scale formed from the fundamental constants of Planck and Boltzmann. Under this constitutive framework, we show that: (i) the non-negativity of entropy production ($\Sigma \ge 0$) formally ensures the strict local monotonicity of the clock field along fluid streamlines ($u^\mu \nabla_\mu \tau \ge 1$); (ii) in global thermodynamic equilibrium ($\Sigma \to 0$), the clock field reduces identically to standard geometric coordinate time in synchronous/comoving parametrization; and (iii) covariant stress-energy conservation $\nabla_\mu T^{\mu\nu} = 0$ is preserved when $\tau(x^\mu)$ acts as a passive thermodynamic tracer without gravitational backreaction. We provide analytical solutions for spatially flat Friedmann–Lemaître–Robertson–Walker (FLRW) cosmologies with regularized primordial limits and for idealized spherically symmetric collapsing dissipative configurations.
 
 ---
 
@@ -20,7 +20,7 @@ where $\kappa_0 \equiv \frac{\hbar^2 G^2}{c^7 k_B} \approx 1.6487 \times 10^{-12
 The nature of time presents one of the most enduring conceptual tensions in theoretical physics. While General Relativity treats time as a geometric coordinate along pseudo-Riemannian manifolds, thermodynamics establishes a fundamental arrow of time dictated by irreversible entropy generation ($\Delta S \ge 0$). In standard relativistic physics, these two descriptions operate on separate footings: the metric determines chronometric intervals, whereas statistical mechanics tracks the distribution of microstates on that fixed geometric background.
 
 Attempts to bridge this gap have arisen in several distinct domains:
-1. **Emergent and Relational Time:** Thermal time hypotheses (Connes & Rovelli 1994, Rovelli 2011) propose that macroscopic temporal flow is state-dependent and emerges from statistical states of quantum systems.
+1. **Emergent and Relational Time:** Thermal time hypotheses (Connes & Rovelli 1994, Rovelli 2011) propose that macroscopic temporal flow is state-dependent and emerges from statistical states of quantum systems. We note a crucial distinction here: whereas the Connes-Rovelli framework constructs a global modular temporal flow directly from the underlying Von Neumann algebraic state, the framework presented here proposes a local, cumulative scalar field explicitly driven by classical macroscopic Onsager entropy production.
 2. **Dissipative and Non-Equilibrium Systems:** The Onsager–Prigogine framework, extended relativistically by Israel & Stewart (1979), establishes that macroscopic dissipation produces positive semi-definite local entropy densities $\Sigma = \nabla_\mu s^\mu \ge 0$ through thermal conduction, viscous shear, and field gradients.
 3. **Conformal and Cyclic Frameworks:** Penrose's Conformal Cyclic Cosmology (CCC; Penrose 2010, Meissner & Penrose 2024) posits that the boundary between cosmological eons is governed by asymptotic dilution into a massless, conformally invariant state.
 
@@ -51,7 +51,7 @@ $$\Sigma(x^\mu) \ge 0, \qquad \forall x^\mu \in \mathcal{M}.$$
 
 ## 3. The Dissipative Clock Field Formulation
 
-### 3.1 Constitutive Evolution Equation
+### 3.1 Postulate 1 (Constitutive Evolution Equation)
 Let $\tau(x^\mu)$ be a scalar clock field tracking accumulated thermodynamic time. Along a fluid streamline with tangent vector $u^\mu$, we postulate the constitutive evolution law:
 $$u^\mu \nabla_\mu \tau = 1 + \kappa_0 \Sigma(x^\mu),$$
 or equivalently, in comoving coordinates where $u^\mu = (c, 0, 0, 0)$:
@@ -83,13 +83,13 @@ To obtain a kinetic time-relaxation rate $\Gamma_{\text{info}}(T) \equiv \dot{I}
 $$\tau_{\text{diss}} \sim \frac{\hbar}{k_B T} \implies \omega_{\text{Planckian}} = \frac{k_B T}{\hbar}.$$
 Combining the Landauer energy scale with the Planckian dissipation frequency yields the microscopic informational relaxation rate:
 $$\Gamma_{\text{info}}(T) = \omega_{\text{Planckian}} \cdot \left(\frac{\Delta E_{\text{erase}}}{E_{\text{ref}}}\right) = \gamma_0 \left(\frac{T}{T_{\text{CMB}}}\right),$$
-where $\nu_0 = \frac{k_B T_{\text{CMB}}}{\hbar} \approx 3.57 \times 10^{11}\ \mathrm{s}^{-1}$ provides the natural attempt frequency in the cosmic background. Thus, the linear temperature scaling $\Gamma \propto T$ is derived from first principles by combining quantum dissipation with Landauer's bound.
+where $\nu_0 = \frac{k_B T_{\text{CMB}}}{\hbar} \approx 3.57 \times 10^{11}\ \mathrm{s}^{-1}$ provides the natural attempt frequency in the cosmic background. Thus, we postulate the linear temperature scaling $\Gamma \propto T$ as a natural phenomenological consequence of combining quantum dissipation with Landauer's bound.
 
 ---
 
 ## 4. Mathematical Properties and Conservation Theorems
 
-### 4.1 Theorem 1 (Streamline Monotonicity and Arrow of Time)
+### 4.1 Corollary 1 (Streamline Monotonicity and Arrow of Time)
 *Let $\mathcal{M}$ be a globally hyperbolic spacetime endowed with a dissipative fluid satisfying the relativistic second law $\Sigma(x^\mu) \ge 0$. Then, along any integral curve of the four-velocity field $u^\mu$, the thermodynamic clock field $\tau$ is strictly monotonically increasing with respect to parameter length $s$:*
 $$\frac{d\tau}{ds} \ge \frac{1}{c} > 0.$$
 
@@ -98,11 +98,11 @@ Along a streamline parameterized by proper distance $ds = c \, dt$, we have $u^\
 $$\frac{d\tau}{ds} = \frac{1}{c} [1 + \kappa_0 \Sigma] \ge \frac{1}{c} > 0.$$
 Hence, the scalar field $\tau$ is strictly monotonic along fluid streamlines, preventing closed timelike loops in the internal clock variable. $\blacksquare$
 
-### 4.2 Theorem 2 (Equilibrium Limit in Synchronous Coordinates)
+### 4.2 Property 1 (Equilibrium Limit in Synchronous Coordinates)
 *In any region of spacetime where the matter distribution reaches global thermodynamic equilibrium ($\nabla_\mu T = 0, \nabla_\mu \Phi = 0, \Sigma = 0$), the clock field reduces identically to standard geometric coordinate time:*
 $$\Sigma = 0 \implies u^\mu \nabla_\mu \tau = 1 \implies \tau(t) = t + \tau_0.$$
 
-### 4.3 Theorem 3 (Stress-Energy Conservation Without Backreaction)
+### 4.3 Postulate 2 (Passive Tracer Conservation)
 *When $\tau(x^\mu)$ is treated as a passive clock tracer, it does not contribute to the stress-energy tensor, preserving the exact contracted Bianchi identities:*
 $$\nabla_\mu T^{\mu\nu}_{\text{matter}} = 0 \iff \nabla_\mu G^{\mu\nu} = 0.$$
 

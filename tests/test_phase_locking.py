@@ -35,11 +35,11 @@ class TestPhaseLocking(unittest.TestCase):
         Verify that higher alpha_mem yields higher cross-correlation
         with the underlying fossil field structure.
         """
-        np.random.seed(123)
+        self.engine.rng = np.random.default_rng(123)
         # alpha = 0.0 (pure uncorrelated quantum noise)
         fluct_quantum = self.engine._generate_phase_locked_fluctuations(self.synthetic_tau, alpha_mem=0.0)
         
-        np.random.seed(123)
+        self.engine.rng = np.random.default_rng(123)
         # alpha = 0.95 (strong holographic phase-locking)
         fluct_fossil_locked = self.engine._generate_phase_locked_fluctuations(self.synthetic_tau, alpha_mem=0.95)
 

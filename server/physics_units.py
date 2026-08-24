@@ -136,6 +136,7 @@ class CosmologicalUnits:
         self.M0_CORE = float(5000.0 * ((self.grid_resolution / 32.0) ** 3))  # Reference black hole core mass scale scaled with volume
         self.A_LOCAL_UNIVERSE = 4.5  # Scale factor of the Local Universe (z = 0)
         self.A_MAX_CONFORMAL = 7.0  # Penrose CCC asymptotic dilution threshold
+        self.H0_PLANCK_BASELINE = 67.36  # Hubble constant baseline (km/s/Mpc) from Planck 2018
 
         # Gravitational potential scale: (Delta x / Delta t)^2 in (m/s)^2
         self.potential_unit_si = (self.delta_x_m / self.time_unit_s) ** 2
@@ -277,39 +278,41 @@ class CosmologicalUnits:
     # FIRST-PRINCIPLES PLASMA & INFORMATION THERMODYNAMICS
     # =========================================================================
 
-    def compute_sound_speed_sq(self, T: np.ndarray | float, base_cs2: float = 0.18, t_cmb: float = 2.73) -> np.ndarray | float:
+    def compute_sound_speed_sq(self, T: np.ndarray | float, base_cs2: float = 0.18, t_cmb: float = 2.73, xp=np) -> np.ndarray | float:
         """
         Computes the monoatomic adiabatic sound speed squared c_s^2(T) = gamma * (k_B * T / mu * m_p).
         Strictly bounded by the relativistic acoustic limit c_s <= c / sqrt(3).
         """
         cs2_thermal = base_cs2 * (T / t_cmb)
         cs2_max = (self.c_code ** 2) / 3.0
-        return np.clip(cs2_thermal, 0.05, cs2_max)
+        return xp.clip(cs2_thermal, 0.05, cs2_max)
 
     def compute_spitzer_conductivity(
         self,
         T: np.ndarray | float,
         rho: np.ndarray | float,
         base_k: float = 0.3,
-        t_cmb: float = 2.73
+        t_cmb: float = 2.73,
+        xp=np
     ) -> np.ndarray | float:
         """
         Computes the astrophysical Spitzer-Braginskii thermal conductivity:
         kappa_Spitzer(T, rho) = kappa_base * (T / T_CMB)^(5/2) / (1 + rho / rho_mean)
         Clamped to [0.05, 2.5] to preserve numerical PDE stability on discrete grids.
         """
-        mean_rho = float(np.mean(rho)) if isinstance(rho, np.ndarray) else 1.0
+        mean_rho = float(xp.mean(rho)) if isinstance(rho, np.ndarray) or hasattr(rho, 'mean') else 1.0
         mean_rho = max(0.1, mean_rho)
-        rho_factor = 1.0 + np.maximum(0.0, rho) / mean_rho
-        t_ratio = np.maximum(1.0, T / t_cmb)
+        rho_factor = 1.0 + xp.maximum(0.0, rho) / mean_rho
+        t_ratio = xp.maximum(1.0, T / t_cmb)
         spitzer_k = base_k * (t_ratio ** 2.5) / rho_factor
-        return np.clip(spitzer_k, 0.05, 2.5)
+        return xp.clip(spitzer_k, 0.05, 2.5)
 
     def compute_thermal_information_relaxation(
         self,
         T: np.ndarray | float,
         base_rate: float = 0.015,
-        t_cmb: float = 2.73
+        t_cmb: float = 2.73,
+        xp=np
     ) -> np.ndarray | float:
         """
         Computes the thermal informational relaxation/erasure rate derived from combining
@@ -322,16 +325,17 @@ class CosmologicalUnits:
         Clamped to [0.005, 0.25] to ensure numerical stability on discrete temporal steps.
         """
         rate = base_rate * (T / t_cmb)
-        return np.clip(rate, 0.005, 0.25)
+        return xp.clip(rate, 0.005, 0.25)
 
     def compute_landauer_decay(
         self,
         T: np.ndarray | float,
         base_decay: float = 0.015,
-        t_cmb: float = 2.73
+        t_cmb: float = 2.73,
+        xp=np
     ) -> np.ndarray | float:
         """Alias for compute_thermal_information_relaxation for backward compatibility."""
-        return self.compute_thermal_information_relaxation(T, base_rate=base_decay, t_cmb=t_cmb)
+        return self.compute_thermal_information_relaxation(T, base_rate=base_decay, t_cmb=t_cmb, xp=xp)
 
     def compute_bekenstein_entropy_limit(
         self,

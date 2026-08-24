@@ -322,7 +322,7 @@ class CosmologicalEngine:
         del z_bounce
 
         p_k = self._compute_p_k()
-        synthesized_fft = p_k * self.xp.exp(1j * theta_bounce)
+        synthesized_fft = self.xp.sqrt(p_k) * self.xp.exp(1j * theta_bounce)
         del p_k, theta_bounce
         synthesized_fft[0, 0, 0] = 0.0 + 0.0j
 
@@ -403,132 +403,178 @@ class CosmologicalEngine:
         return rho_new.astype(self.xp.float32), v_x_new.astype(self.xp.float32), v_y_new.astype(self.xp.float32), v_z_new.astype(self.xp.float32), T_new.astype(self.xp.float32)
 
     def _grad_axis(self, arr, axis):
-        """Computes central spatial difference along a single axis without bulk intermediate tuples."""
+        """Computes central spatial difference along a single axis."""
         return 0.5 * (self.xp.roll(arr, -1, axis=axis) - self.xp.roll(arr, 1, axis=axis))
 
-    def step(self):
-        """Executes a single Runge-Kutta / Eulerian cosmological differential step."""
-        self.t_coord += self.DT
-        # 1. Cosmological Scale Factor Evolution
-        if self.scale_factor < 1.05:
-            H_eff = self.H_0 * (1.0 + self.INFLATION_BOOST * np.exp(-(self.scale_factor - 1.0) / 0.015))
+    def _compute_rhs(self, a_factor, rho, vx, vy, vz, T, I, tau):
+        xp = self.xp
+        # 1. H_eff
+        if a_factor < 1.05:
+            H_eff = self.H_0 * (1.0 + self.INFLATION_BOOST * np.exp(-(a_factor - 1.0) / 0.015))
         else:
             H_eff = self.H_0
 
-        self.scale_factor += H_eff * self.DT
-
-        # 2. Gravitational Potential via 3D Comoving Poisson Equation (FFT)
-        # In comoving coordinates, Poisson equation scales as nabla^2 Phi = 4*pi*G*delta_rho / a
-        delta_rho = self.rho - self.xp.mean(self.rho)
-        phi_fft = self.xp.fft.fftn(delta_rho)
-        del delta_rho
-        phi_fft *= (-4.0 * np.pi * self.G_CONST) / (self.k2 * max(1.0, self.scale_factor))
+        # 2. Phi
+        delta_rho = rho - xp.mean(rho)
+        phi_fft = xp.fft.fftn(delta_rho)
+        phi_fft *= (-4.0 * np.pi * self.G_CONST) / (self.k2 * max(1.0, float(a_factor)))
         phi_fft[0, 0, 0] = 0.0
-        self.phi = self.xp.real(self.xp.fft.ifftn(phi_fft))
-        del phi_fft
-
-        # 3. Dynamic Adiabatic Sound Speed & Navier-Stokes Acceleration with Hubble Drag
-        cs2_field = self.units.compute_sound_speed_sq(self.T, base_cs2=self.CS2)
-        hubble_damping = 1.0 - (2.0 * H_eff / max(1.0, float(self.scale_factor))) * self.DT
-
-        grad_phi_sq = self.xp.zeros_like(self.phi)
-        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
-            g_phi = self._grad_axis(self.phi, axis)
-            grad_phi_sq += g_phi**2
-            g_rho = self._grad_axis(self.rho, axis)
-            acc = -g_phi - cs2_field * (g_rho / (self.rho + 0.2))
-            del g_phi, g_rho
-            v *= hubble_damping
-            v += (0.015 * acc) * self.DT
-            del acc
-        del cs2_field, hubble_damping
-
-        # Relativistic Causal Limit (v <= c)
-        v_mag = self.xp.sqrt(self.v_x**2 + self.v_y**2 + self.v_z**2)
-        v_limit = self.xp.maximum(1.0, v_mag / self.C_LIGHT)
-        self.v_x /= v_limit
-        self.v_y /= v_limit
-        self.v_z /= v_limit
-        del v_mag, v_limit
-
-        # 4. Conservative Matter Continuity (Lax-Friedrichs Advection to prevent Odd-Even Decoupling)
+        phi = xp.real(xp.fft.ifftn(phi_fft))
+        
+        # 3. Hydro
+        cs2 = self.units.compute_sound_speed_sq(T, base_cs2=self.CS2, xp=xp)
+        hubble_damp = 2.0 * H_eff / max(1.0, float(a_factor))
+        
+        div_rho = xp.zeros_like(rho)
+        div_px = xp.zeros_like(rho)
+        div_py = xp.zeros_like(rho)
+        div_pz = xp.zeros_like(rho)
+        
         c_num = 0.04
-        div_flux = self.xp.zeros_like(self.rho)
-        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
-            flux = self.rho * v
-            roll_f_p = self.xp.roll(flux, -1, axis=axis)
-            roll_r_p = self.xp.roll(self.rho, -1, axis=axis)
-            f_p = 0.5 * (flux + roll_f_p) - (0.5 * c_num) * (roll_r_p - self.rho)
-            del roll_f_p, roll_r_p
+        grad_phi_sq = xp.zeros_like(rho)
+        
+        px, py, pz = rho * vx, rho * vy, rho * vz
+        
+        for axis, v_ax in enumerate([vx, vy, vz]):
+            # Mass flux
+            f_rho = rho * v_ax
+            r_f_p = xp.roll(f_rho, -1, axis=axis)
+            r_r_p = xp.roll(rho, -1, axis=axis)
+            fp_rho = 0.5 * (f_rho + r_f_p) - 0.5 * c_num * (r_r_p - rho)
+            
+            r_f_m = xp.roll(f_rho, 1, axis=axis)
+            r_r_m = xp.roll(rho, 1, axis=axis)
+            fm_rho = 0.5 * (r_f_m + f_rho) - 0.5 * c_num * (rho - r_r_m)
+            div_rho += (fp_rho - fm_rho)
+            
+            # Mom fluxes
+            for target_p, p_ax in zip([div_px, div_py, div_pz], [px, py, pz]):
+                f_p_ax = p_ax * v_ax
+                r_fp_p = xp.roll(f_p_ax, -1, axis=axis)
+                r_rp_p = xp.roll(p_ax, -1, axis=axis)
+                fp_pax = 0.5 * (f_p_ax + r_fp_p) - 0.5 * c_num * (r_rp_p - p_ax)
+                
+                r_fm_p = xp.roll(f_p_ax, 1, axis=axis)
+                r_rm_p = xp.roll(p_ax, 1, axis=axis)
+                fm_pax = 0.5 * (r_fm_p + f_p_ax) - 0.5 * c_num * (p_ax - r_rm_p)
+                target_p += (fp_pax - fm_pax)
+                
+            g_phi = self._grad_axis(phi, axis)
+            grad_phi_sq += g_phi**2
+            
+            # Source term for momentum: -grad(P) - rho * grad(Phi)
+            g_P = self._grad_axis(cs2 * rho, axis)
+            source_p = -g_P - rho * g_phi - hubble_damp * (px if axis==0 else (py if axis==1 else pz))
+            
+            if axis == 0: div_px = div_px - source_p
+            elif axis == 1: div_py = div_py - source_p
+            else: div_pz = div_pz - source_p
 
-            roll_f_m = self.xp.roll(flux, 1, axis=axis)
-            roll_r_m = self.xp.roll(self.rho, 1, axis=axis)
-            f_m = 0.5 * (roll_f_m + flux) - (0.5 * c_num) * (self.rho - roll_r_m)
-            del roll_f_m, roll_r_m, flux
-
-            div_flux += (f_p - f_m)
-            del f_p, f_m
-
-        self.rho = self.xp.clip(self.rho - div_flux * self.DT, 0.02, 12.0)
-
-        # 5. Thermal Field & Spitzer-Braginskii Plasma Conduction with Adiabatic Equation of State
-        kappa_spitzer = self.units.compute_spitzer_conductivity(self.T, self.rho, base_k=self.DIFFUSION_COEFF)
-        laplacian_T = (
-            self.xp.roll(self.T, 1, axis=0) + self.xp.roll(self.T, -1, axis=0) +
-            self.xp.roll(self.T, 1, axis=1) + self.xp.roll(self.T, -1, axis=1) +
-            self.xp.roll(self.T, 1, axis=2) + self.xp.roll(self.T, -1, axis=2) - 6.0 * self.T
-        )
-        # Adiabatic thermodynamic temperature from ideal gas law: T_ad = T_0 * rho^(gamma - 1) (gamma = 5/3)
-        T_adiabatic = 2.73 + 12.0 * (self.rho ** 0.67) / max(1.0, float(self.scale_factor)**0.5)
-        compression_heating = 0.05 * self.xp.maximum(0.0, -div_flux) * self.T
-        del div_flux
-        hubble_cooling = (H_eff / max(1.0, float(self.scale_factor))) * (self.T - 2.73)
-        dT_dt = 0.25 * kappa_spitzer * laplacian_T + compression_heating - hubble_cooling + 0.1 * (T_adiabatic - self.T)
-        del laplacian_T, compression_heating, hubble_cooling, T_adiabatic
-        self.T = self.xp.clip(self.T + dT_dt * self.DT, 2.73, 250.0)
-        del dT_dt
-
-        # 6. Onsager Irreversible Entropy Production & Reotransductor Time
-        inv_T = 1.0 / self.T
-        sigma_thermal = self.xp.zeros_like(self.T)
+        d_rho_dt = -div_rho
+        d_px_dt = -div_px
+        d_py_dt = -div_py
+        d_pz_dt = -div_pz
+        
+        # 4. Thermal
+        kappa = self.units.compute_spitzer_conductivity(T, rho, base_k=self.DIFFUSION_COEFF, xp=xp)
+        laplacian_T = (xp.roll(T, 1, 0) + xp.roll(T, -1, 0) +
+                       xp.roll(T, 1, 1) + xp.roll(T, -1, 1) +
+                       xp.roll(T, 1, 2) + xp.roll(T, -1, 2) - 6.0 * T)
+                       
+        T_ad = 2.73 + 12.0 * (rho ** 0.67) / max(1.0, float(a_factor)**0.5)
+        comp_heating = 0.05 * xp.maximum(0.0, d_rho_dt) * T
+        hubble_cooling = (H_eff / max(1.0, float(a_factor))) * (T - 2.73)
+        d_T_dt = 0.25 * kappa * laplacian_T + comp_heating - hubble_cooling + 0.1 * (T_ad - T)
+        
+        # 5. Onsager Entropy & Tau
+        inv_T = 1.0 / T
+        sigma_th = xp.zeros_like(T)
         for axis in range(3):
-            g_inv = self._grad_axis(inv_T, axis)
-            g_T = self._grad_axis(self.T, axis)
-            J_T = -kappa_spitzer * g_T
-            del g_T
-            sigma_thermal += (J_T * g_inv)
-            del g_inv, J_T
-        del inv_T, kappa_spitzer
-        sigma_thermal = self.xp.maximum(0.0, sigma_thermal)
+            sigma_th += (-kappa * self._grad_axis(T, axis)) * self._grad_axis(inv_T, axis)
+        sigma_th = xp.maximum(0.0, sigma_th)
+        sigma_grav = (rho * grad_phi_sq) / (T * 50.0)
+        sigma_total = sigma_th + sigma_grav
+        d_tau_dt = self.KAPPA * sigma_total
+        
+        # 6. Information
+        div_I = xp.zeros_like(I)
+        for axis, v_ax in enumerate([vx, vy, vz]):
+            div_I += self._grad_axis(I * v_ax, axis)
+        lap_I = (xp.roll(I, 1, 0) + xp.roll(I, -1, 0) +
+                 xp.roll(I, 1, 1) + xp.roll(I, -1, 1) +
+                 xp.roll(I, 1, 2) + xp.roll(I, -1, 2) - 6.0 * I)
+        sustenance = 0.6 * sigma_total * (rho / xp.mean(rho))
+        decay = self.units.compute_landauer_decay(T, base_decay=self.LANDAUER_DECAY, xp=xp)
+        d_I_dt = -div_I + 0.02 * lap_I + (sustenance - decay * I)
+        
+        return d_rho_dt, d_px_dt, d_py_dt, d_pz_dt, d_T_dt, d_I_dt, d_tau_dt, H_eff
 
-        sigma_grav = (self.rho * grad_phi_sq) / (self.T * 50.0)
-        del grad_phi_sq
-
-        sigma_total = sigma_thermal + sigma_grav
-        del sigma_thermal, sigma_grav
-
-        self.d_tau_dt = self.KAPPA * sigma_total
-        self.tau += self.d_tau_dt * self.DT
-
-        # 7. Landauer Negentropy / Informational Field
-        div_flux_I = self.xp.zeros_like(self.I)
-        for axis, v in enumerate([self.v_x, self.v_y, self.v_z]):
-            flux_I = self.I * v
-            div_flux_I += self._grad_axis(flux_I, axis)
-            del flux_I
-
-        laplacian_I = (
-            self.xp.roll(self.I, 1, axis=0) + self.xp.roll(self.I, -1, axis=0) +
-            self.xp.roll(self.I, 1, axis=1) + self.xp.roll(self.I, -1, axis=1) +
-            self.xp.roll(self.I, 1, axis=2) + self.xp.roll(self.I, -1, axis=2) - 6.0 * self.I
-        )
-        sustenance = 0.6 * sigma_total * (self.rho / self.xp.mean(self.rho))
-        del sigma_total
-        landauer_erasure = self.units.compute_landauer_decay(self.T, base_decay=self.LANDAUER_DECAY)
-        dI_dt = -div_flux_I + 0.02 * laplacian_I + (sustenance - landauer_erasure * self.I)
-        del div_flux_I, laplacian_I, sustenance, landauer_erasure
-        self.I = self.xp.clip(self.I + dI_dt * self.DT, 0.0, 1.0)
-        del dI_dt
+    def step(self):
+        """Executes a single SSP-RK2 cosmological differential step."""
+        xp = self.xp
+        dt = self.DT
+        
+        # Current state U^n
+        a_n = self.scale_factor
+        rho_n = self.rho
+        vx_n, vy_n, vz_n = self.v_x, self.v_y, self.v_z
+        T_n = self.T
+        I_n = self.I
+        tau_n = self.tau
+        
+        # Stage 1: U^{(1)} = U^n + dt * L(U^n)
+        drho, dpx, dpy, dpz, dT, dI, dtau, H_eff = self._compute_rhs(a_n, rho_n, vx_n, vy_n, vz_n, T_n, I_n, tau_n)
+        
+        a_1 = a_n + dt * H_eff
+        
+        # Mass clipping diagnostic
+        rho_candidate = rho_n + dt * drho
+        mass_before = float(self.to_cpu(xp.sum(rho_candidate)))
+        rho_1 = xp.clip(rho_candidate, 0.02, 12.0)
+        mass_after = float(self.to_cpu(xp.sum(rho_1)))
+        self.mass_clip_error = abs(mass_after - mass_before)
+        
+        # Limit momentum via causal limit (v <= c)
+        px_1 = rho_n * vx_n + dt * dpx
+        py_1 = rho_n * vy_n + dt * dpy
+        pz_1 = rho_n * vz_n + dt * dpz
+        
+        vx_1 = px_1 / rho_1
+        vy_1 = py_1 / rho_1
+        vz_1 = pz_1 / rho_1
+        
+        v_mag_1 = xp.sqrt(vx_1**2 + vy_1**2 + vz_1**2)
+        v_limit_1 = xp.maximum(1.0, v_mag_1 / self.C_LIGHT)
+        vx_1 /= v_limit_1; vy_1 /= v_limit_1; vz_1 /= v_limit_1
+        
+        T_1 = xp.clip(T_n + dt * dT, 2.73, 250.0)
+        I_1 = xp.clip(I_n + dt * dI, 0.0, 1.0)
+        tau_1 = tau_n + dt * dtau
+        
+        # Stage 2: U^{n+1} = 0.5 * U^n + 0.5 * U^{(1)} + 0.5 * dt * L(U^{(1)})
+        drho2, dpx2, dpy2, dpz2, dT2, dI2, dtau2, H_eff2 = self._compute_rhs(a_1, rho_1, vx_1, vy_1, vz_1, T_1, I_1, tau_1)
+        
+        self.scale_factor = 0.5 * a_n + 0.5 * a_1 + 0.5 * dt * H_eff2
+        self.rho = xp.clip(0.5 * rho_n + 0.5 * rho_1 + 0.5 * dt * drho2, 0.02, 12.0)
+        
+        px_2 = 0.5 * (rho_n * vx_n) + 0.5 * (rho_1 * vx_1) + 0.5 * dt * dpx2
+        py_2 = 0.5 * (rho_n * vy_n) + 0.5 * (rho_1 * vy_1) + 0.5 * dt * dpy2
+        pz_2 = 0.5 * (rho_n * vz_n) + 0.5 * (rho_1 * vz_1) + 0.5 * dt * dpz2
+        
+        self.v_x = px_2 / self.rho
+        self.v_y = py_2 / self.rho
+        self.v_z = pz_2 / self.rho
+        
+        v_mag_2 = xp.sqrt(self.v_x**2 + self.v_y**2 + self.v_z**2)
+        v_limit_2 = xp.maximum(1.0, v_mag_2 / self.C_LIGHT)
+        self.v_x /= v_limit_2; self.v_y /= v_limit_2; self.v_z /= v_limit_2
+        
+        self.T = xp.clip(0.5 * T_n + 0.5 * T_1 + 0.5 * dt * dT2, 2.73, 250.0)
+        self.I = xp.clip(0.5 * I_n + 0.5 * I_1 + 0.5 * dt * dI2, 0.0, 1.0)
+        self.tau = 0.5 * tau_n + 0.5 * tau_1 + 0.5 * dt * dtau2
+        self.d_tau_dt = dtau2
+        
+        self.t_coord += dt
 
         # 8. Bekenstein Quantum Saturation & Virialized Structure Diagnostics
         tau_current_eon = self.tau - self.tau_eon_start
@@ -567,10 +613,17 @@ class CosmologicalEngine:
             self.saved_epochs.add("pantheon")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}{g_tag}.npz"))
 
-        # Global Cosmological Eon Transition: Governed by the global conformal boundary of Roger Penrose (CCC)
+        # Dual-Transition Cosmological Phase Diagram: Global CCC vs Local Bekenstein Saturation
+        is_gravitational_bounce = (
+            self.mass_frac_val >= self.units.MASS_THRESHOLD
+            and self.s_bh_val >= self.s_crit
+            and self.s_bh_val > 0.0 # Prevent trivial bounce at early times
+        )
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
-        if is_conformal_bounce:
+        if is_gravitational_bounce:
+            self._handle_bounce(transition_type="Rebote Gravitatorio (Túnel Cuántico)")
+        elif is_conformal_bounce:
             self._handle_bounce(transition_type="CCC (Muerte Térmica)")
 
     def _handle_bounce(self, transition_type="CCC (Muerte Térmica)"):
@@ -598,19 +651,20 @@ class CosmologicalEngine:
             pass
 
         # Locate central attractor
-        bx, by, bz = np.unravel_index(np.argmax(self.rho), self.rho.shape)
+        flat_idx_rho = int(self.to_cpu(self.xp.argmax(self.rho)))
+        bx, by, bz = np.unravel_index(flat_idx_rho, self.rho.shape)
 
         # Generate Observational Reports (CMB Mollweide Map + Planck Power Spectrum)
         observational_metrics = {}
-        h0_pred = 67.36
+        h0_pred = self.units.H0_PLANCK_BASELINE
         c2_val = 0.0
         c3_val = 0.0
         c2_c3_ratio = 1.0
         planck_chi2_val = 0.0
         try:
-            from observational.compare_planck import generate_eon_observational_report
+            from experiments.compare_planck import generate_eon_observational_report
             observational_metrics = generate_eon_observational_report(self, output_dir=self.snapshots_dir)
-            h0_pred = float(observational_metrics.get("h0_predicted", 67.36))
+            h0_pred = float(observational_metrics.get("h0_predicted", self.units.H0_PLANCK_BASELINE))
             c2_val = float(observational_metrics.get("quadrupole_C2", 0.0))
             c3_val = float(observational_metrics.get("octopole_C3", 0.0))
             c2_c3_ratio = float(observational_metrics.get("ratio_C2_C3", 1.0))
@@ -626,7 +680,7 @@ class CosmologicalEngine:
             "peak_s_bh": round(float(self.s_bh_val), 1),
             "s_crit": round(float(self.s_crit), 1),
             "core_mass_fraction": round(float(self.mass_frac_val * 100.0), 2),
-            "fossil_odometer_total": round(float(np.max(self.tau)), 1),
+            "fossil_odometer_total": round(float(self.to_cpu(self.xp.max(self.tau))), 1),
             "h0_predicted": round(h0_pred, 2),
             "quadrupole_C2": round(c2_val, 4),
             "octopole_C3": round(c3_val, 4),
@@ -1006,7 +1060,7 @@ class CosmologicalEngine:
                 item.get("s_crit"),
                 item.get("core_mass_fraction"),
                 item.get("fossil_odometer_total"),
-                item.get("h0_predicted") if item.get("h0_predicted") is not None else obs.get("h0_predicted", 67.36),
+                item.get("h0_predicted") if item.get("h0_predicted") is not None else obs.get("h0_predicted", self.units.H0_PLANCK_BASELINE),
                 item.get("quadrupole_C2") if item.get("quadrupole_C2") is not None else obs.get("quadrupole_C2", ""),
                 item.get("octopole_C3") if item.get("octopole_C3") is not None else obs.get("octopole_C3", ""),
                 item.get("ratio_C2_C3") if item.get("ratio_C2_C3") is not None else obs.get("ratio_C2_C3", ""),
@@ -1042,6 +1096,7 @@ class CosmologicalEngine:
             "total_steps": self.total_steps,
             "t_coord": self.t_coord,
             "seed": self.seed,
+            "rng_state_json": json.dumps(self.rng.bit_generator.state),
             "rho": self.to_cpu(self.rho).astype(np.float32),
             "phi": phi,
             "T": self.to_cpu(self.T).astype(np.float32),
@@ -1074,7 +1129,11 @@ class CosmologicalEngine:
         self.t_coord = float(data["t_coord"]) if "t_coord" in data else float(self.total_steps * self.DT)
         if "seed" in data:
             self.seed = int(data["seed"])
-            self.rng = np.random.default_rng(self.seed)
+        if "rng_state_json" in data:
+            self.rng = np.random.default_rng()
+            self.rng.bit_generator.state = json.loads(str(data["rng_state_json"]))
+        else:
+            self.rng = np.random.default_rng(getattr(self, "seed", 42))
         self.rho = self.xp.asarray(data["rho"].astype(np.float32))
         self.T = self.xp.asarray(data["T"].astype(np.float32))
         self.I = self.xp.asarray(data["I"].astype(np.float32))

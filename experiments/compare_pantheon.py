@@ -1,7 +1,7 @@
 """
 Command-Line Utility and Publication Plot Generator:
 Compares Reotransductor Cosmological Simulation with Pantheon+ (2022) Supernovae Catalog
-and evaluates the resolution of the Cosmological Hubble Tension (assets/pantheon_hubble_tension.png).
+and evaluates the resolution of the Cosmological Hubble Tension (results/paper_III/pantheon_hubble_tension.png).
 """
 
 import os
@@ -22,7 +22,7 @@ def run_pantheon_comparison(
     auto_resume: bool = True,
     steps: int = 0,
     mode: str = "full",
-    output_fig: str = "assets/pantheon_hubble_tension.png"
+    output_fig: str = "results/paper_III/pantheon_hubble_tension.png"
 ) -> Dict[str, Any]:
     """Executes live Hubble tension and Pantheon+ supernovae comparison on active cosmological state."""
     os.makedirs(os.path.dirname(output_fig) or ".", exist_ok=True)
@@ -264,8 +264,8 @@ def generate_eon_pantheon_report(
     plt.savefig(eon_pantheon_path, dpi=180, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close(fig)
 
-    # Copy to assets/
-    latest_pantheon_path = "assets/pantheon_hubble_tension.png"
+    # Copy to results/paper_III/
+    latest_pantheon_path = "results/paper_III/pantheon_hubble_tension.png"
     try:
         os.makedirs("assets", exist_ok=True)
         shutil.copyfile(eon_pantheon_path, latest_pantheon_path)
@@ -339,7 +339,7 @@ if __name__ == '__main__':
     parser.add_argument("--from-scratch", action="store_true", help="Start from blank initial conditions")
     parser.add_argument("--process-all", action="store_true", help="Process and generate Pantheon plots for all historical checkpoints")
     parser.add_argument("--binned", action="store_true", help="Use 13-bin calibration subset instead of full 1,701 SNe sample")
-    parser.add_argument("--output", type=str, default="assets/pantheon_hubble_tension.png", help="Output PNG path")
+    parser.add_argument("--output", type=str, default="results/paper_III/pantheon_hubble_tension.png", help="Output PNG path")
     args = parser.parse_args()
 
     mode = "binned" if args.binned else "full"

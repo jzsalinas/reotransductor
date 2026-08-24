@@ -1,7 +1,7 @@
 """
 Command-Line Utility and Publication Plot Generator:
 Compares Reotransductor Cosmological Simulation with NANOGrav 15-Year (2023) Pulsar Timing Data.
-Evaluates Galactic Proper Time Micro-Drifts and the Hellings-Downs Correlation (assets/nanograv_pulsar_timing.png).
+Evaluates Galactic Proper Time Micro-Drifts and the Hellings-Downs Correlation (results/paper_III/nanograv_pulsar_timing.png).
 """
 
 import os
@@ -21,7 +21,7 @@ def run_nanograv_comparison(
     checkpoint_path: str = "checkpoints",
     auto_resume: bool = True,
     steps: int = 0,
-    output_fig: str = "assets/nanograv_pulsar_timing.png"
+    output_fig: str = "results/paper_III/nanograv_pulsar_timing.png"
 ) -> Dict[str, Any]:
     """Executes live NANOGrav 15-Year pulsar timing comparison on active cosmological state."""
     os.makedirs(os.path.dirname(output_fig) or ".", exist_ok=True)
@@ -238,8 +238,8 @@ def generate_eon_nanograv_report(
     plt.savefig(eon_nanograv_path, dpi=180, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close(fig)
 
-    # Copy to assets/
-    latest_nanograv_path = "assets/nanograv_pulsar_timing.png"
+    # Copy to results/paper_III/
+    latest_nanograv_path = "results/paper_III/nanograv_pulsar_timing.png"
     try:
         os.makedirs("assets", exist_ok=True)
         shutil.copyfile(eon_nanograv_path, latest_nanograv_path)
@@ -304,7 +304,7 @@ if __name__ == '__main__':
     parser.add_argument("--steps", type=int, default=0, help="Additional steps to simulate before evaluation")
     parser.add_argument("--from-scratch", action="store_true", help="Start from blank initial conditions")
     parser.add_argument("--process-all", action="store_true", help="Process and generate NANOGrav plots for all historical checkpoints")
-    parser.add_argument("--output", type=str, default="assets/nanograv_pulsar_timing.png", help="Output PNG path")
+    parser.add_argument("--output", type=str, default="results/paper_III/nanograv_pulsar_timing.png", help="Output PNG path")
     args = parser.parse_args()
 
     if args.process_all:
