@@ -43,19 +43,7 @@ def run_halo_comparison(
         print(f"• Loading Virialized Cluster Epoch Checkpoint: '{target_checkpoint}'...")
         data = np.load(target_checkpoint)
         grid_n = int(data['rho'].shape[0])
-        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
-        engine.rho = data['rho']
-        engine.v_x = data['v_x']
-        engine.v_y = data['v_y']
-        engine.v_z = data['v_z']
-        engine.T = data['T']
-        engine.I = data['I']
-        engine.tau = data['tau']
-        if 'phi' in data:
-            engine.phi = data['phi']
-        engine.scale_factor = float(data['scale_factor'])
-        engine.eon = int(data['eon'])
-        engine.total_steps = int(data.get('total_steps', 0))
+        engine = CosmologicalEngine.from_checkpoint(target_checkpoint)
     else:
         print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
         engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
@@ -317,12 +305,7 @@ def run_full_sparc_population_analysis(
     if target_checkpoint and os.path.exists(target_checkpoint):
         data = np.load(target_checkpoint)
         grid_n = int(data['rho'].shape[0])
-        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
-        engine.rho = data['rho']
-        engine.phi = data.get('phi', None)
-        engine.tau = data['tau']
-        engine.scale_factor = float(data['scale_factor'])
-        engine.eon = int(data['eon'])
+        engine = CosmologicalEngine.from_checkpoint(target_checkpoint)
     else:
         engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=True)
 
@@ -461,26 +444,10 @@ def process_all_existing_checkpoints_halo(checkpoints_dir: str = "checkpoints", 
     print(f"• Found {len(npz_files)} Halo/Cluster checkpoints in '{checkpoints_dir}'. Processing Cusp-Core reports...")
     snapshots_dir = os.path.join(checkpoints_dir, "snapshots")
     os.makedirs(snapshots_dir, exist_ok=True)
-    engine = CosmologicalEngine(checkpoint_dir=checkpoints_dir, auto_resume=False)
 
     for npz_path in npz_files:
         try:
-            data = np.load(npz_path)
-            engine.grid_size = int(data['rho'].shape[0])
-            engine.rho = data['rho']
-            engine.v_x = data.get('v_x', None)
-            engine.v_y = data.get('v_y', None)
-            engine.v_z = data.get('v_z', None)
-            engine.T = data.get('T', None)
-            engine.I = data.get('I', None)
-            engine.tau = data['tau']
-            if 'phi' in data:
-                engine.phi = data['phi']
-            engine.scale_factor = float(data['scale_factor'])
-            engine.eon = int(data['eon'])
-            engine.total_steps = int(data.get('total_steps', 0))
-            if 'tau_eon_start' in data:
-                engine.tau_eon_start = data['tau_eon_start']
+            engine = CosmologicalEngine.from_checkpoint(npz_path)
 
             print(f"\n--- Processing Halo: {os.path.basename(npz_path)} (Eon {engine.eon}, Grid {engine.grid_size}³) ---")
             metrics = generate_eon_halo_report(engine, galaxy_name=galaxy_name, output_dir=snapshots_dir)

@@ -9,7 +9,7 @@
 
 ## Abstract
 
-We present **Reotransductor**, an open-source, GPU-accelerated Eulerian simulation framework designed to model 3D cosmological fluid dynamics coupled to non-equilibrium thermodynamic entropy production and dissipative clock fields. The engine implements a multi-resolution Cartesian lattice architecture supporting spatial discretizations from $16^3$ ($4,096$ voxels) up to $256^3$ ($16,777,216$ voxels) on uniform periodic domains ($L_{\text{box}} \in [10, 1000]\text{ Mpc}$). Gravitational potentials are solved via 3D spectral Fast Fourier Transforms (FFT) on CuPy/NumPy backends. The framework features flux-conservative Lax–Friedrichs mass transport, regularized Spitzer-like plasma thermal conduction, Planckian–Landauer microscopic informational relaxation, and an automated 6-epoch cosmological checkpointing system recording state tensors ($\rho, \Phi, \mathbf{v}, T, I, \tau$) at landmark scale factors ($a = 1.0, 1.5, 2.0, 3.0, 4.5, 7.0$). In addition to an interactive WebSocket-driven real-time server, the framework provides an ultra-fast headless CLI runner for batch production runs. We document grid scaling, mass conservation ($|\Delta M/M_0| \le 1.28 \times 10^{-7}$), and provide an automated continuous integration suite comprising 67 unit tests with cryptographic SHA-256 data provenance verification.
+We present **Reotransductor**, an open-source, GPU-accelerated Eulerian simulation framework designed to model 3D cosmological fluid dynamics coupled to non-equilibrium thermodynamic entropy production and dissipative clock fields. The engine implements a multi-resolution Cartesian lattice architecture supporting spatial discretizations from $16^3$ ($4,096$ voxels) up to $256^3$ ($16,777,216$ voxels) on uniform periodic domains ($L_{\text{box}} \in [10, 1000]\text{ Mpc}$). Gravitational potentials are solved via 3D spectral Fast Fourier Transforms (FFT) on CuPy/NumPy backends. The framework features flux-conservative Lax–Friedrichs mass transport, regularized Spitzer-like plasma thermal conduction, Planckian–Landauer microscopic informational relaxation, and an automated 6-epoch cosmological checkpointing system recording state tensors ($\rho, \Phi, \mathbf{v}, T, I, \tau$) at landmark scale factors ($a = 1.0, 1.5, 2.0, 3.0, 4.5, 7.0$). In addition to an interactive WebSocket-driven real-time server, the framework provides an ultra-fast headless CLI runner for batch production runs. We document grid scaling, mass conservation ($|\Delta M/M_0| \le 1.28 \times 10^{-7}$), and provide an automated continuous integration suite comprising 68 unit tests with cryptographic SHA-256 data provenance verification.
 
 ---
 
@@ -85,14 +85,14 @@ else:
 The nominal array memory footprint for state tensors ($\rho, v_x, v_y, v_z, T, \Phi, I, \tau, \dots$) scales as $N^3 \times 4\text{ bytes per float32}$:
 
 | Grid Resolution $N$ | Total Cells ($N^3$) | Spatial Resolution $\Delta x$ ($L=100\text{ Mpc}$) | Nominal Tensor State | Peak GPU Allocated VRAM |
-| :---: | :---: | :---: | :---: | :---: |
-| **$16^3$** | $4,096$ | $6.25\text{ Mpc}$ | $0.2\text{ MB}$ | $\approx 18\text{ MB}$ |
-| **$32^3$** | $32,768$ | $3.125\text{ Mpc}$ | $1.5\text{ MB}$ | $\approx 42\text{ MB}$ |
-| **$64^3$** | $262,144$ | $1.562\text{ Mpc}$ | $12.0\text{ MB}$ | $\approx 110\text{ MB}$ |
-| **$128^3$** | $2,097,152$ | $0.781\text{ Mpc}$ | $96.0\text{ MB}$ | $\approx 295\text{ MB}$ |
-| **$256^3$** | $16,777,216$ | $0.391\text{ Mpc}$ | $768.0\text{ MB}$ | **$\approx 880\text{ MB}$** |
+| :--- | :--- | :--- | :--- | :--- |
+| $16^3$ (Testing) | $4,096$ | $6.25\text{ Mpc}$ | $206\text{ KB}$ | $< 50\text{ MB}$ |
+| $32^3$ (Cosmological Base) | $32,768$ | $3.125\text{ Mpc}$ | $1.6\text{ MB}$ | $< 100\text{ MB}$ |
+| $64^3$ (Halo Profiling) | $262,144$ | $1.56\text{ Mpc}$ | $13.1\text{ MB}$ | $\approx 200\text{ MB}$ |
+| $128^3$ (Deep Cusp Resolving)| $2,097,152$ | $781\text{ kpc}$ | $104.8\text{ MB}$ | $\approx 600\text{ MB}$ |
+| $256^3$ (Ultra-HD Boundary) | $16,777,216$ | $390\text{ kpc}$ | $838.8\text{ MB}$ | $\approx 2.21\text{ GB}$ |
 
-The entire $256^3$ simulation executes comfortably under $1.0\text{ GB}$ of VRAM, allowing production runs on standard consumer GPUs and headless compute clusters.
+The entire $256^3$ simulation requires a peak allocated VRAM of $\approx 2.21\text{ GB}$ due to FFT workspace buffers, allowing production runs on standard consumer GPUs and headless compute clusters.
 
 ### 3.3 Float32 Constraints and the Bekenstein-Hawking Numerical Freeze
 Due to the exponential mass-gravity feedback loop governing extreme overdensities, the proper-time tensor $\tau$ grows asymptotically at the core of virialized halos. Allowing $\tau$ to grow unbounded inevitably causes IEEE 754 single-precision (`float32`) arithmetic overflows (reaching values $\sim 3.4 \times 10^{38}$) in subsequent coupled equations. To ensure mathematical stability within the bounds of consumer GPU memory architecture, the integration scheme imposes a hard numerical ceiling on $\tau$.
@@ -156,11 +156,11 @@ A systematic multi-resolution benchmark was executed across five lattice sizes (
 *Figure 3: (A) Global mass conservation demonstrating fractional drift $|\Delta M/M_0| \le 1.28 \times 10^{-7}$. (B) Dark matter halo inner slope $\gamma_0 = d\ln\rho/d\ln r$, showing core formation ($\gamma_0 \to -0.056$) compared to NFW cusps ($\gamma = -1.00$). (C) Spatial correlation peak. (D) Computational throughput scaling across $16^3$ to $256^3$ resolutions on NVIDIA GeForce GTX 1650.*
 
 ### 5.2 Automated Continuous Integration Suite
-The framework includes an extensive Python `unittest` suite comprising **67 automated unit tests** across 11 specialized modules covering:
+The framework includes an extensive Python `unittest` suite comprising **68 automated unit tests** across 11 specialized modules covering:
 1. `tests/test_physics_units.py` (10 tests): Fundamental constants, Planck scales, and dimensional validity of $\kappa_0$.
-2. `tests/test_first_principles.py` (6 tests): Onsager–Prigogine entropy scalar, acoustic sound speed, and Spitzer–Braginskii conductivity.
-3. `tests/test_phase_locking.py` (4 tests): Holographic phase-locking in Fourier space and fossil clock phase coherence $\alpha_{\text{mem}}$.
-4. `tests/test_convergence.py` (5 tests): Multi-resolution lattice invariance and mass conservation across $16^3, 32^3, 64^3$.
+2. `tests/test_nanograv.py` (3 tests): Validates the Transverse-Traceless timing response integration for the PTA geometric consistency test.
+3. `tests/test_observational.py` (3 tests): Tests the pipeline ingestion and basic cosmological variable mapping.
+4. `tests/test_convergence.py` (5 tests): Multi-resolution lattice invariance and mass conservation across $16^3, 32^3, 64^3$. Important Note: In our model, $t_{\text{physical}}$ explicitly depends on the cell size grid spacing. Thus, convergence studies cannot just test for fixed step counts $n_{\text{steps}}$, they must evolve different grids until they reach identical $t_{\text{physical}}$ states to legitimately compare halo profiles and metrics.
 5. `tests/test_observational.py` (5 tests): Observational harmonic decomposition $Y_{\ell m}$ and angular power spectrum $C_\ell$.
 6. `tests/test_bao.py` (5 tests): 3D spatial correlation $\xi(r)$ via Wiener–Khinchin theorem and acoustic peak detection.
 7. `tests/test_halo.py` (6 tests): SPARC 2020 Cusp-Core profile analysis, Burkert core vs NFW cusp, and full 175-galaxy population benchmark.

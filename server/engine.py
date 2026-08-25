@@ -11,8 +11,14 @@ import csv
 import shutil
 import re
 import numpy as np
+from enum import Enum
 from server.notifier import TelegramNotifier
 from server.physics_units import CosmologicalUnits, FundamentalConstants, PlanckScales
+
+class BlackHoleEndpointModel(Enum):
+    STABLE_SATURATION = 1
+    HAWKING_EVAPORATION = 2
+    QUANTUM_WHITE_HOLE = 3
 
 class CosmologicalEngine:
     """
@@ -21,8 +27,9 @@ class CosmologicalEngine:
     Supports unified CPU (NumPy) and GPU (CuPy / CUDA) hardware execution.
     """
 
-    def __init__(self, grid_size=32, box_size_mpc=None, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20, seed=42, use_gpu=False):
+    def __init__(self, grid_size=32, box_size_mpc=None, checkpoint_dir="checkpoints", auto_resume=True, force_reset=False, initial_speed=20, seed=42, use_gpu=False, bh_model=BlackHoleEndpointModel.STABLE_SATURATION):
         self.grid_size = grid_size
+        self.bh_model = bh_model
         env_box = float(os.getenv("REOTRANSDUCTOR_BOX_SIZE_MPC", "100.0"))
         self.box_size_mpc = float(box_size_mpc) if box_size_mpc is not None else env_box
         self.initial_speed = int(initial_speed)
@@ -512,15 +519,7 @@ class CosmologicalEngine:
         
         # Exponential sub-grid scaling triggered inside virialized clusters.
         # The critical overdensity threshold scales inversely with voxel volume.
-        # Calibrated for DX_ref ~ 3.9 Mpc (Grid 128 in 500 Mpc box).
-        ref_dx = 500.0 / 128.0
-        current_dx = float(self.box_size_mpc) / float(self.grid_size)
-        delta_threshold = max(2.0, 50.0 * (ref_dx / current_dx)**3)
-        
-        # Subgrid Virial Enhancer (Clipped to prevent numerical runaway singularities)
-        subgrid_factor = 1.0 + xp.clip(xp.maximum(0.0, (overdensity / delta_threshold)**2), 0.0, 1000.0) * 100.0
-        
-        sigma_total = (sigma_th + sigma_grav) * subgrid_factor
+        sigma_total = (sigma_th + sigma_grav)
         d_tau_dt = self.KAPPA * sigma_total
         
         # 6. Information
@@ -600,7 +599,8 @@ class CosmologicalEngine:
         self.I = xp.clip(0.5 * I_n + 0.5 * I_1 + 0.5 * dt * dI2, 0.0, 1.0)
         
         # Bekenstein-Hawking Saturation Limit for Virialized Cores
-        self.tau = xp.clip(0.5 * tau_n + 0.5 * tau_1 + 0.5 * dt * dtau2, 0.0, 1e7)
+        tau_new = 0.5 * tau_n + 0.5 * tau_1 + 0.5 * dt * dtau2
+        self.tau = self._apply_black_hole_endpoint_physics(tau_new)
         self.d_tau_dt = xp.clip(dtau2, -1e6, 1e7)
         
         self.t_coord += dt
@@ -1133,8 +1133,22 @@ class CosmologicalEngine:
             "v_z": self.to_cpu(self.v_z).astype(np.float32),
             "d_tau_dt": self.to_cpu(self.d_tau_dt).astype(np.float32),
             "box_size_mpc": float(self.units.box_size_mpc),
-            "h0_kms_mpc": float(self.units.h0_kms_mpc)
+            "h0_kms_mpc": float(self.units.h0_kms_mpc),
+            "saved_epochs_json": json.dumps(list(self.saved_epochs))
         }
+        
+        # Physics & Hardware Manifest for strict load-time validation
+        manifest = {
+            "version": "2.6.0",
+            "box_size_mpc": float(self.units.box_size_mpc),
+            "grid_size": int(self.grid_size),
+            "h0_kms_mpc": float(self.units.h0_kms_mpc),
+            "g_const": float(self.G_CONST),
+            "cs2_base": float(self.CS2_BASE),
+            "bh_model": self.bh_model.name
+        }
+        data["physics_manifest_json"] = json.dumps(manifest)
+
         np.savez_compressed(target_filepath, **data)
         if filepath is None and self.grid_size == 32:
             np.savez_compressed(os.path.join(self.checkpoint_dir, "latest.npz"), **data)
@@ -1146,7 +1160,24 @@ class CosmologicalEngine:
 
         data = np.load(filepath)
         if "rho" in data and data["rho"].shape[0] != self.grid_size:
+            print(f"Error: Target grid size {self.grid_size} != Checkpoint grid size {data['rho'].shape[0]}")
             return False
+            
+        # P0-1: Strict physics manifest validation
+        if "physics_manifest_json" in data:
+            manifest = json.loads(str(data["physics_manifest_json"]))
+            if abs(manifest.get("box_size_mpc", self.box_size_mpc) - float(self.box_size_mpc)) > 1e-4:
+                print(f"Error: Box size mismatch. Expected {self.box_size_mpc}, found {manifest.get('box_size_mpc')} in checkpoint.")
+                return False
+            
+            # Load BH endpoint model if present in manifest
+            bh_model_name = manifest.get("bh_model", "STABLE_SATURATION")
+            self.bh_model = BlackHoleEndpointModel[bh_model_name]
+
+        # P0-2: Reconstruct saved epochs state
+        if "saved_epochs_json" in data:
+            self.saved_epochs = set(json.loads(str(data["saved_epochs_json"])))
+
         self.eon = int(data["eon"])
         self.scale_factor = float(data["scale_factor"])
         self.total_steps = int(data["total_steps"])
@@ -1170,6 +1201,28 @@ class CosmologicalEngine:
         self.last_bounce_step = self.total_steps
         self.eon_start_walltime = time.time()
         return True
+
+    @classmethod
+    def from_checkpoint(cls, filepath, use_gpu=False):
+        """Instantiates and returns an exact replica of the CosmologicalEngine from a checkpoint."""
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Checkpoint not found: {filepath}")
+        
+        data = np.load(filepath)
+        grid_size = int(data["rho"].shape[0])
+        box_size_mpc = None
+        
+        if "physics_manifest_json" in data:
+            manifest = json.loads(str(data["physics_manifest_json"]))
+            box_size_mpc = float(manifest["box_size_mpc"])
+        elif "box_size_mpc" in data:
+            box_size_mpc = float(data["box_size_mpc"])
+            
+        engine = cls(grid_size=grid_size, box_size_mpc=box_size_mpc, auto_resume=False, force_reset=False, use_gpu=use_gpu)
+        success = engine.load_checkpoint(filepath)
+        if not success:
+            raise RuntimeError(f"Failed to load checkpoint state into engine from {filepath}")
+        return engine
 
     def _append_history(self, entry):
         """Appends a completed eon summary to the history.json log."""

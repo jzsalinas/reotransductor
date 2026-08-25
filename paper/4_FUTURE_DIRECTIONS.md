@@ -65,7 +65,7 @@ We plan to derive precision shear forecasts for:
 ## 4. Laboratory Metrology & Quantum Optical Clocks
 
 ### 4.1 Principle of Laboratory Probing
-The microscopic value of $\kappa_0 \approx 6.03 \times 10^{-71}\ \mathrm{m\cdot s^3\cdot K\cdot kg^{-1}}$ implies that cosmological dissipation accumulates measurable effects over gigayear timescales. However, modern optical lattice atomic clocks (e.g., strontium $^{87}\text{Sr}$ and ytterbium $^{171}\text{Yb}$) achieve fractional frequency uncertainties below:
+The microscopic value of $\kappa_0 \approx 1.6487 \times 10^{-125}\ \mathrm{m\cdot s^3\cdot K\cdot kg^{-1}}$ implies that cosmological dissipation accumulates measurable effects over gigayear timescales. However, modern optical lattice atomic clocks (e.g., strontium $^{87}\text{Sr}$ and ytterbium $^{171}\text{Yb}$) achieve fractional frequency uncertainties below:
 $$\frac{\Delta\nu}{\nu} \sim 10^{-18} - 10^{-19}.$$
 
 ### 4.2 Proposed Metrology Experiments

@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![NumPy](https://img.shields.io/badge/NumPy-2.0+-013243.svg?logo=numpy)](https://numpy.org/)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8+-11557c.svg)](https://matplotlib.org/)
-[![Tests: 67/67 Passed](https://img.shields.io/badge/tests-67%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Tests: 68/68 Passed](https://img.shields.io/badge/tests-68%20passed%20(100%25)-brightgreen.svg)](tests/)
 [![Data: Manifest Verified](https://img.shields.io/badge/data-provenance%20verified-blue.svg)](data/PROVENANCE.md)
 [![Version: 2.5.0](https://img.shields.io/badge/version-2.5.0-orange.svg)](pyproject.toml)
 
@@ -35,7 +35,7 @@ The autonomous 3D cosmological engine (`server/engine.py`) continuously tracks c
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                SIX COSMOLOGICAL EPOCHS CHECKPOINTING                                   │
 ├────────────────────────────┬──────────────┬────────────────────────┬───────────────────────────────────┤
-│ Epoch                      │ Scale Factor │ Binary Checkpoint File │ Observational Target & Mission    │
+│ Epoch                      │ Expansion Coordinate (a) │ Binary Checkpoint File │ Observational Target & Mission    │
 ├────────────────────────────┼──────────────┼────────────────────────┼───────────────────────────────────┤
 │ 1. Primordial Recombination│ a = 1.000    │ cmb_eon_N.npz          │ ESA Planck 2018 CMB Anisotropies  │
 │ 2. Cosmic Dawn             │ a = 1.500    │ dawn_eon_N.npz         │ First Collapses & JWST Protogal. │
@@ -95,7 +95,7 @@ source .venv/bin/activate
 pip install -e ".[server,test]"
 ```
 
-### 2. Run Automated Unit Tests (67/67 Tests Passing 100%)
+### 2. Run Automated Unit Tests (68/68 Tests Passing 100%)
 ```bash
 python -m unittest discover tests -v
 ```
@@ -201,7 +201,7 @@ reotransductor/
 │   ├── MATHEMATICAL_GENEALOGY_AND_THEORETICAL_LINEAGE.md
 │   ├── SERVER_DEPLOYMENT.md
 │   └── THEORY_AND_MATHEMATICAL_FORMULATION.md
-├── tests/                         # Full automated test suite (67 unit tests, 100% pass)
+├── tests/                         # Full automated test suite (68 unit tests, 100% pass)
 └── assets/                        # Publication figures (Planck, DESI, SPARC, Pantheon+, NANOGrav, Galaxy)
 ```
 

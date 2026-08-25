@@ -40,12 +40,7 @@ def run_bao_comparison(
         print(f"• Loading Target BAO/Cosmic Noon Checkpoint: '{target_checkpoint}'...")
         data = np.load(target_checkpoint)
         grid_n = int(data['rho'].shape[0])
-        engine = CosmologicalEngine(grid_size=grid_n, checkpoint_dir=os.path.dirname(target_checkpoint), auto_resume=False)
-        engine.rho = data['rho']
-        engine.tau = data['tau']
-        engine.scale_factor = float(data['scale_factor'])
-        engine.eon = int(data['eon'])
-        engine.total_steps = int(data.get('total_steps', 0))
+        engine = CosmologicalEngine.from_checkpoint(target_checkpoint)
     else:
         print(f"• Loading Cosmological State (checkpoint_dir='{checkpoint_path}', auto_resume={auto_resume})...")
         engine = CosmologicalEngine(checkpoint_dir=checkpoint_path, auto_resume=auto_resume)
@@ -221,23 +216,10 @@ def process_all_existing_checkpoints_bao(checkpoints_dir: str = "checkpoints"):
 
     print(f"• Found {len(npz_files)} BAO epoch checkpoints in '{checkpoints_dir}'. Processing BAO reports...")
     snapshots_dir = os.path.join(checkpoints_dir, "snapshots")
-    engine = CosmologicalEngine(checkpoint_dir=checkpoints_dir, auto_resume=False)
 
     for npz_path in npz_files:
         try:
-            data = np.load(npz_path)
-            engine.rho = data['rho']
-            engine.v_x = data['v_x']
-            engine.v_y = data['v_y']
-            engine.v_z = data['v_z']
-            engine.T = data['T']
-            engine.I = data['I']
-            engine.tau = data['tau']
-            engine.scale_factor = float(data['scale_factor'])
-            engine.eon = int(data['eon'])
-            engine.total_steps = int(data.get('total_steps', 0))
-            if 'tau_eon_start' in data:
-                engine.tau_eon_start = data['tau_eon_start']
+            engine = CosmologicalEngine.from_checkpoint(npz_path)
 
             print(f"\n--- Processing BAO: {os.path.basename(npz_path)} (Eon {engine.eon}) ---")
             metrics = generate_eon_bao_report(engine, output_dir=snapshots_dir)

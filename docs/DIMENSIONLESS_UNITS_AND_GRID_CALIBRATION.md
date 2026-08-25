@@ -35,8 +35,8 @@ The parameters declared in `CosmologicalUnits` (`server/physics_units.py`) are t
 # =====================================================================
 self.DT = 0.05
 self.H_0 = 0.0003
-self.G_CONST = 0.04
-self.CS2_BASE = 0.18
+self.G_CONST = 0.0001
+self.CS2_BASE = 1e-5
 self.DIFFUSION_BASE = 0.3
 self.LANDAUER_BASE = 0.015
 self.INFLATION_BOOST = 8.0
@@ -68,7 +68,7 @@ self.A_MAX_CONFORMAL = 7.0
 
 ---
 
-### 2.3. `self.G_CONST = 0.04` (Screened Poisson Gravitational Coupling)
+### 2.3. `self.G_CONST = 0.0001` (Screened Poisson Gravitational Coupling)
 * **Physical Basis:** **Jeans Collapse Length Scale ($\lambda_J$).**
 * **Mathematical Derivation:** The gravitational potential satisfies the 3D Poisson equation $\nabla^2 \phi = 4\pi G_{\text{code}} (\rho - \bar{\rho})$.
   The Jeans wavelength is given by:
@@ -79,7 +79,7 @@ self.A_MAX_CONFORMAL = 7.0
 
 ---
 
-### 2.4. `self.CS2_BASE = 0.18` (Base Adiabatic Sound Speed Squared)
+### 2.4. `self.CS2_BASE = 1e-5` (Base Adiabatic Sound Speed Squared)
 * **Physical Basis:** **Monoatomic Ideal Gas Thermodynamics ($\gamma = 5/3$).**
 * **Mathematical Derivation:** In cosmic plasma:
   $$c_s^2(T) = \gamma \frac{k_B T}{\mu m_H}$$

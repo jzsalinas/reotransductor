@@ -92,7 +92,7 @@ class CosmologicalUnits:
         box_size_mpc: float = 100.0,
         grid_resolution: int = 32,
         c_code: float = 2.5,
-        h0_km_s_mpc: float = 70.0
+        h0_km_s_mpc: float = 67.36
     ):
         self.constants = FundamentalConstants()
         self.planck = PlanckScales()

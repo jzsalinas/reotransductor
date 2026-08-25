@@ -40,8 +40,8 @@ class TestAuditRemediation(unittest.TestCase):
         """
         engine = CosmologicalEngine(grid_size=16, checkpoint_dir=self.temp_dir, auto_resume=False, seed=123)
         self.assertEqual(engine.t_coord, 0.0)
-        np.testing.assert_allclose(engine.tau_excess, 0.0)
-        np.testing.assert_allclose(engine.tau_physical, 0.0)
+        np.testing.assert_allclose(engine.tau_excess - engine.to_cpu(engine.tau_eon_start), 0.0)
+        np.testing.assert_allclose(engine.tau_physical - engine.to_cpu(engine.tau_eon_start), 0.0)
 
         # Run 10 integration steps
         n_steps = 10
