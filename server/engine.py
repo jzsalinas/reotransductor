@@ -648,6 +648,23 @@ class CosmologicalEngine:
         if is_conformal_bounce:
             self._handle_bounce(transition_type="CCC (Muerte Térmica)")
 
+    def _apply_black_hole_endpoint_physics(self, tau_new):
+        """
+        Executes the chosen Black Hole endpoint physics architecture.
+        STABLE_SATURATION acts as an effective boundary condition for the astophysical era.
+        """
+        if self.bh_model == BlackHoleEndpointModel.STABLE_SATURATION:
+            # Numerically saturates Delta tau to prevent IEEE 754 overflow, effectively mimicking 
+            # a stable event horizon without stopping coordinate time.
+            return self.xp.clip(tau_new, 0.0, 1e7)
+        elif self.bh_model == BlackHoleEndpointModel.HAWKING_EVAPORATION:
+            # Future Implementation: -dM/dt = alpha / M^2
+            raise NotImplementedError("HAWKING_EVAPORATION not yet mathematically implemented for 3D lattice.")
+        elif self.bh_model == BlackHoleEndpointModel.QUANTUM_WHITE_HOLE:
+            # Future Implementation: Local metric bounce, energy release, bypassing CCC
+            raise NotImplementedError("QUANTUM_WHITE_HOLE not yet mathematically implemented for 3D lattice.")
+        return tau_new
+
     def _handle_bounce(self, transition_type="CCC (Muerte Térmica)"):
         """Processes transition to next eon, logs history, archives full snapshot, and notifies Telegram."""
         eon_duration_wall = time.time() - self.eon_start_walltime
@@ -1143,8 +1160,8 @@ class CosmologicalEngine:
             "box_size_mpc": float(self.units.box_size_mpc),
             "grid_size": int(self.grid_size),
             "h0_kms_mpc": float(self.units.h0_kms_mpc),
-            "g_const": float(self.G_CONST),
-            "cs2_base": float(self.CS2_BASE),
+            "g_const": float(self.units.G_CONST),
+            "cs2_base": float(self.units.CS2_BASE),
             "bh_model": self.bh_model.name
         }
         data["physics_manifest_json"] = json.dumps(manifest)
