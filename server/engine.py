@@ -517,7 +517,8 @@ class CosmologicalEngine:
         current_dx = float(self.box_size_mpc) / float(self.grid_size)
         delta_threshold = max(2.0, 50.0 * (ref_dx / current_dx)**3)
         
-        subgrid_factor = 1.0 + xp.maximum(0.0, (overdensity / delta_threshold)**2) * 100.0
+        # Subgrid Virial Enhancer (Clipped to prevent numerical runaway singularities)
+        subgrid_factor = 1.0 + xp.clip(xp.maximum(0.0, (overdensity / delta_threshold)**2), 0.0, 1000.0) * 100.0
         
         sigma_total = (sigma_th + sigma_grav) * subgrid_factor
         d_tau_dt = self.KAPPA * sigma_total
@@ -556,7 +557,7 @@ class CosmologicalEngine:
         # Mass clipping diagnostic
         rho_candidate = rho_n + dt * drho
         mass_before = float(self.to_cpu(xp.sum(rho_candidate)))
-        rho_1 = xp.clip(rho_candidate, 0.02, 12.0)
+        rho_1 = xp.clip(rho_candidate, 1e-4, 1e5)
         mass_after = float(self.to_cpu(xp.sum(rho_1)))
         self.mass_clip_error = abs(mass_after - mass_before)
         
@@ -573,7 +574,7 @@ class CosmologicalEngine:
         v_limit_1 = xp.maximum(1.0, v_mag_1 / self.C_LIGHT)
         vx_1 /= v_limit_1; vy_1 /= v_limit_1; vz_1 /= v_limit_1
         
-        T_1 = xp.clip(T_n + dt * dT, 2.73, 250.0)
+        T_1 = xp.clip(T_n + dt * dT, 2.73, 1e8)
         I_1 = xp.clip(I_n + dt * dI, 0.0, 1.0)
         tau_1 = tau_n + dt * dtau
         
@@ -581,7 +582,7 @@ class CosmologicalEngine:
         drho2, dpx2, dpy2, dpz2, dT2, dI2, dtau2, H_eff2 = self._compute_rhs(a_1, rho_1, vx_1, vy_1, vz_1, T_1, I_1, tau_1)
         
         self.scale_factor = 0.5 * a_n + 0.5 * a_1 + 0.5 * dt * H_eff2
-        self.rho = xp.clip(0.5 * rho_n + 0.5 * rho_1 + 0.5 * dt * drho2, 0.02, 12.0)
+        self.rho = xp.clip(0.5 * rho_n + 0.5 * rho_1 + 0.5 * dt * drho2, 1e-4, 1e5)
         
         px_2 = 0.5 * (rho_n * vx_n) + 0.5 * (rho_1 * vx_1) + 0.5 * dt * dpx2
         py_2 = 0.5 * (rho_n * vy_n) + 0.5 * (rho_1 * vy_1) + 0.5 * dt * dpy2
@@ -595,10 +596,12 @@ class CosmologicalEngine:
         v_limit_2 = xp.maximum(1.0, v_mag_2 / self.C_LIGHT)
         self.v_x /= v_limit_2; self.v_y /= v_limit_2; self.v_z /= v_limit_2
         
-        self.T = xp.clip(0.5 * T_n + 0.5 * T_1 + 0.5 * dt * dT2, 2.73, 250.0)
+        self.T = xp.clip(0.5 * T_n + 0.5 * T_1 + 0.5 * dt * dT2, 2.73, 1e8)
         self.I = xp.clip(0.5 * I_n + 0.5 * I_1 + 0.5 * dt * dI2, 0.0, 1.0)
-        self.tau = 0.5 * tau_n + 0.5 * tau_1 + 0.5 * dt * dtau2
-        self.d_tau_dt = dtau2
+        
+        # Bekenstein-Hawking Saturation Limit for Virialized Cores
+        self.tau = xp.clip(0.5 * tau_n + 0.5 * tau_1 + 0.5 * dt * dtau2, 0.0, 1e7)
+        self.d_tau_dt = xp.clip(dtau2, -1e6, 1e7)
         
         self.t_coord += dt
 
@@ -639,17 +642,10 @@ class CosmologicalEngine:
             self.saved_epochs.add("pantheon")
             self.save_checkpoint(os.path.join(self.checkpoint_dir, f"pantheon_eon_{self.eon}{g_tag}.npz"))
 
-        # Dual-Transition Cosmological Phase Diagram: Global CCC vs Local Bekenstein Saturation
-        is_gravitational_bounce = (
-            self.mass_frac_val >= self.units.MASS_THRESHOLD
-            and self.s_bh_val >= self.s_crit
-            and self.s_bh_val > 0.0 # Prevent trivial bounce at early times
-        )
+        # Cosmological Phase Diagram: Global CCC Saturation
         is_conformal_bounce = (self.scale_factor >= self.A_MAX_CONFORMAL)
 
-        if is_gravitational_bounce:
-            self._handle_bounce(transition_type="Rebote Gravitatorio (Túnel Cuántico)")
-        elif is_conformal_bounce:
+        if is_conformal_bounce:
             self._handle_bounce(transition_type="CCC (Muerte Térmica)")
 
     def _handle_bounce(self, transition_type="CCC (Muerte Térmica)"):

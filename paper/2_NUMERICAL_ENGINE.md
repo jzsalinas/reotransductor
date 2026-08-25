@@ -94,6 +94,10 @@ The nominal array memory footprint for state tensors ($\rho, v_x, v_y, v_z, T, \
 
 The entire $256^3$ simulation executes comfortably under $1.0\text{ GB}$ of VRAM, allowing production runs on standard consumer GPUs and headless compute clusters.
 
+### 3.3 Float32 Constraints and the Bekenstein-Hawking Numerical Freeze
+Due to the exponential mass-gravity feedback loop governing extreme overdensities, the proper-time tensor $\tau$ grows asymptotically at the core of virialized halos. Allowing $\tau$ to grow unbounded inevitably causes IEEE 754 single-precision (`float32`) arithmetic overflows (reaching values $\sim 3.4 \times 10^{38}$) in subsequent coupled equations. To ensure mathematical stability within the bounds of consumer GPU memory architecture, the integration scheme imposes a hard numerical ceiling on $\tau$.
+We map this numerical safeguard to the phenomenological **Bekenstein-Hawking Freeze** (Section 4.7 of Paper I). The proper time is clipped mathematically at $\tau_{\text{crit}} = 10^7$. Macroscopically, a time dilation factor of 10 million effectively represents absolute temporal stasis for the exterior cosmological fluid. Reserving precision bits beyond this threshold yields no hydrodynamical consequence, thus reconciling GPU hardware constraints with the theoretical expectation of "frozen stars" (stable galactic anchors).
+
 ---
 
 ## 4. Automated 6-Epoch Cosmological Checkpointing

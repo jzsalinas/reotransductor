@@ -149,7 +149,9 @@ def main():
                 rho_max = float(np.max(engine.to_cpu(engine.rho)))
                 rho_mean = float(np.mean(engine.to_cpu(engine.rho)))
                 t_mean = float(np.mean(engine.to_cpu(engine.T)))
-                tau_max = float(np.max(engine.to_cpu(engine.tau)))
+                tau_cpu = engine.to_cpu(engine.tau)
+                tau_max = float(np.max(tau_cpu))
+                bh_count = int(np.sum(tau_cpu >= 0.99e7))
 
                 print(
                     f"[{time.strftime('%H:%M:%S')}] Eon {engine.eon:<2} | "
@@ -157,7 +159,7 @@ def main():
                     f"Prog: {engine.progress * 100.0:5.1f}% | "
                     f"ρ̄={rho_mean:.3f} (max={rho_max:5.2f}) | "
                     f"T̄={t_mean:5.1f}K | "
-                    f"τ_max={tau_max:6.1f} | "
+                    f"τ_max={tau_max:6.1f} (BHs: {bh_count}) | "
                     f"⚡ {sps:6.1f} steps/s"
                 )
                 last_log_time = now
