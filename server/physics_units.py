@@ -127,7 +127,8 @@ class CosmologicalUnits:
         self.DT = 0.05
         self.H_0 = self.get_hubble_code_unit()  # Dimensionless expansion rate derived directly from physical H0 and time_unit_s
         self.G_CONST = 0.0001  # Screened Poisson gravitational coupling parameter
-        self.CS2_BASE = 0.18  # Adiabatic sound speed baseline at T_CMB = 2.7255 K
+        # Adiabatic sound speed baseline at T_CMB = 2.7255 K (Non-relativistic baryonic gas limits)
+        self.CS2_BASE = 1e-5
         self.DIFFUSION_BASE = 0.3  # Spitzer plasma conduction baseline at T_CMB
         self.LANDAUER_BASE = 0.015  # Landauer thermal erasure baseline at T_CMB
         self.INFLATION_BOOST = 8.0  # Primordial scalar field inflation boost

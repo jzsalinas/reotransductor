@@ -110,8 +110,12 @@ $$\nabla_\mu T^{\mu\nu}_{\text{matter}} = 0 \iff \nabla_\mu G^{\mu\nu} = 0.$$
 *In virialized, steady-state astrophysical systems (such as mature $z=0$ galaxies), the local accumulation of the time-dilation field $\tau$ flattens the central effective gravitational potential. As a rigorous phenomenological consequence, this dissipative framework natively predicts the kinetic emergence of Burkert-like constant-density cores in galactic centers, circumventing the cuspy singularities historically expected under collisionless NFW dark matter profiles.*
 
 ### 4.5 Conformal Boundary and Crossover Hypothesis
-Under asymptotic cosmic expansion with positive cosmological constant $\Lambda > 0$, the matter density dilutes as $\rho \propto a^{-3} \to 0$ and radiation cools as $T \propto a^{-1} \to 0$. In accordance with Penrose's Conformal Cyclic Cosmology (CCC), as $a \to \infty$, the metric approaches conformal invariance ($m \to 0$). The spacelike future hypersurface $\mathscr{I}^+$ of Eon $N$ maps to the past Big Bang hypersurface $\mathscr{I}^-$ of Eon $N+1$ via the global conformal rescaling $\hat{g}_{\mu\nu} = \Omega^2 g_{\mu\nu}$. In this framework, primordial perturbations inherit the phase of the fossil proper time tensor:
-$$\hat{\rho}_{\text{new}}(\mathbf{k}) = \sqrt{P(k)} \exp\left(i \left[ \alpha_{\text{mem}} \operatorname{Arg}(\hat{\tau}(\mathbf{k})) + (1 - \alpha_{\text{mem}}) \theta_{\text{quant}}(\mathbf{k}) \right]\right).$$
+We hypothesize that as the universe expands asymptotically ($a \to \infty$) and the physical state variables ($\rho, T$) approach the zero-mass radiative limit, the thermodynamic clock field $\tau_{\text{physical}}$ becomes the dominant cosmological scale. In the limit where conformal rescaling bridges to a subsequent eon (as proposed in Roger Penrose's Conformal Cyclic Cosmology), the residual fossil field $\Delta\tau(\mathbf{x}, t \to \infty)$ acts as a conformal blueprint for the initial density fluctuations of the subsequent thermodynamic cycle.
+
+### 4.6 Postulate 3 (Holographic Gravity Parity)
+For the conformal boundary transition to satisfy macroscopic energy-momentum conservation across eons, we postulate a strict Holographic Gravity Parity (a 1:1 equivalence). The fossil proper-time tensor $\tau$ generated in the preceding eon couples to the local spatial geometry of the nascent eon exactly as baryonic mass does. Specifically, in the Newtonian limit (Poisson's equation), the effective gravitational potential is sourced by an apparent density:
+$$\rho_{\text{eff}} = \rho + \mathcal{H} \cdot \tau_{\text{prior}}$$
+where the coupling constant $\mathcal{H} = 1.0$ by equivalence. This ensures that the time-dilation memory of past structural virialization acts macroscopically as "Apparent Dark Matter," providing the necessary potential wells for the primordial gas to overcome Jeans mass limits purely via baryonic hydrodynamics.
 
 ---
 

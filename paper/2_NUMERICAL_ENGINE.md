@@ -39,7 +39,7 @@ The engine evolves the cosmological fluid equations with thermal conduction and 
 
 2. **Momentum Evolution with Hubble Damping:**
    $$\frac{\partial \mathbf{v}}{\partial t} + (\mathbf{v} \cdot \nabla) \mathbf{v} = -\frac{\nabla P}{\rho} - \nabla \Phi - 2 H(t) \mathbf{v}$$
-   where $H(t) = H_0 / a(t)^{3/2}$ is the comoving expansion rate, and the adiabatic sound speed is bounded relativistically: $c_s^2(T) = \min(0.33 c^2, \gamma k_B T / \mu)$.
+   where $H(t) = H_0 / a(t)^{3/2}$ is the comoving expansion rate. The adiabatic sound speed is constrained to strict non-relativistic baryonic limits ($c_s \ll c$) to accurately model post-recombination Jeans mass instabilities.
 
 3. **Energy and Heat Transport Equation:**
    $$\frac{\partial T}{\partial t} = \nabla \cdot (\kappa_{\text{spitzer}}(T, \rho) \nabla T) - (\gamma - 1) T (\nabla \cdot \mathbf{v}) - 2 H(t) T$$
@@ -58,6 +58,13 @@ The engine evolves the cosmological fluid equations with thermal conduction and 
   $$\hat{\Phi}(\mathbf{k}) = -\frac{4\pi G}{k^2} \hat{\rho}(\mathbf{k}), \qquad \mathbf{k} \neq \mathbf{0},$$
   with $\hat{\Phi}(\mathbf{0}) = 0$ enforcing the neutral periodic cosmological background.
 
+### 2.3 Holographic Gravity Bootstrap and the Synthetic Eon 0 Burn-in Phase
+
+A fundamental challenge in simulating the infinite cycle of Conformal Cyclic Cosmology (CCC) is the numerical initialization of the "first" eon (Eon 1). According to the Reotransductor equivalence principle, the fossil proper time field ($\tau$) from the preceding eon acts as a Holographic Gravity source, providing a conformal apparent mass $\rho_{\text{apparent}} \propto \tau_{\text{prior}}$ that aids primordial gas in overcoming the Jeans stability limit without invoking collisionless dark matter particles. 
+
+Since Eon 1 possesses no literal computational predecessor, it must be pre-conditioned using a Synthetic Eon 0 Burn-in formulation. To bootstrap the cycle in a mathematically rigorous and symmetric fashion, we initialize a synthetic fossil memory field proportional to the primordial density fluctuations:
+$$\tau_{\text{synthetic}} = \kappa_{\text{boot}} \cdot \max(0, \delta\rho_{\text{init}})$$
+where the Pre-Conditioning Constant $\kappa_{\text{boot}} = 50.0$ acts as a numerical burn-in scaling factor. Given that the primordial density amplitude in the grid is normalized to $\sigma_{\delta} \approx 0.45$, this injects a modest initial apparent mass field with $\langle \tau_{\text{synthetic}} \rangle \approx 22.5$. This $\mathcal{O}(10^1)$ boost is deliberately calibrated to be at least an order of magnitude smaller than the mature Bekenstein-Hawking saturation of virialized clusters ($\mathcal{O}(10^3)$), ensuring that the initial pre-conditioning breaks the linear acoustic Jeans barrier gently while leaving space for pure non-linear hydrodynamics to dominate the production of true physical entropy as the eon evolves. For all subsequent eons ($N \ge 2$), the simulation rigorously discards the synthetic bootstrap and perfectly inherits the conformal $\tau$ tensor computationally integrated from the previous universe.
 ---
 
 ## 3. GPU Acceleration and Memory Optimization

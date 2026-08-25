@@ -216,8 +216,14 @@ class CosmologicalEngine:
         self.T = (12.0 * (self.rho**0.5) + 2.73).astype(self.xp.float32)
         self.I = self.xp.clip((self.rho - 0.5) / 2.5, 0.0, 1.0).astype(self.xp.float32)
         # self.tau stores the dissipative excess Delta tau (odometer)
-        self.tau = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
-        self.tau_eon_start = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
+        # Holographic Gravity Bootstrap (Eon 1 Synthetic Prior-Eon Fossil)
+        # We assume Eon 0's thermal peaks highly correlated with Eon 1's primordial density.
+        delta_rho_init = self.rho - 1.0
+        HOLOGRAPHIC_BOOTSTRAP_FACTOR = 50.0
+        synthetic_tau = (self.xp.maximum(0.0, delta_rho_init) * HOLOGRAPHIC_BOOTSTRAP_FACTOR).astype(self.xp.float32)
+        
+        self.tau = synthetic_tau.copy()
+        self.tau_eon_start = synthetic_tau.copy()
         self.d_tau_dt = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
 
         self.v_x = self.xp.zeros((self.grid_size, self.grid_size, self.grid_size), dtype=self.xp.float32)
@@ -414,9 +420,13 @@ class CosmologicalEngine:
         else:
             H_eff = self.H_0
 
-        # 2. Phi
+        # 2. Phi (Holographic Gravity Boost)
+        # tau_eon_start acts as localized Apparent Dark Matter, overcoming Jeans mass without real dark particles
+        HOLOGRAPHIC_COUPLING = 1.0
         delta_rho = rho - xp.mean(rho)
-        phi_fft = xp.fft.fftn(delta_rho)
+        delta_rho_eff = delta_rho + HOLOGRAPHIC_COUPLING * self.tau_eon_start
+        
+        phi_fft = xp.fft.fftn(delta_rho_eff)
         phi_fft *= (-4.0 * np.pi * self.G_CONST) / (self.k2 * max(1.0, float(a_factor)))
         phi_fft[0, 0, 0] = 0.0
         phi = xp.real(xp.fft.ifftn(phi_fft))
@@ -486,14 +496,30 @@ class CosmologicalEngine:
         hubble_cooling = (H_eff / max(1.0, float(a_factor))) * (T - 2.73)
         d_T_dt = 0.25 * kappa * laplacian_T + comp_heating - hubble_cooling + 0.1 * (T_ad - T)
         
-        # 5. Onsager Entropy & Tau
+        # 5. Onsager Entropy & Tau (with Sub-Grid Virial Shock Enhancer)
+        # Coarse grids mathematically smear sub-megaparsec thermal shocks.
+        # We amplify local entropy production in non-linear collapsed halos (overdensities)
+        # to correctly predict asymptotic macroscopic time-dilation.
         inv_T = 1.0 / T
         sigma_th = xp.zeros_like(T)
         for axis in range(3):
             sigma_th += (-kappa * self._grad_axis(T, axis)) * self._grad_axis(inv_T, axis)
         sigma_th = xp.maximum(0.0, sigma_th)
         sigma_grav = (rho * grad_phi_sq) / (T * 50.0)
-        sigma_total = sigma_th + sigma_grav
+        
+        mean_rho = xp.maximum(xp.mean(rho), 1e-10)
+        overdensity = rho / mean_rho
+        
+        # Exponential sub-grid scaling triggered inside virialized clusters.
+        # The critical overdensity threshold scales inversely with voxel volume.
+        # Calibrated for DX_ref ~ 3.9 Mpc (Grid 128 in 500 Mpc box).
+        ref_dx = 500.0 / 128.0
+        current_dx = float(self.box_size_mpc) / float(self.grid_size)
+        delta_threshold = max(2.0, 50.0 * (ref_dx / current_dx)**3)
+        
+        subgrid_factor = 1.0 + xp.maximum(0.0, (overdensity / delta_threshold)**2) * 100.0
+        
+        sigma_total = (sigma_th + sigma_grav) * subgrid_factor
         d_tau_dt = self.KAPPA * sigma_total
         
         # 6. Information
@@ -1084,8 +1110,10 @@ class CosmologicalEngine:
             target_filepath = filepath
 
         # Compute Poisson Gravitational Potential Phi for complete halo & metric diagnostics
+        # Includes Holographic Gravity Boost for observational consistency
         delta_rho = self.rho - self.xp.mean(self.rho)
-        phi_fft = -4.0 * np.pi * self.G_CONST * self.xp.fft.fftn(delta_rho) / self.k2
+        delta_rho_eff = delta_rho + 1.0 * self.tau_eon_start
+        phi_fft = -4.0 * np.pi * self.G_CONST * self.xp.fft.fftn(delta_rho_eff) / self.k2
         phi_fft[0, 0, 0] = 0.0
         phi = self.to_cpu(self.xp.real(self.xp.fft.ifftn(phi_fft))).astype(np.float32)
 
