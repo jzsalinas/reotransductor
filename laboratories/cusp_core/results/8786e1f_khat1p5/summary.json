@@ -1,0 +1,979 @@
+{
+  "classification": "E. SCIENTIFIC EXPERIMENT INVALID \u2014 NUMERICAL FAILURE",
+  "conservation_failures": [
+    {
+      "branch": "conductive",
+      "cells": 512,
+      "central_density_relative_change": -0.6581386720613697,
+      "core_radius_cells": null,
+      "core_radius_rs": null,
+      "density_L1_change": 0.009910537983333571,
+      "dr_rs": 0.01953125,
+      "flat_rotation_regions_rs": [
+        [
+          1.26953125,
+          3.84765625
+        ]
+      ],
+      "gamma_r_min": -0.4038565327271382,
+      "gravitational_energy": -43.86772692511617,
+      "internal_energy": 25.353464820245353,
+      "kinetic_energy": 0.022861881911811276,
+      "mass": 18.70886740662315,
+      "maximum_abs_conductive_luminosity": 35.776259032272065,
+      "maximum_vc_km_s": 108.20443127990683,
+      "maximum_vc_v0": 1.649901190560956,
+      "minimum_density": 0.0008365456649260099,
+      "minimum_internal_energy_density": 0.0010946853237092172,
+      "minimum_specific_internal_energy": 0.8060369118843662,
+      "r_min_rs": 0.166015625,
+      "relative_mass_error": 0.0,
+      "relative_total_energy_error": 1.803058324401063e-06,
+      "time_t0": 0.25,
+      "total_energy": -18.491400222959008
+    }
+  ],
+  "control_comparisons": [
+    {
+      "cells": 512,
+      "delta_central_density_relative": 0.0,
+      "delta_core_radius_rs": null,
+      "delta_density_L1": 0.0,
+      "delta_gamma_r_min": 0.0,
+      "delta_vc_relative_L1": 0.0,
+      "time_t0": 0.0
+    },
+    {
+      "cells": 512,
+      "delta_central_density_relative": -0.6581386720613697,
+      "delta_core_radius_rs": null,
+      "delta_density_L1": 0.009910537983333573,
+      "delta_gamma_r_min": 0.8786232923699391,
+      "delta_vc_relative_L1": 0.00519844533087114,
+      "time_t0": 0.25
+    },
+    {
+      "cells": 1024,
+      "delta_central_density_relative": 0.0,
+      "delta_core_radius_rs": null,
+      "delta_density_L1": 0.0,
+      "delta_gamma_r_min": 0.0,
+      "delta_vc_relative_L1": 0.0,
+      "time_t0": 0.0
+    },
+    {
+      "cells": 2048,
+      "delta_central_density_relative": 0.0,
+      "delta_core_radius_rs": null,
+      "delta_density_L1": 0.0,
+      "delta_gamma_r_min": 0.0,
+      "delta_vc_relative_L1": 0.0,
+      "time_t0": 0.0
+    }
+  ],
+  "convergence": [],
+  "manifest": {
+    "conductive_conductivity_hat": 1.5,
+    "control_conductivity_hat": 0.0,
+    "git_commit": "8786e1fec25c6dd8021fdd53238e79b7c4585399",
+    "implementation": "CPython",
+    "laboratory_config": {
+      "cfl": 0.35,
+      "conductivity_hat_star": 1.5,
+      "control_density_l1_tolerance": 1e-10,
+      "control_slope_tolerance": 1e-08,
+      "control_velocity_tolerance": 1e-10,
+      "energy_tolerance": 1e-06,
+      "gamma": 1.6666666666666667,
+      "mass_tolerance": 1e-12,
+      "minimum_resolved_cells": 8,
+      "radius": 10.0,
+      "required_core_cells": 16
+    },
+    "numpy_dtype": "float64",
+    "packages": {
+      "matplotlib": "3.11.1",
+      "numpy": "2.4.6",
+      "pytest": null,
+      "setuptools": null
+    },
+    "physical_scales": {
+      "r_s_kpc": 1.0,
+      "rho_s_msun_pc3": 1.0
+    },
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+    "python": "3.11.15 (main, Jun 11 2026, 04:03:40) [Clang 22.1.3 ]",
+    "resolutions": [
+      512,
+      1024,
+      2048
+    ],
+    "source_sha256": {
+      "laboratories/cusp_core/__init__.py": "d47b9259b3d84da2a031e5b9286a0187eff2577a05413bece780902b9b49fa76",
+      "laboratories/cusp_core/conduction.py": "00dfebf2d1f8d98d1326b488e098abc101757d16a2b96b5ea61e41fbd1a20979",
+      "laboratories/cusp_core/config.py": "8046755b780acd47ff42099f0894ee1ded2ae86599a032e1ea1ba3efa6b0f416",
+      "laboratories/cusp_core/diagnostics.py": "f1bcdbe49e2905a4510f16ebe073d1eb5655f6fbb9645a21fa3e04d2e880ba05",
+      "laboratories/cusp_core/equilibrium.py": "4b13f006600ccc3e4faafe1639e17a43473cf1d11a3c553eab45b27863e911e7",
+      "laboratories/cusp_core/grid.py": "aef35e90a8a5189cc8878fc915bd9b469a5968072001346811b94ccbd3ad35d6",
+      "laboratories/cusp_core/hydrodynamics.py": "826c2c71d1b220ff126fff50a128a21a29baa7fa63c61f435009fcfae130ec8c",
+      "laboratories/cusp_core/run_control.py": "a94976d89f88c57c990fd99a8ae07800436959fa44180f96086050802332d0b8",
+      "laboratories/cusp_core/solver.py": "23935aa6dfa2bfafda288ae5262d90c7f5d0b05e576c8b65736a9ad6620f6d8e",
+      "laboratories/cusp_core/tests/__init__.py": "498138138a7b1236476f6bc66c83cc3e4b888d70b8fd309dcddb26e5c79df9d2",
+      "laboratories/cusp_core/tests/test_laboratory.py": "9122b5b5bb9c72f82212e542afbcecb26d9e994f3132455b8df1b03a1c0c4204",
+      "laboratories/cusp_core/validation.py": "d472914520f0e7fe373c8e62c1aa99f1aadb68f98cb163768bb4318c649166c6"
+    },
+    "specification_sha256": "83c6a7de7776c53683e2979176d588c2ceb2c707ae0870b7ed4e3fb1e83e0a2b",
+    "times_t0": [
+      0.0,
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "wall_seconds": 23.988259077072144
+  },
+  "numerical_failures": [
+    {
+      "branch": "conductive",
+      "cells": 512,
+      "message": "MUSCL reconstruction produced non-positive density",
+      "target_time_t0": 0.5,
+      "time_t0": 0.32605753108385743
+    },
+    {
+      "branch": "conductive",
+      "cells": 1024,
+      "message": "Implicit conduction produced non-positive temperature",
+      "target_time_t0": 0.25,
+      "time_t0": 0.12315763618760787
+    },
+    {
+      "branch": "conductive",
+      "cells": 2048,
+      "message": "Implicit conduction produced non-positive temperature",
+      "target_time_t0": 0.25,
+      "time_t0": 0.057036552700526745
+    }
+  ],
+  "profiles_file": "laboratories/cusp_core/results/8786e1f_khat1p5/profiles.npz",
+  "runs": {
+    "conductive_N1024": {
+      "causal": {
+        "boundary_radius_rs": 0.99609375,
+        "cumulative_advective_internal_energy_into_center": 0.0033238088720382057,
+        "cumulative_conductive_energy_into_center": -0.25316605937072956,
+        "cumulative_gravity_work_center": -0.01661381424154153,
+        "cumulative_pressure_work_center": -0.022470301972716083,
+        "initial_central_internal_energy": 4.06780701251065,
+        "series": []
+      },
+      "failure": {
+        "branch": "conductive",
+        "cells": 1024,
+        "message": "Implicit conduction produced non-positive temperature",
+        "target_time_t0": 0.25,
+        "time_t0": 0.12315763618760787
+      },
+      "records": [
+        {
+          "branch": "conductive",
+          "cells": 1024,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.1510553076856365,
+          "gravitational_energy": -43.880211248973175,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 29.28667754713121,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.2086113698949151,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.492648276978066
+        }
+      ],
+      "steps": 56
+    },
+    "conductive_N2048": {
+      "causal": {
+        "boundary_radius_rs": 1.0009765625,
+        "cumulative_advective_internal_energy_into_center": 0.0003379549018077107,
+        "cumulative_conductive_energy_into_center": -0.10824630569160791,
+        "cumulative_gravity_work_center": -0.002896934754593353,
+        "cumulative_pressure_work_center": -0.0045481379046264005,
+        "initial_central_internal_energy": 4.094835551239516,
+        "series": []
+      },
+      "failure": {
+        "branch": "conductive",
+        "cells": 2048,
+        "message": "Implicit conduction produced non-positive temperature",
+        "target_time_t0": 0.25,
+        "time_t0": 0.057036552700526745
+      },
+      "records": [
+        {
+          "branch": "conductive",
+          "cells": 2048,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.077441892063689,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 29.286660068985828,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.000827015158517402,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942122,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.492956218065995
+        }
+      ],
+      "steps": 47
+    },
+    "conductive_N512": {
+      "causal": {
+        "boundary_radius_rs": 0.99609375,
+        "cumulative_advective_internal_energy_into_center": 0.0526385064695386,
+        "cumulative_conductive_energy_into_center": -0.5626884432200201,
+        "cumulative_gravity_work_center": -0.06740658264133,
+        "cumulative_pressure_work_center": -0.057447621985251565,
+        "initial_central_internal_energy": 4.06780701251065,
+        "series": [
+          {
+            "direct_central_internal_energy_change": -0.5005620940624271,
+            "integrated_advective_internal_energy_into_center": 0.025424009726774614,
+            "integrated_conductive_energy_into_center": -0.4733789445011486,
+            "integrated_gravity_work_center": -0.05361962203980438,
+            "integrated_pressure_work_center": -0.05655180881161288,
+            "internal_energy_balance_residual": 0.003944649523559773,
+            "time_t0": 0.25
+          }
+        ]
+      },
+      "failure": {
+        "branch": "conductive",
+        "cells": 512,
+        "message": "MUSCL reconstruction produced non-positive density",
+        "target_time_t0": 0.5,
+        "time_t0": 0.32605753108385743
+      },
+      "records": [
+        {
+          "branch": "conductive",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.2824798250970773,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 29.28665893164221,
+          "maximum_vc_km_s": 108.10264201374463,
+          "maximum_vc_v0": 1.648349107809438,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.33833052855813156,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.491433564092226
+        },
+        {
+          "branch": "conductive",
+          "cells": 512,
+          "central_density_relative_change": -0.6581386720613697,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.009910537983333571,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.26953125,
+              3.84765625
+            ]
+          ],
+          "gamma_r_min": -0.4038565327271382,
+          "gravitational_energy": -43.86772692511617,
+          "internal_energy": 25.353464820245353,
+          "kinetic_energy": 0.022861881911811276,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 35.776259032272065,
+          "maximum_vc_km_s": 108.20443127990683,
+          "maximum_vc_v0": 1.649901190560956,
+          "minimum_density": 0.0008365456649260099,
+          "minimum_internal_energy_density": 0.0010946853237092172,
+          "minimum_specific_internal_energy": 0.8060369118843662,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.803058324401063e-06,
+          "time_t0": 0.25,
+          "total_energy": -18.491400222959008
+        }
+      ],
+      "steps": 99
+    },
+    "control_N1024": {
+      "causal": {
+        "boundary_radius_rs": 0.99609375,
+        "cumulative_advective_internal_energy_into_center": -1.0291350307333339e-16,
+        "cumulative_conductive_energy_into_center": 0.0,
+        "cumulative_gravity_work_center": -9.171705683414067e-16,
+        "cumulative_pressure_work_center": -9.86093480266782e-16,
+        "initial_central_internal_energy": 4.06780701251065,
+        "series": [
+          {
+            "direct_central_internal_energy_change": 0.0,
+            "integrated_advective_internal_energy_into_center": 0.0,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 2.6865314053167472e-17,
+            "integrated_pressure_work_center": 2.68666453333114e-17,
+            "internal_energy_balance_residual": -2.68666453333114e-17,
+            "time_t0": 0.25
+          },
+          {
+            "direct_central_internal_energy_change": 0.0,
+            "integrated_advective_internal_energy_into_center": 5.084359506893537e-17,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 7.134548449623798e-17,
+            "integrated_pressure_work_center": 1.051613711715559e-16,
+            "internal_energy_balance_residual": -1.5600496624049128e-16,
+            "time_t0": 0.5
+          },
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 5.691818363796588e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 3.364364410235453e-16,
+            "integrated_pressure_work_center": 7.159099853696257e-16,
+            "internal_energy_balance_residual": -3.9691340204915944e-16,
+            "time_t0": 1.0
+          },
+          {
+            "direct_central_internal_energy_change": -8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": -1.0291350307333339e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": -9.171705683414067e-16,
+            "integrated_pressure_work_center": -9.86093480266782e-16,
+            "internal_energy_balance_residual": 2.008285636399902e-16,
+            "time_t0": 2.0
+          }
+        ]
+      },
+      "failure": null,
+      "records": [
+        {
+          "branch": "control",
+          "cells": 1024,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.1510553076856365,
+          "gravitational_energy": -43.880211248973175,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.2086113698949151,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.492648276978066
+        },
+        {
+          "branch": "control",
+          "cells": 1024,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 1.2188298168223035e-16,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.1510553076856365,
+          "gravitational_energy": -43.88021124897317,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 1.9632484556495672e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.2086113698949151,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 3.8422984372912754e-16,
+          "time_t0": 0.25,
+          "total_energy": -18.49264827697806
+        },
+        {
+          "branch": "control",
+          "cells": 1024,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 2.3372057016160005e-16,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.1510553076856365,
+          "gravitational_energy": -43.880211248973175,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 3.1964533211412996e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.20861136989491516,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.9211492186456377e-16,
+          "time_t0": 0.5,
+          "total_energy": -18.492648276978063
+        },
+        {
+          "branch": "control",
+          "cells": 1024,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 4.3656807822402947e-16,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.151055307685633,
+          "gravitational_energy": -43.880211248973175,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 4.823347876576132e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.2086113698949152,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.9211492186456377e-16,
+          "time_t0": 1.0,
+          "total_energy": -18.492648276978063
+        },
+        {
+          "branch": "control",
+          "cells": 1024,
+          "central_density_relative_change": 3.749028113090052e-16,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 7.210470678378047e-16,
+          "dr_rs": 0.009765625,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.1510553076856311,
+          "gravitational_energy": -43.880211248973175,
+          "internal_energy": 25.387562971995116,
+          "kinetic_energy": 1.486066675925264e-30,
+          "mass": 18.708867406623153,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10266268836473,
+          "maximum_vc_v0": 1.6483494230560498,
+          "minimum_density": 0.0008275845473818353,
+          "minimum_internal_energy_density": 0.000824104372441155,
+          "minimum_specific_internal_energy": 0.20861136989491497,
+          "r_min_rs": 0.0830078125,
+          "relative_mass_error": 1.8989464202107714e-16,
+          "relative_total_energy_error": 3.8422984372912754e-16,
+          "time_t0": 2.0,
+          "total_energy": -18.49264827697806
+        }
+      ],
+      "steps": 824
+    },
+    "control_N2048": {
+      "causal": {
+        "boundary_radius_rs": 1.0009765625,
+        "cumulative_advective_internal_energy_into_center": 1.5749369298420242e-15,
+        "cumulative_conductive_energy_into_center": 0.0,
+        "cumulative_gravity_work_center": 5.681064955360617e-16,
+        "cumulative_pressure_work_center": 1.6184496974975744e-15,
+        "initial_central_internal_energy": 4.094835551239516,
+        "series": [
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 9.24052779681737e-17,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": -3.054255583508543e-17,
+            "integrated_pressure_work_center": 3.108120715309973e-17,
+            "internal_energy_balance_residual": 7.646919345788519e-16,
+            "time_t0": 0.25
+          },
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 1.2264552094895653e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": -2.244168259081953e-16,
+            "integrated_pressure_work_center": -1.4264495484279802e-16,
+            "internal_energy_balance_residual": 9.081778535939668e-16,
+            "time_t0": 0.5
+          },
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 4.713100889723768e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": -1.4220699221817197e-16,
+            "integrated_pressure_work_center": 1.7222273189602129e-16,
+            "internal_energy_balance_residual": 2.446455988317271e-16,
+            "time_t0": 1.0
+          },
+          {
+            "direct_central_internal_energy_change": 1.7763568394002505e-15,
+            "integrated_advective_internal_energy_into_center": 1.5749369298420242e-15,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 5.681064955360617e-16,
+            "integrated_pressure_work_center": 1.6184496974975744e-15,
+            "internal_energy_balance_residual": -1.417029787939348e-15,
+            "time_t0": 2.0
+          }
+        ]
+      },
+      "failure": null,
+      "records": [
+        {
+          "branch": "control",
+          "cells": 2048,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.077441892063689,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.000827015158517402,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942122,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.492956218065995
+        },
+        {
+          "branch": "control",
+          "cells": 2048,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 1.7352182248925426e-16,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.077441892063689,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 3.0070587946677743e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.000827015158517402,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942128,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.25,
+          "total_energy": -18.492956218065995
+        },
+        {
+          "branch": "control",
+          "cells": 2048,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 3.3211454326684356e-16,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.077441892063689,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 6.020628560305052e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.000827015158517402,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942118,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.5,
+          "total_energy": -18.492956218065995
+        },
+        {
+          "branch": "control",
+          "cells": 2048,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 6.481095400676018e-16,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.0774418920636961,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 1.2219048956371174e-30,
+          "mass": 18.708867406623153,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.000827015158517402,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942135,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 1.8989464202107714e-16,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 1.0,
+          "total_energy": -18.492956218065995
+        },
+        {
+          "branch": "control",
+          "cells": 2048,
+          "central_density_relative_change": 5.587291940010259e-16,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 1.0764764178541908e-15,
+          "dr_rs": 0.0048828125,
+          "flat_rotation_regions_rs": [
+            [
+              1.279296875,
+              3.876953125
+            ]
+          ],
+          "gamma_r_min": -1.0774418920637103,
+          "gravitational_energy": -43.88051919006111,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 2.065848113594292e-30,
+          "mass": 18.708867406623153,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10270296057615,
+          "maximum_vc_v0": 1.6483500371267379,
+          "minimum_density": 0.0008270151585174021,
+          "minimum_internal_energy_density": 0.0008235372386241292,
+          "minimum_specific_internal_energy": 0.12466514001942124,
+          "r_min_rs": 0.04150390625,
+          "relative_mass_error": 1.8989464202107714e-16,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 2.0,
+          "total_energy": -18.492956218065995
+        }
+      ],
+      "steps": 1647
+    },
+    "control_N512": {
+      "causal": {
+        "boundary_radius_rs": 0.99609375,
+        "cumulative_advective_internal_energy_into_center": 3.749426072273531e-16,
+        "cumulative_conductive_energy_into_center": 0.0,
+        "cumulative_gravity_work_center": -3.6935063238176593e-16,
+        "cumulative_pressure_work_center": -1.2112918323725812e-16,
+        "initial_central_internal_energy": 4.06780701251065,
+        "series": [
+          {
+            "direct_central_internal_energy_change": 0.0,
+            "integrated_advective_internal_energy_into_center": 1.643645723526533e-19,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 2.7264853662509812e-17,
+            "integrated_pressure_work_center": 2.7409492815685686e-17,
+            "internal_energy_balance_residual": -2.757385738803834e-17,
+            "time_t0": 0.25
+          },
+          {
+            "direct_central_internal_energy_change": 0.0,
+            "integrated_advective_internal_energy_into_center": 2.777702163420583e-17,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 2.2343435210408473e-16,
+            "integrated_pressure_work_center": 2.423940777775194e-16,
+            "internal_energy_balance_residual": -2.7017109941172523e-16,
+            "time_t0": 0.5
+          },
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 5.879884173266558e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": 1.2447354514038415e-15,
+            "integrated_pressure_work_center": 1.6362977109916658e-15,
+            "internal_energy_balance_residual": -1.3361077086181965e-15,
+            "time_t0": 1.0
+          },
+          {
+            "direct_central_internal_energy_change": 8.881784197001252e-16,
+            "integrated_advective_internal_energy_into_center": 3.749426072273531e-16,
+            "integrated_conductive_energy_into_center": 0.0,
+            "integrated_gravity_work_center": -3.6935063238176593e-16,
+            "integrated_pressure_work_center": -1.2112918323725812e-16,
+            "internal_energy_balance_residual": 6.343649957100302e-16,
+            "time_t0": 2.0
+          }
+        ]
+      },
+      "failure": null,
+      "records": [
+        {
+          "branch": "control",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 0.0,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.2824798250970773,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 0.0,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10264201374463,
+          "maximum_vc_v0": 1.648349107809438,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.33833052855813156,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.0,
+          "total_energy": -18.491433564092226
+        },
+        {
+          "branch": "control",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 5.4190912062545944e-17,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.2824798250970773,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.38756297199511,
+          "kinetic_energy": 6.432558427895372e-32,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10264201374463,
+          "maximum_vc_v0": 1.648349107809438,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.33833052855813156,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 0.0,
+          "time_t0": 0.25,
+          "total_energy": -18.491433564092226
+        },
+        {
+          "branch": "control",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 1.0444892237396675e-16,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.282479825097071,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 2.146891525463026e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10264201374463,
+          "maximum_vc_v0": 1.648349107809438,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.33833052855813156,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.921275420040647e-16,
+          "time_t0": 0.5,
+          "total_energy": -18.491433564092222
+        },
+        {
+          "branch": "control",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 2.0808524177968774e-16,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.2824798250970746,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 5.016142779881842e-31,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10264201374463,
+          "maximum_vc_v0": 1.648349107809438,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.3383305285581317,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.921275420040647e-16,
+          "time_t0": 1.0,
+          "total_energy": -18.491433564092222
+        },
+        {
+          "branch": "control",
+          "cells": 512,
+          "central_density_relative_change": 0.0,
+          "core_radius_cells": null,
+          "core_radius_rs": null,
+          "density_L1_change": 3.6688175359874745e-16,
+          "dr_rs": 0.01953125,
+          "flat_rotation_regions_rs": [
+            [
+              1.2890625,
+              3.8671875
+            ]
+          ],
+          "gamma_r_min": -1.2824798250970746,
+          "gravitational_energy": -43.878996536087335,
+          "internal_energy": 25.387562971995113,
+          "kinetic_energy": 1.2479959343943227e-30,
+          "mass": 18.70886740662315,
+          "maximum_abs_conductive_luminosity": 0.0,
+          "maximum_vc_km_s": 108.10264201374464,
+          "maximum_vc_v0": 1.6483491078094383,
+          "minimum_density": 0.0008287248613404361,
+          "minimum_internal_energy_density": 0.0008252404498859191,
+          "minimum_specific_internal_energy": 0.3383305285581318,
+          "r_min_rs": 0.166015625,
+          "relative_mass_error": 0.0,
+          "relative_total_energy_error": 1.921275420040647e-16,
+          "time_t0": 2.0,
+          "total_energy": -18.491433564092222
+        }
+      ],
+      "steps": 413
+    }
+  }
+}

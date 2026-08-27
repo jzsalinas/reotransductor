@@ -1,0 +1,60 @@
+{
+  "conductive_conductivity_hat": 1.5,
+  "control_conductivity_hat": 0.0,
+  "git_commit": "8786e1fec25c6dd8021fdd53238e79b7c4585399",
+  "implementation": "CPython",
+  "laboratory_config": {
+    "cfl": 0.35,
+    "conductivity_hat_star": 1.5,
+    "control_density_l1_tolerance": 1e-10,
+    "control_slope_tolerance": 1e-08,
+    "control_velocity_tolerance": 1e-10,
+    "energy_tolerance": 1e-06,
+    "gamma": 1.6666666666666667,
+    "mass_tolerance": 1e-12,
+    "minimum_resolved_cells": 8,
+    "radius": 10.0,
+    "required_core_cells": 16
+  },
+  "numpy_dtype": "float64",
+  "packages": {
+    "matplotlib": "3.11.1",
+    "numpy": "2.4.6",
+    "pytest": null,
+    "setuptools": null
+  },
+  "physical_scales": {
+    "r_s_kpc": 1.0,
+    "rho_s_msun_pc3": 1.0
+  },
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+  "python": "3.11.15 (main, Jun 11 2026, 04:03:40) [Clang 22.1.3 ]",
+  "resolutions": [
+    512,
+    1024,
+    2048
+  ],
+  "source_sha256": {
+    "laboratories/cusp_core/__init__.py": "d47b9259b3d84da2a031e5b9286a0187eff2577a05413bece780902b9b49fa76",
+    "laboratories/cusp_core/conduction.py": "00dfebf2d1f8d98d1326b488e098abc101757d16a2b96b5ea61e41fbd1a20979",
+    "laboratories/cusp_core/config.py": "8046755b780acd47ff42099f0894ee1ded2ae86599a032e1ea1ba3efa6b0f416",
+    "laboratories/cusp_core/diagnostics.py": "f1bcdbe49e2905a4510f16ebe073d1eb5655f6fbb9645a21fa3e04d2e880ba05",
+    "laboratories/cusp_core/equilibrium.py": "4b13f006600ccc3e4faafe1639e17a43473cf1d11a3c553eab45b27863e911e7",
+    "laboratories/cusp_core/grid.py": "aef35e90a8a5189cc8878fc915bd9b469a5968072001346811b94ccbd3ad35d6",
+    "laboratories/cusp_core/hydrodynamics.py": "826c2c71d1b220ff126fff50a128a21a29baa7fa63c61f435009fcfae130ec8c",
+    "laboratories/cusp_core/run_control.py": "a94976d89f88c57c990fd99a8ae07800436959fa44180f96086050802332d0b8",
+    "laboratories/cusp_core/solver.py": "23935aa6dfa2bfafda288ae5262d90c7f5d0b05e576c8b65736a9ad6620f6d8e",
+    "laboratories/cusp_core/tests/__init__.py": "498138138a7b1236476f6bc66c83cc3e4b888d70b8fd309dcddb26e5c79df9d2",
+    "laboratories/cusp_core/tests/test_laboratory.py": "9122b5b5bb9c72f82212e542afbcecb26d9e994f3132455b8df1b03a1c0c4204",
+    "laboratories/cusp_core/validation.py": "d472914520f0e7fe373c8e62c1aa99f1aadb68f98cb163768bb4318c649166c6"
+  },
+  "specification_sha256": "83c6a7de7776c53683e2979176d588c2ceb2c707ae0870b7ed4e3fb1e83e0a2b",
+  "times_t0": [
+    0.0,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+  ],
+  "wall_seconds": 23.988259077072144
+}
