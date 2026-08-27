@@ -13,7 +13,8 @@ from .solver import CuspCoreSolver
 
 
 CONTROL_RESOLUTIONS = (512, 1024, 2048)
-CONTROL_TIMES = (0.25, 0.5, 1.0)
+CONTROL_TIMES = (0.25, 0.5, 1.0, 2.0)
+SLOPE_SAMPLE_RADII = (0.25, 0.5, 1.0, 2.0, 5.0, 9.5)
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,8 @@ class ControlMeasurement:
     mass_error: float
     total_energy_error: float
     core_radius: float | None
+    slope_samples: dict[str, float]
+    positivity_limiter_activation_frequency: float
     passed: bool
 
 
@@ -61,6 +64,13 @@ def validate_control_resolution(
             cfg.required_core_cells,
         )
         max_velocity = float(np.max(np.abs(velocity)))
+        slope_samples = {
+            f"r={radius:g}": float(
+                np.interp(np.log(radius), np.log(solver.grid.centers), slope)
+            )
+            for radius in SLOPE_SAMPLE_RADII
+        }
+        limiter_frequency = solver.hydrodynamics.limiter_activation_frequency
         passed = (
             max_velocity <= cfg.control_velocity_tolerance
             and density_l1 <= cfg.control_density_l1_tolerance
@@ -79,6 +89,8 @@ def validate_control_resolution(
                 mass_error=mass_error,
                 total_energy_error=energy_error,
                 core_radius=estimated_core,
+                slope_samples=slope_samples,
+                positivity_limiter_activation_frequency=limiter_frequency,
                 passed=passed,
             )
         )

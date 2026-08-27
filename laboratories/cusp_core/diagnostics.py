@@ -34,6 +34,45 @@ def gravitational_energy(density: np.ndarray, grid: SphericalGrid) -> float:
     return float(-np.sum(shell_factor * integral))
 
 
+def gravitational_energy_coefficients(
+    grid: SphericalGrid,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return coefficients of the exact piecewise-constant shell functional."""
+    a = grid.faces[:-1]
+    b = grid.faces[1:]
+    radial_area = 0.5 * (b**2 - a**2)
+    radial_self = (b**5 - a**5) / 5.0 - 0.5 * a**3 * (b**2 - a**2)
+    density_factor = 4.0 * np.pi / grid.volumes
+    cross = density_factor * radial_area
+    self_term = (density_factor**2 / 3.0) * radial_self
+    return cross, self_term
+
+
+def gravitational_energy_from_mass(mass: np.ndarray, grid: SphericalGrid) -> float:
+    """Evaluate W_h(m) for cell masses using its explicit quadratic form."""
+    mass = np.asarray(mass, dtype=np.float64)
+    if mass.shape != grid.centers.shape:
+        raise ValueError("Cell masses must match the grid")
+    cross, self_term = gravitational_energy_coefficients(grid)
+    interior_mass = np.concatenate(([0.0], np.cumsum(mass[:-1])))
+    return float(-np.sum(cross * mass * interior_mass + self_term * mass**2))
+
+
+def conjugate_gravitational_potential(
+    mass: np.ndarray, grid: SphericalGrid
+) -> np.ndarray:
+    """Return psi=dW_h/dm for the exact discrete gravitational energy."""
+    mass = np.asarray(mass, dtype=np.float64)
+    if mass.shape != grid.centers.shape:
+        raise ValueError("Cell masses must match the grid")
+    cross, self_term = gravitational_energy_coefficients(grid)
+    interior_mass = np.concatenate(([0.0], np.cumsum(mass[:-1])))
+    exterior = np.zeros_like(mass)
+    if mass.size > 1:
+        exterior[:-1] = np.cumsum((cross[1:] * mass[1:])[::-1])[::-1]
+    return -(cross * interior_mass + 2.0 * self_term * mass + exterior)
+
+
 def potential_faces(density: np.ndarray, grid: SphericalGrid) -> np.ndarray:
     """Potential with Phi(infinity)=0 for the truncated spherical fluid."""
     mass = enclosed_mass_faces(density, grid)
@@ -80,7 +119,7 @@ def energy_budget(state: np.ndarray, grid: SphericalGrid, gamma: float) -> Energ
     kinetic_density = 0.5 * rho * velocity**2
     internal = float(np.sum(internal_density * grid.volumes))
     kinetic = float(np.sum(kinetic_density * grid.volumes))
-    gravitational = gravitational_energy(rho, grid)
+    gravitational = gravitational_energy_from_mass(rho * grid.volumes, grid)
     return EnergyBudget(
         mass=float(np.sum(rho * grid.volumes)),
         internal=internal,

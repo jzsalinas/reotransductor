@@ -15,6 +15,13 @@ class SphericalGrid:
     areas: np.ndarray
     dr: float
 
+    @property
+    def volume_centroids(self) -> np.ndarray:
+        """Exact radial centroids under the spherical volume measure."""
+        a = self.faces[:-1]
+        b = self.faces[1:]
+        return 0.75 * (b**4 - a**4) / (b**3 - a**3)
+
     @classmethod
     def uniform(cls, cells: int, radius: float) -> "SphericalGrid":
         if cells < 4:

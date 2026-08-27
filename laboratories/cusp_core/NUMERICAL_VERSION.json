@@ -1,0 +1,69 @@
+{
+  "base_git_commit": "aeb6cbce7f1d8df0eebe2619f0c07d514bc1adf6",
+  "dependencies": {
+    "numpy": "2.4.6",
+    "scipy": null
+  },
+  "experiment_001": {
+    "numerical_version": "CCL-NUM-1",
+    "outcome": "SCIENTIFIC EXPERIMENT INVALID — NUMERICAL FAILURE",
+    "preserved_artifacts": "results/8786e1f_khat1p5"
+  },
+  "frozen_physics": {
+    "conductivity_hat_star": 1.5,
+    "gamma": "5/3",
+    "outer_radius_rs": 10.0,
+    "physical_mapping": {
+      "rho_s": "1 Msun pc^-3",
+      "r_s": "1 kpc"
+    },
+    "scientific_output_times_t0": [0.0, 0.25, 0.5, 1.0, 2.0],
+    "scientific_resolutions": [512, 1024, 2048]
+  },
+  "numerical_tolerances": {
+    "action_absolute": 5e-15,
+    "action_relative": 5e-13,
+    "constant_mode": 5e-14,
+    "discrete_maximum_principle_allowance": 5e-13,
+    "energy_conservation": 1e-06,
+    "krylov_dimensions": {
+      "increment": 16,
+      "initial": 16,
+      "maximum": 256
+    },
+    "mass_conservation": 1e-12,
+    "positivity_allowance": 5e-13,
+    "weighted_thermal_invariant": 5e-13
+  },
+  "numerical_version": "CCL-NUM-2",
+  "platform": {
+    "interpreter": "CPython 3.11.15",
+    "interpreter_compiler": "Clang 22.1.3",
+    "machine": "x86_64",
+    "numpy": "2.4.6",
+    "operating_system": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43"
+  },
+  "source_sha256": {
+    "README.md": "ff3039647798828da6937129a29ea49e0a723cdcf28d47907ae17712945ef8d3",
+    "SPECIFICATION.md": "214fd6d9e00a02fd6b4f8929d7455bf781046e8fb326882d3c2918d5e04f6de4",
+    "__init__.py": "d47b9259b3d84da2a031e5b9286a0187eff2577a05413bece780902b9b49fa76",
+    "conduction.py": "04348e2803ee9dfe50ada75006c1fab3e26bff5abb4f8a5f7431845620134a17",
+    "config.py": "5a5b0eac5aeffb93b3e85d49b71283c163569369e7f9af84e9cb3c679f0c39a6",
+    "diagnostics.py": "9d0c1fdbc497d46b3c2f8c070ceb8b548891b0d6e13857eeb86b750881e4c038",
+    "equilibrium.py": "4b13f006600ccc3e4faafe1639e17a43473cf1d11a3c553eab45b27863e911e7",
+    "grid.py": "6acde9ae88c49acc10efd15f57fffcb4c79efbedfe2c7af56e283e648585a04f",
+    "hydrodynamics.py": "33bf5e9b2bc638a8959d7c7d670cc0ce0c4498965b763c502fc66165219bdcfb",
+    "run_control.py": "a94976d89f88c57c990fd99a8ae07800436959fa44180f96086050802332d0b8",
+    "solver.py": "b5e3746350cd6020e37546ba36e0596d9af9ef50261cf7f30159039cf72be8c7",
+    "tests/test_ccl_num2.py": "5f7a4ab474470c43b5d51d240cd64f5b6f0a234a809e634fd59e24499b745ab4",
+    "tests/test_laboratory.py": "9122b5b5bb9c72f82212e542afbcecb26d9e994f3132455b8df1b03a1c0c4204",
+    "validation.py": "36a1f4cdf15528030b2eb4ad09fad30110eca94e0438fb687cadddc77806f6e4"
+  },
+  "verification": {
+    "control_record": "CCL_NUM_2_CONTROL.json",
+    "control_validated": true,
+    "inherited_tests_passed": 13,
+    "pre_registered_tests_passed": 16,
+    "total_tests_passed": 29
+  }
+}

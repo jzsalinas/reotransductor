@@ -10,6 +10,22 @@ G_SI = 6.67430e-11
 MSUN_KG = 1.98847e30
 PC_M = 3.085677581491367e16
 KPC_M = 1.0e3 * PC_M
+NUMERICAL_VERSION = "CCL-NUM-2"
+
+
+@dataclass(frozen=True)
+class ExponentialActionContract:
+    """Pre-specified float64 certification limits for exp(dt L) actions."""
+
+    relative_action_tolerance: float = 5.0e-13
+    absolute_action_tolerance: float = 5.0e-15
+    weighted_invariant_tolerance: float = 5.0e-13
+    constant_mode_tolerance: float = 5.0e-14
+    positivity_allowance: float = 5.0e-13
+    maximum_principle_allowance: float = 5.0e-13
+    initial_krylov_dimension: int = 16
+    krylov_dimension_increment: int = 16
+    maximum_krylov_dimension: int = 256
 
 
 @dataclass(frozen=True)
@@ -55,6 +71,7 @@ class LaboratoryConfig:
     control_velocity_tolerance: float = 1.0e-10
     control_density_l1_tolerance: float = 1.0e-10
     control_slope_tolerance: float = 1.0e-8
+    exponential_action: ExponentialActionContract = ExponentialActionContract()
 
     def reference_conduction_time(self, conductivity_hat: float) -> float:
         """Return t_cond,0/t0, not the local time at r_s."""

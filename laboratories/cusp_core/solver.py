@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .conduction import conductive_luminosity, implicit_conduction_step
+from .conduction import conductive_luminosity, exponential_conduction_step
 from .config import LaboratoryConfig
 from .diagnostics import EnergyBudget, energy_budget, potential_centers
 from .equilibrium import HydrostaticNFW
@@ -63,20 +63,22 @@ class CuspCoreSolver:
         if dt <= 0.0 or not np.isfinite(dt):
             raise ValueError("A finite positive timestep is required")
         half = 0.5 * dt
-        first = implicit_conduction_step(
+        first = exponential_conduction_step(
             self.state,
             self.grid,
             self.config.gamma,
             self.conductivity_hat,
             half,
+            self.config.exponential_action,
         )
         hydro = self.hydrodynamics.step_rk2(first, dt)
-        self.state = implicit_conduction_step(
+        self.state = exponential_conduction_step(
             hydro,
             self.grid,
             self.config.gamma,
             self.conductivity_hat,
             half,
+            self.config.exponential_action,
         )
         primitive(self.state, self.config.gamma)
         self.time += dt

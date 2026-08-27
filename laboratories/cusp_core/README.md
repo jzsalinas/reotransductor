@@ -25,15 +25,18 @@ not a microphysical derivation.
 - `grid.py`: exact spherical face areas and cell volumes.
 - `equilibrium.py`: NFW mass, exact density cell averages, and hydrostatic
   pressure cell averages without evaluating the central singularity.
-- `hydrodynamics.py`: MUSCL-MC/HLLC Euler-Poisson operator with equilibrium
-  subtraction and SSP-RK2 time integration.
-- `conduction.py`: conservative Crank-Nicolson Fourier transport through face
-  luminosities.
+- `hydrodynamics.py`: conservative-perturbation MUSCL-MC/HLLC Euler-Poisson
+  operator, positivity scaling, conjugate-potential gravity work, equilibrium
+  subtraction, and SSP-RK2 time integration.
+- `conduction.py`: certified Lanczos matrix-exponential Fourier transport
+  through face luminosities.
 - `diagnostics.py`: mass, energy, potential, slope, core radius, and rotation
   curve.
 - `solver.py`: symmetric Strang-split evolution.
 - `validation.py` and `run_control.py`: protected `K_hat=0` validation only.
 - `tests/`: isolated verification suite.
+- `NUMERICAL_VERSION.json`: frozen CCL-NUM-2 source hashes, numerical
+  tolerances, dependencies, and platform provenance.
 
 ## Verification and control
 
@@ -53,6 +56,10 @@ Run only the pre-registered nonconducting control:
 The control command does not expose or execute the `K_hat=1.5` scientific
 branch. The protected conductive experiment must only be added or invoked
 after explicit project-owner approval.
+
+CCL-NUM-2 is a purely numerical revision. Experiment 001 remains permanently
+CCL-NUM-1 and invalid because of numerical failure; its recorded artifacts are
+not overwritten or promoted by the new verification suite.
 
 The reference realization `r_s=1 kpc`, `rho_s=1 Msun pc^-3` fixes the unit
 mapping. Rotation speeds emitted in km/s are conditional on that mapping and

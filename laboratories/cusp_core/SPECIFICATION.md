@@ -1,4 +1,11 @@
-# Frozen Specification — Independent Cusp-Core Laboratory
+# Frozen Physical and CCL-NUM-2 Numerical Specification — Independent Cusp-Core Laboratory
+
+Numerical version: `CCL-NUM-2`
+
+`Experiment 001` remains permanently identified with `CCL-NUM-1` and
+`OUTCOME = SCIENTIFIC EXPERIMENT INVALID — NUMERICAL FAILURE`. Its artifacts
+under `results/8786e1f_khat1p5/` are immutable historical evidence and are not
+reinterpreted by this revision.
 
 ## 1. Scientific scope
 
@@ -143,23 +150,50 @@ domain.
 
 - Uniform radial spherical finite volumes in `float64`.
 - Exact cell volumes `4 pi (r_+^3-r_-^3)/3` and face areas `4 pi r_f^2`.
-- Piecewise-linear MUSCL reconstruction of primitive perturbations.
-- Monotonized-central (MC) limiter, explicitly used for all reconstructed
-  primitive perturbations.
+- Piecewise-linear MUSCL reconstruction of conserved-variable perturbations
+  about the exact NFW equilibrium. Linear perturbations use the exact spherical
+  volume centroid
+  `r_bar,V=(3/4)(r_+^4-r_-^4)/(r_+^3-r_-^3)`.
+- Monotonized-central (MC) slopes for all conserved perturbations.
+- Conservative positivity scaling at every used reconstruction point,
+  `U_limited=U_bar+alpha(U_raw-U_bar)`, using the largest common
+  `0<alpha<=1` that gives `rho>0` and `rho E-(rho u)^2/2>0`. The same `alpha`
+  scales every conserved component. Cell averages are unchanged. A
+  nonphysical cell average is an immediate numerical failure.
 - HLLC advective Riemann flux.
 - Well-balanced equilibrium subtraction: numerical fluxes and source terms
   are evolved relative to the same hydrostatic NFW equilibrium. The exact
   initialized state therefore has a zero semidiscrete residual while the
   correction vanishes under spatial refinement for general states.
-- Self-gravity from finite-volume enclosed mass; no external or synthetic
-  source.
+- Self-gravity from the conjugate potential of the same exact discrete
+  piecewise-constant-shell energy functional used in conservation accounting;
+  no external or synthetic source.
 - Second-order SSP-RK2 for the Euler-Poisson operator.
-- Conservative implicit Crank-Nicolson conduction.
+- Conservative matrix-exponential conduction for `H dTheta/dt=A Theta`.
+  Production actions use the symmetric similar tridiagonal operator
+  `B=H^-1/2 A H^-1/2` and adaptive, fully reorthogonalized Lanczos projection.
+  Only the small Krylov projection is dense; no production-sized dense
+  exponential is constructed.
 - Symmetric conduction-half / hydro-full / conduction-half Strang splitting.
 
-Crank-Nicolson is not positivity preserving for arbitrary timesteps. This is
-a declared numerical limitation: if it produces non-positive internal energy,
-the run stops rather than repairing the state.
+The weighted constant thermal mode is split explicitly before the Lanczos
+action. The fixed float64 exponential-action contract is:
+
+- relative a-posteriori action tolerance `5e-13`;
+- absolute a-posteriori action tolerance `5e-15`;
+- weighted thermal-invariant relative tolerance `5e-13`;
+- constant-mode preservation relative tolerance `5e-14`;
+- positivity numerical allowance `5e-13 * max(1,max|Theta_initial|)`;
+- discrete maximum-principle allowance
+  `5e-13 * max(1,max|Theta_initial|)`;
+- initial/increment/maximum Krylov dimensions `16/16/256`.
+
+The action is accepted only when the successive-projection a-posteriori
+difference and the Lanczos residual estimate meet the contract (or an
+invariant Krylov subspace terminates exactly), and all invariant, constant,
+positivity, and maximum-principle checks pass. Temperature is never clipped.
+Negativity beyond the certified allowance is `NUMERICAL FAILURE`; any
+non-positive state, even within an allowance, is unusable and also stops.
 
 ## 7. Conservation accounting
 
@@ -181,6 +215,44 @@ mass error `<=1e-12` and relative total-energy error `<=1e-6`. They may not be
 relaxed based on development outcomes without a new scientific/numerical
 decision.
 
+Writing cell masses as `m_i=rho_i V_i`, the implemented quadratic functional
+is
+
+\[
+ W_h=-\sum_i\left(a_i m_i M_i+b_i m_i^2\right),\qquad
+ M_i=\sum_{j<i}m_j,
+\]
+
+where
+
+\[
+ a_i={4\pi\over V_i}{r_{i+1}^2-r_i^2\over2},\qquad
+ b_i={1\over3}\left({4\pi\over V_i}\right)^2
+ \left[{r_{i+1}^5-r_i^5\over5}
+ -{r_i^3(r_{i+1}^2-r_i^2)\over2}\right].
+\]
+
+Its conjugate potential is
+
+\[
+ \psi_k={\partial W_h\over\partial m_k}
+ =-\left(a_kM_k+2b_km_k+\sum_{i>k}a_i m_i\right).
+\]
+
+For the RK2-integrated face mass transfer `F_m,f`, `psi` is evaluated at the
+midpoint cell mass. The quadratic identity is then exact:
+
+\[
+ \Delta W_h=\sum_f F_{m,f}(\psi_R-\psi_L).
+\]
+
+The gas receives the local face work
+`-F_m,f(psi_R-psi_L)`, shared equally by its adjacent finite volumes. This is
+part of the timestep construction, not a post-step correction or energy
+renormalization. The same first-stage construction supplies the RK2 predictor.
+The gravitational momentum source uses the gradient of this conjugate
+potential with the frozen equilibrium subtraction.
+
 ## 8. Controlled experiment and protected execution
 
 The branches have identical equations, initial state, grid, boundary
@@ -189,13 +261,25 @@ conditions, solver, and diagnostics:
 - `CONTROL`: `K_hat=0`.
 - `CONDUCTIVE`: `K_hat=K_hat_star=1.5`.
 
-The control is evaluated at `t/t0={0.25,0.5,1.0}` on
+The control is evaluated at `t/t0={0.25,0.5,1.0,2.0}` on
 `N_r={512,1024,2048}`. It must satisfy the conservation tolerances, have
 `max|u|/v0<=1e-10`, volume-weighted relative `L1` density change `<=1e-10`,
 maximum resolved slope change `<=1e-8`, and form no resolved core.
 
 The final conductive experiment at `N_r={512,1024,2048}` is protected and is
 not executed as part of implementation or control validation.
+
+## 8.1 CCL-NUM-2 verification gate
+
+Before freezing this numerical version, the implementation must pass the
+pre-registered tests for constant temperature, positive Gaussian diffusion,
+spherical analytic diffusion, thermal conservation, zero origin luminosity,
+stiffness through `mu=1e5`, the central NFW weak state, temporal and spatial
+convergence, coupled hydro-gravity energy, extreme positive reconstruction,
+exact NFW equilibrium, locally convergent collapse/expansion work, absence of
+silent repair, dense-reference comparison, and thermal invariant/constant
+mode preservation. Verification is software evidence only, not physical
+validation.
 
 ## 9. Resolution, slope, and core protocol
 
